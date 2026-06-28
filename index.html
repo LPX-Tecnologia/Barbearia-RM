@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1A0A0A">
+    <meta name="theme-color" content="#0D0D0D">
     <title>Barbearia RM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -32,11 +32,11 @@
                 <img src="imagem/logobarbearia-rm.jpeg" alt="Barbearia RM" class="logo-login">
             </div>
             <h2>Barbearia RM</h2>
-            <p class="subtitle">Faça seu login ou cadastre-se</p>
+            <p class="subtitle">✂️ Estilo e Tradição</p>
             <div class="card">
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
-                    <button class="btn btn-secondary" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
+                    <button class="btn btn-primary neon" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
+                    <button class="btn btn-secondary neon" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
                 </div>
                 <div id="loginFormCliente" style="display:none; margin-top:16px;">
                     <div class="input-group">
@@ -47,7 +47,7 @@
                         <label>🔒 Senha</label>
                         <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
                     </div>
-                    <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
+                    <button class="btn btn-primary neon" onclick="loginCliente()">🔑 ENTRAR</button>
                     <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
                 </div>
                 <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
@@ -59,7 +59,7 @@
                         <label>🔒 Senha</label>
                         <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
                     </div>
-                    <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
+                    <button class="btn btn-secondary neon" onclick="loginBarbeiro()">🔑 ENTRAR</button>
                 </div>
             </div>
         </div>
@@ -87,7 +87,7 @@
                 <label>🔒 Senha</label>
                 <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
             </div>
-            <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button>
+            <button class="btn btn-primary neon" onclick="cadastrarCliente()">✅ FINALIZAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
         </div>
     </section>
@@ -96,9 +96,25 @@
     <!-- TELA: HOME CLIENTE -->
     <!-- ============================================================ -->
     <section class="screen" id="homeClienteScreen">
+        <!-- ANÚNCIO -->
+        <div class="ad-banner">
+            <span class="ad-icon">📢</span>
+            <div class="ad-text">
+                <strong>Promoção Especial!</strong> Corte + Barba por apenas R$ 60,00
+            </div>
+            <span class="ad-close" onclick="this.parentElement.style.display='none'">✕</span>
+        </div>
+
         <div class="welcome-banner">
             <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
             <p>Confira os cortes e agende seu horário</p>
+        </div>
+
+        <!-- LOCALIZAÇÃO -->
+        <div class="location-card" onclick="abrirLocalizacao()">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>📍 Rua das Barbearias, 123 - Centro</span>
+            <i class="fas fa-chevron-right"></i>
         </div>
 
         <div class="feed-container" id="feedClienteContainer"></div>
@@ -106,11 +122,19 @@
         <div class="card" id="agendaClienteCard">
             <h3>📅 Meus Agendamentos</h3>
             <div id="agendaClienteContainer">
-                <p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>
+                <p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>
             </div>
         </div>
 
-        <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+        <button class="btn btn-primary neon" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+
+        <!-- ANÚNCIO RODAPÉ -->
+        <div class="ad-banner" style="margin-top:16px;">
+            <span class="ad-icon">💈</span>
+            <div class="ad-text">
+                <strong>Plano Mensal</strong> 1 corte + barba grátis por R$ 150,00
+            </div>
+        </div>
     </section>
 
     <!-- ============================================================ -->
@@ -156,8 +180,8 @@
         </div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
-            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
+            <button class="btn btn-primary neon" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
+            <button class="btn btn-secondary neon" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
         </div>
     </section>
 
@@ -210,7 +234,7 @@
                     <option value="Progressiva">Progressiva</option>
                 </select>
             </div>
-            <button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button>
+            <button class="btn btn-primary neon" onclick="agendarCorte()">✅ AGENDAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
         </div>
     </section>
@@ -241,7 +265,7 @@
                 <label>📝 Descrição</label>
                 <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
             </div>
-            <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
+            <button class="btn btn-primary neon" onclick="criarPost()">📤 PUBLICAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
     </section>
@@ -275,7 +299,7 @@
                 <label>📝 Descrição</label>
                 <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
             </div>
-            <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR PLANO</button>
+            <button class="btn btn-primary neon" onclick="criarPlano()">💾 SALVAR PLANO</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
     </section>
@@ -291,7 +315,7 @@
                 <button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button>
                 <button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button>
                 <button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button>
-                <button class="btn btn-small btn-primary" onclick="filtrarExtrato('todos')">📋 Todos</button>
+                <button class="btn btn-small btn-primary neon" onclick="filtrarExtrato('todos')">📋 Todos</button>
             </div>
             <div id="extratoContainer"></div>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
@@ -307,11 +331,11 @@
             <div class="logo-pagamento">
                 <img src="imagem/logobarbearia-rm.jpeg" alt="Barbearia RM" class="logo-small">
             </div>
-            <h3 style="margin-top:10px;">Barbearia RM</h3>
+            <h3 style="margin-top:10px; color:#C9A84C;">Barbearia RM</h3>
             <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
-            <p><strong>Chave PIX:</strong> <span id="pixChave">barbearia.rm@email.com</span></p>
+            <p><strong style="color:#C9A84C;">Chave PIX:</strong> <span id="pixChave" style="color:#F5F0E8;">barbearia.rm@email.com</span></p>
             <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
-            <hr style="margin:20px 0; border-color:#C9A84C;">
+            <hr style="margin:20px 0; border-color:#2A2A2A;">
             <div class="input-group">
                 <label>💳 Cartão de Crédito</label>
                 <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
@@ -326,7 +350,7 @@
                     <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="processarPagamento()">💳 PAGAR</button>
+            <button class="btn btn-primary neon" onclick="processarPagamento()">💳 PAGAR</button>
             <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
         </div>
     </section>
@@ -362,7 +386,7 @@
                 <label>📱 Celular</label>
                 <input type="tel" id="editClienteCelular">
             </div>
-            <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
+            <button class="btn btn-primary neon" onclick="salvarPerfilCliente()">💾 SALVAR</button>
         </div>
 
         <div class="card">
@@ -379,7 +403,7 @@
                 <label>🔒 Confirmar Nova Senha</label>
                 <input type="password" id="confirmarSenhaCliente" placeholder="Confirme a nova senha">
             </div>
-            <button class="btn btn-primary" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
+            <button class="btn btn-primary neon" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
         </div>
 
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
@@ -413,7 +437,7 @@
                 <label>📧 E-mail</label>
                 <input type="email" id="editBarbeiroEmail">
             </div>
-            <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
+            <button class="btn btn-primary neon" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
         </div>
 
         <div class="card">
@@ -430,7 +454,7 @@
                 <label>🔒 Confirmar Nova Senha</label>
                 <input type="password" id="confirmarSenhaBarbeiro" placeholder="Confirme a nova senha">
             </div>
-            <button class="btn btn-primary" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
+            <button class="btn btn-primary neon" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
         </div>
 
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
@@ -446,7 +470,7 @@
             <div class="input-group">
                 <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
             </div>
-            <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
+            <button class="btn btn-primary neon" onclick="adicionarComentario()">📤 COMENTAR</button>
             <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
         </div>
     </div>
