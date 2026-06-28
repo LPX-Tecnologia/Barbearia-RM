@@ -19,7 +19,6 @@ body {
     background-repeat: no-repeat;
 }
 
-/* ===== OVERLAY DE FUNDO ===== */
 body::before {
     content: '';
     position: fixed;
@@ -79,7 +78,6 @@ body::before {
     box-shadow: 0 0 60px rgba(201, 168, 76, 0.4);
 }
 
-/* TÍTULO REMOVIDO - AGORA SÓ A IMAGEM */
 .header-subtitle {
     font-size: 13px;
     color: #8A7A5A;
@@ -239,7 +237,7 @@ body::before {
     color: #F5F0E8;
 }
 
-/* ===== BOTÕES COM EFEITO NEON ===== */
+/* ===== BOTÕES ===== */
 .btn {
     width: 100%;
     padding: 14px;
@@ -285,10 +283,6 @@ body::before {
     box-shadow: 0 8px 40px rgba(201, 168, 76, 0.4);
 }
 
-.btn-primary:active {
-    transform: translateY(0) scale(0.99);
-}
-
 .btn-secondary {
     background: linear-gradient(135deg, #2A2A2A, #1A1A1A);
     color: #C9A84C;
@@ -301,7 +295,6 @@ body::before {
     box-shadow: 0 8px 30px rgba(201, 168, 76, 0.2);
 }
 
-/* ===== EFEITO NEON ===== */
 .btn.neon {
     position: relative;
     z-index: 1;
@@ -475,14 +468,10 @@ body::before {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #C9A84C, #B8923A);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: #0D0D0D;
-    font-weight: 900;
     overflow: hidden;
+    background: transparent;
+    padding: 0;
+    border: 2px solid #C9A84C;
 }
 
 .feed-post-avatar img {
@@ -869,17 +858,16 @@ body::before {
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    background: #0D0D0D;
     margin: 0 auto 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 40px;
     position: relative;
     cursor: pointer;
-    border: 3px solid #C9A84C;
     transition: 0.3s;
     overflow: hidden;
+    border: 3px solid #C9A84C;
+    background: #0D0D0D;
 }
 
 .profile-avatar:hover {
@@ -1063,7 +1051,6 @@ body::before {
     .profile-avatar {
         width: 75px;
         height: 75px;
-        font-size: 32px;
     }
     .welcome-banner h2 {
         font-size: 18px;
