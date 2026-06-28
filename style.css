@@ -65,8 +65,8 @@ body::before {
 }
 
 .logo-header {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #C9A84C;
@@ -79,19 +79,12 @@ body::before {
     box-shadow: 0 0 60px rgba(201, 168, 76, 0.4);
 }
 
-.header-title {
-    font-size: 24px;
-    font-weight: 900;
-    color: #C9A84C;
-    letter-spacing: 3px;
-    text-shadow: 0 0 30px rgba(201, 168, 76, 0.2);
-}
-
+/* TÍTULO REMOVIDO - AGORA SÓ A IMAGEM */
 .header-subtitle {
     font-size: 13px;
     color: #8A7A5A;
     font-weight: 500;
-    margin-top: 2px;
+    margin-top: 4px;
     letter-spacing: 4px;
 }
 
