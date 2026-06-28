@@ -135,7 +135,7 @@ if (!carregarDados('pagamentos')) {
 // =============================================================
 
 let usuarioLogado = null;
-let tipoUsuario = null; // 'cliente' ou 'barbeiro'
+let tipoUsuario = null;
 let postSelecionado = null;
 let extratoFiltro = 'todos';
 
@@ -148,7 +148,6 @@ function mostrarTela(id) {
     const tela = document.getElementById(id);
     if (tela) tela.classList.add('active');
 
-    // Controla navegação inferior
     const navCliente = document.getElementById('bottomNavCliente');
     const navBarbeiro = document.getElementById('bottomNavBarbeiro');
 
@@ -163,19 +162,26 @@ function mostrarTela(id) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
 
-    // Carrega dados ao entrar nas telas
     if (id === 'homeClienteScreen') {
         carregarFeedCliente();
         carregarAgendaCliente();
+        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
     }
     if (id === 'homeBarbeiroScreen') {
         carregarFeedBarbeiro();
         carregarAgendamentosBarbeiro();
         carregarPlanos();
         carregarFaturamento();
+        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
     }
     if (id === 'extratoScreen') {
         carregarExtrato();
+    }
+    if (id === 'perfilClienteScreen') {
+        carregarPerfilCliente();
+    }
+    if (id === 'perfilBarbeiroScreen') {
+        carregarPerfilBarbeiro();
     }
 }
 
@@ -317,15 +323,23 @@ function sairBarbeiro() {
 }
 
 // =============================================================
-// ===== PERFIL =====
+// ===== PERFIL - CLIENTE =====
 // =============================================================
 
 function carregarPerfilCliente() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') return;
+
     document.getElementById('perfilClienteNome').textContent = usuarioLogado.nome;
     document.getElementById('perfilClienteEmail').textContent = usuarioLogado.email;
     document.getElementById('editClienteNome').value = usuarioLogado.nome || '';
     document.getElementById('editClienteCelular').value = usuarioLogado.celular || '';
+
+    if (usuarioLogado.foto) {
+        document.getElementById('perfilClienteAvatar').innerHTML =
+            `<img src="${usuarioLogado.foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+        document.getElementById('perfilClienteAvatar').textContent = '👤';
+    }
 }
 
 function salvarPerfilCliente() {
@@ -345,13 +359,25 @@ function salvarPerfilCliente() {
     carregarPerfilCliente();
 }
 
+// =============================================================
+// ===== PERFIL - BARBEIRO =====
+// =============================================================
+
 function carregarPerfilBarbeiro() {
     if (!usuarioLogado || tipoUsuario !== 'barbeiro') return;
+
     document.getElementById('perfilBarbeiroNome').textContent = usuarioLogado.nome;
     document.getElementById('perfilBarbeiroEmail').textContent = usuarioLogado.email;
     document.getElementById('editBarbeiroNome').value = usuarioLogado.nome || '';
     document.getElementById('editBarbeiroCelular').value = usuarioLogado.celular || '';
     document.getElementById('editBarbeiroEmail').value = usuarioLogado.email || '';
+
+    if (usuarioLogado.foto) {
+        document.getElementById('perfilBarbeiroAvatar').innerHTML =
+            `<img src="${usuarioLogado.foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+        document.getElementById('perfilBarbeiroAvatar').textContent = '✂️';
+    }
 }
 
 function salvarPerfilBarbeiro() {
@@ -373,6 +399,180 @@ function salvarPerfilBarbeiro() {
 }
 
 // =============================================================
+// ===== FOTO DE PERFIL =====
+// =============================================================
+
+function uploadFotoCliente(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        mostrarToast('A imagem deve ter no máximo 2MB!', 'erro');
+        return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+        mostrarToast('Por favor, selecione uma imagem!', 'erro');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fotoBase64 = e.target.result;
+
+        document.getElementById('perfilClienteAvatar').innerHTML =
+            `<img src="${fotoBase64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+
+        if (usuarioLogado && tipoUsuario === 'cliente') {
+            usuarioLogado.foto = fotoBase64;
+
+            const clientes = carregarDados('clientes') || [];
+            const idx = clientes.findIndex(c => c.id === usuarioLogado.id);
+            if (idx !== -1) {
+                clientes[idx].foto = fotoBase64;
+                salvarDados('clientes', clientes);
+            }
+
+            mostrarToast('📸 Foto atualizada!', 'sucesso');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function uploadFotoBarbeiro(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        mostrarToast('A imagem deve ter no máximo 2MB!', 'erro');
+        return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+        mostrarToast('Por favor, selecione uma imagem!', 'erro');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fotoBase64 = e.target.result;
+
+        document.getElementById('perfilBarbeiroAvatar').innerHTML =
+            `<img src="${fotoBase64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+
+        if (usuarioLogado && tipoUsuario === 'barbeiro') {
+            usuarioLogado.foto = fotoBase64;
+
+            const barbeiros = carregarDados('barbeiros') || [];
+            const idx = barbeiros.findIndex(b => b.id === usuarioLogado.id);
+            if (idx !== -1) {
+                barbeiros[idx].foto = fotoBase64;
+                salvarDados('barbeiros', barbeiros);
+            }
+
+            mostrarToast('📸 Foto atualizada!', 'sucesso');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// =============================================================
+// ===== TROCAR SENHA =====
+// =============================================================
+
+function trocarSenhaCliente() {
+    if (!usuarioLogado || tipoUsuario !== 'cliente') {
+        mostrarToast('Faça login como cliente!', 'erro');
+        return;
+    }
+
+    const senhaAtual = document.getElementById('senhaAtualCliente').value;
+    const novaSenha = document.getElementById('novaSenhaCliente').value;
+    const confirmarSenha = document.getElementById('confirmarSenhaCliente').value;
+
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
+        mostrarToast('Preencha todos os campos!', 'erro');
+        return;
+    }
+
+    if (senhaAtual !== usuarioLogado.senha) {
+        mostrarToast('Senha atual incorreta!', 'erro');
+        return;
+    }
+
+    if (novaSenha.length < 6) {
+        mostrarToast('Nova senha deve ter no mínimo 6 caracteres!', 'erro');
+        return;
+    }
+
+    if (novaSenha !== confirmarSenha) {
+        mostrarToast('As senhas não coincidem!', 'erro');
+        return;
+    }
+
+    usuarioLogado.senha = novaSenha;
+
+    const clientes = carregarDados('clientes') || [];
+    const idx = clientes.findIndex(c => c.id === usuarioLogado.id);
+    if (idx !== -1) {
+        clientes[idx].senha = novaSenha;
+        salvarDados('clientes', clientes);
+    }
+
+    document.getElementById('senhaAtualCliente').value = '';
+    document.getElementById('novaSenhaCliente').value = '';
+    document.getElementById('confirmarSenhaCliente').value = '';
+
+    mostrarToast('✅ Senha alterada com sucesso!', 'sucesso');
+}
+
+function trocarSenhaBarbeiro() {
+    if (!usuarioLogado || tipoUsuario !== 'barbeiro') {
+        mostrarToast('Faça login como barbeiro!', 'erro');
+        return;
+    }
+
+    const senhaAtual = document.getElementById('senhaAtualBarbeiro').value;
+    const novaSenha = document.getElementById('novaSenhaBarbeiro').value;
+    const confirmarSenha = document.getElementById('confirmarSenhaBarbeiro').value;
+
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
+        mostrarToast('Preencha todos os campos!', 'erro');
+        return;
+    }
+
+    if (senhaAtual !== usuarioLogado.senha) {
+        mostrarToast('Senha atual incorreta!', 'erro');
+        return;
+    }
+
+    if (novaSenha.length < 6) {
+        mostrarToast('Nova senha deve ter no mínimo 6 caracteres!', 'erro');
+        return;
+    }
+
+    if (novaSenha !== confirmarSenha) {
+        mostrarToast('As senhas não coincidem!', 'erro');
+        return;
+    }
+
+    usuarioLogado.senha = novaSenha;
+
+    const barbeiros = carregarDados('barbeiros') || [];
+    const idx = barbeiros.findIndex(b => b.id === usuarioLogado.id);
+    if (idx !== -1) {
+        barbeiros[idx].senha = novaSenha;
+        salvarDados('barbeiros', barbeiros);
+    }
+
+    document.getElementById('senhaAtualBarbeiro').value = '';
+    document.getElementById('novaSenhaBarbeiro').value = '';
+    document.getElementById('confirmarSenhaBarbeiro').value = '';
+
+    mostrarToast('✅ Senha alterada com sucesso!', 'sucesso');
+}
+
+// =============================================================
 // ===== FEED CLIENTE =====
 // =============================================================
 
@@ -385,7 +585,7 @@ function carregarFeedCliente() {
         container.innerHTML = `
             <div class="card" style="text-align:center;padding:40px;">
                 <div style="font-size:60px;">✂️</div>
-                <h3>Nenhum post ainda</h3>
+                <h3 style="margin-top:10px;">Nenhum post ainda</h3>
                 <p style="color:#6B7280;">Aguardando novidades do barbeiro!</p>
             </div>
         `;
@@ -402,13 +602,11 @@ function carregarFeedCliente() {
             const videoId = post.video.split('v=')[1]?.split('&')[0] || post.video.split('/').pop();
             mediaHtml = `
                 <div class="feed-post-video">
-                    <iframe src="https://www.youtube.com/embed/${videoId}" 
-                            style="width:100%;height:100%;border:none;" 
-                            allowfullscreen></iframe>
+                    <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
                 </div>
             `;
         } else if (post.imagem) {
-            mediaHtml = `<img src="${post.imagem}" alt="${post.titulo}" class="feed-post-image">`;
+            mediaHtml = `<img src="${post.imagem}" alt="${post.titulo}" class="feed-post-image" onerror="this.style.display='none'">`;
         }
 
         return `
@@ -454,12 +652,11 @@ function carregarFeedBarbeiro() {
     const container = document.getElementById('feedClienteContainer');
     if (!container) return;
 
-    // O barbeiro vê o mesmo feed, mas com opções de edição
     if (posts.length === 0) {
         container.innerHTML = `
             <div class="card" style="text-align:center;padding:40px;">
                 <div style="font-size:60px;">📸</div>
-                <h3>Nenhum post ainda</h3>
+                <h3 style="margin-top:10px;">Nenhum post ainda</h3>
                 <p style="color:#6B7280;">Crie seu primeiro post!</p>
             </div>
         `;
@@ -475,13 +672,11 @@ function carregarFeedBarbeiro() {
             const videoId = post.video.split('v=')[1]?.split('&')[0] || post.video.split('/').pop();
             mediaHtml = `
                 <div class="feed-post-video">
-                    <iframe src="https://www.youtube.com/embed/${videoId}" 
-                            style="width:100%;height:100%;border:none;" 
-                            allowfullscreen></iframe>
+                    <iframe src="https://www.youtube.com/embed/${videoId}" allowfullscreen></iframe>
                 </div>
             `;
         } else if (post.imagem) {
-            mediaHtml = `<img src="${post.imagem}" alt="${post.titulo}" class="feed-post-image">`;
+            mediaHtml = `<img src="${post.imagem}" alt="${post.titulo}" class="feed-post-image" onerror="this.style.display='none'">`;
         }
 
         return `
@@ -492,7 +687,7 @@ function carregarFeedBarbeiro() {
                         <div class="feed-post-user-name">Barbearia RM</div>
                         <div class="feed-post-user-time">${new Date(post.data).toLocaleDateString('pt-BR')}</div>
                     </div>
-                    <button onclick="excluirPost('${post.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:18px;">
+                    <button onclick="excluirPost('${post.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:18px;padding:0 8px;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -560,9 +755,9 @@ function abrirComentarios(postId) {
         container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
     } else {
         container.innerHTML = comentarios.map(c => `
-            <div style="padding:8px 0; border-bottom:1px solid #e5e7eb;">
-                <strong>${c.nome}</strong>
-                <p style="margin:4px 0; font-size:14px;">${c.texto}</p>
+            <div style="padding:10px 0; border-bottom:1px solid #e5e7eb;">
+                <strong style="color:#1A1A1A;">${c.nome}</strong>
+                <p style="margin:4px 0; font-size:14px; color:#4B5563;">${c.texto}</p>
                 <span style="font-size:11px; color:#9CA3AF;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
             </div>
         `).join('');
@@ -605,8 +800,8 @@ function compartilharPost(postId) {
     const url = window.location.href + '?post=' + postId;
     if (navigator.share) {
         navigator.share({
-            title: 'Barbearia RM - Corte incrível!',
-            text: 'Confira esse corte na Barbearia RM!',
+            title: '✂️ Barbearia RM',
+            text: 'Confira esse corte incrível!',
             url: url
         }).catch(() => {});
     } else {
@@ -666,7 +861,6 @@ function criarPost() {
     salvarDados('posts', posts);
     mostrarToast('Post publicado com sucesso!', 'sucesso');
 
-    // Limpa campos
     document.getElementById('postTitulo').value = '';
     document.getElementById('postPreco').value = '';
     document.getElementById('postImagem').value = '';
@@ -758,7 +952,6 @@ function agendarCorte() {
 
     const agendamentos = carregarDados('agendamentos') || [];
 
-    // Verifica se já existe agendamento no mesmo horário
     const conflito = agendamentos.some(a => a.data === data && a.horario === horario && a.status !== 'cancelado');
     if (conflito) {
         mostrarToast('Horário já ocupado! Escolha outro.', 'erro');
@@ -795,13 +988,12 @@ function carregarAgendaCliente() {
         return;
     }
 
-    // Ordena por data
     meus.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
 
     container.innerHTML = meus.map(a => `
         <div class="agenda-item">
             <div class="agenda-info">
-                <div>✂️ ${a.tipo}</div>
+                <div style="font-weight:600;">✂️ ${a.tipo}</div>
                 <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
             </div>
             <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
@@ -819,10 +1011,9 @@ function carregarAgendamentosBarbeiro() {
         return;
     }
 
-    // Ordena por data
     agendamentos.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
 
-    container.innerHTML = agendamentos.map(a => `
+    container.innerHTML = agendamentos.filter(a => a.status !== 'cancelado').map(a => `
         <div class="agenda-item">
             <div class="agenda-info">
                 <div class="agenda-cliente">${a.clienteNome}</div>
@@ -831,7 +1022,7 @@ function carregarAgendamentosBarbeiro() {
             </div>
             <div>
                 <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
-                ${a.status === 'confirmado' ? `<button onclick="cancelarAgendamento('${a.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:14px;margin-top:4px;">Cancelar</button>` : ''}
+                ${a.status === 'confirmado' ? `<button onclick="cancelarAgendamento('${a.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:14px;margin-top:4px;display:block;">Cancelar</button>` : ''}
             </div>
         </div>
     `).join('');
@@ -847,7 +1038,6 @@ function cancelarAgendamento(id) {
     agendamentos[idx].status = 'cancelado';
     salvarDados('agendamentos', agendamentos);
 
-    // Verifica se o cliente faltou
     const agendamento = agendamentos[idx];
     if (agendamento) {
         mostrarToast(`❌ ${agendamento.clienteNome} perdeu a vez. Precisa agendar novamente.`, 'erro');
@@ -864,29 +1054,24 @@ function carregarFaturamento() {
     const pagamentos = carregarDados('pagamentos') || [];
     const hoje = new Date();
 
-    // Filtra pagamentos confirmados
     const confirmados = pagamentos.filter(p => p.status === 'confirmado');
 
-    // Hoje
     const hojeStr = hoje.toISOString().split('T')[0];
     const faturamentoHoje = confirmados
         .filter(p => p.data.split('T')[0] === hojeStr)
         .reduce((sum, p) => sum + p.valor, 0);
 
-    // Semana
     const inicioSemana = new Date(hoje);
     inicioSemana.setDate(hoje.getDate() - hoje.getDay());
     const faturamentoSemana = confirmados
         .filter(p => new Date(p.data) >= inicioSemana)
         .reduce((sum, p) => sum + p.valor, 0);
 
-    // Mês
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const faturamentoMes = confirmados
         .filter(p => new Date(p.data) >= inicioMes)
         .reduce((sum, p) => sum + p.valor, 0);
 
-    // Ano
     const inicioAno = new Date(hoje.getFullYear(), 0, 1);
     const faturamentoAno = confirmados
         .filter(p => new Date(p.data) >= inicioAno)
@@ -909,7 +1094,6 @@ function carregarExtrato() {
 
     let filtrados = pagamentos.filter(p => p.status === 'confirmado');
 
-    // Aplica filtro
     const hoje = new Date();
     if (extratoFiltro === 'dia') {
         const hojeStr = hoje.toISOString().split('T')[0];
@@ -926,11 +1110,10 @@ function carregarExtrato() {
         filtrados = filtrados.filter(p => new Date(p.data) >= inicioAno);
     }
 
-    // Ordena por data (mais recente primeiro)
     filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
 
     if (filtrados.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#6B7280;">Nenhum pagamento encontrado</p>';
+        container.innerHTML = '<p style="text-align:center;color:#6B7280;padding:20px;">Nenhum pagamento encontrado</p>';
         return;
     }
 
@@ -950,7 +1133,7 @@ function carregarExtrato() {
     }).join('');
 
     container.innerHTML += `
-        <div style="text-align:right;padding:10px 0;font-weight:700;font-size:18px;border-top:2px solid #D4A84B;">
+        <div style="text-align:right;padding:10px 0;font-weight:700;font-size:20px;border-top:2px solid #D4A84B;color:#1A1A1A;">
             Total: R$ ${total.toFixed(2)}
         </div>
     `;
@@ -976,7 +1159,6 @@ function abrirPagamento(postId) {
     pagamentoPostId = postId;
     mostrarTela('pagamentoScreen');
 
-    // Gera QR Code PIX
     const container = document.getElementById('qrcodeContainer');
     container.innerHTML = '';
 
@@ -998,7 +1180,7 @@ function abrirPagamento(postId) {
             correctLevel: QRCode.CorrectLevel.H
         });
     } catch (e) {
-        container.innerHTML = '<p>Erro ao gerar QR Code. Use a chave PIX abaixo.</p>';
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao gerar QR Code. Use a chave PIX abaixo.</p>';
     }
 
     document.getElementById('pixChave').textContent = chavePix;
@@ -1026,7 +1208,6 @@ function processarPagamento() {
         return;
     }
 
-    // Simula processamento
     const pagamentos = carregarDados('pagamentos') || [];
     pagamentos.push({
         id: gerarId(),
@@ -1055,10 +1236,8 @@ function fecharPagamento() {
 // ===== INICIALIZAÇÃO =====
 // =============================================================
 
-// Verifica se já está logado
 const usuarioSalvo = carregarDados('usuarioLogado');
 if (usuarioSalvo) {
-    // Tenta identificar o tipo
     const clientes = carregarDados('clientes') || [];
     const barbeiros = carregarDados('barbeiros') || [];
 
@@ -1079,3 +1258,4 @@ if (usuarioSalvo) {
 
 console.log('✂️ Barbearia RM carregada com sucesso!');
 console.log('🔒 Sistema com proteção contra XSS e sanitização de dados.');
+console.log('📸 Foto de perfil e troca de senha disponíveis!');
