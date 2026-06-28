@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1A1A1A">
+    <title>Barbearia RM</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Ícones Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js para gerar QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-title">✂️ Barbearia RM</div>
+        <div class="header-subtitle">Estilo e Tradição</div>
+    </header>
+
+    <!-- ===== TELAS ===== -->
+
+    <!-- ============================================================ -->
+    <!-- TELA: LOGIN -->
+    <!-- ============================================================ -->
+    <section class="screen active" id="loginScreen">
+        <div class="login-container">
+            <div class="login-icon">✂️</div>
+            <h2>Barbearia RM</h2>
+            <p class="subtitle">Faça seu login ou cadastre-se</p>
+            <div class="card">
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
+                    <button class="btn btn-outline" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
+                </div>
+                <div id="loginFormCliente" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
+                </div>
+                <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-primary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="cadastroClienteScreen">
+        <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999">
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
+            </div>
+            <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeClienteScreen">
+        <!-- Feed -->
+        <div class="feed-container" id="feedClienteContainer">
+            <!-- Posts serão carregados pelo JavaScript -->
+        </div>
+
+        <!-- Agenda do Cliente -->
+        <div class="card" id="agendaClienteCard">
+            <h3>📅 Meus Agendamentos</h3>
+            <div id="agendaClienteContainer">
+                <p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>
+            </div>
+        </div>
+
+        <!-- Botão para agendar -->
+        <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeBarbeiroScreen">
+        <!-- Resumo Financeiro -->
+        <div class="card">
+            <h3>💰 FATURAMENTO</h3>
+            <div class="financeiro-resumo">
+                <div class="financeiro-item">
+                    <span>📅 Hoje</span>
+                    <strong id="faturamentoHoje">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📆 Semana</span>
+                    <strong id="faturamentoSemana">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📊 Mês</span>
+                    <strong id="faturamentoMes">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📈 Ano</span>
+                    <strong id="faturamentoAno">R$ 0,00</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Planos -->
+        <div class="card">
+            <h3>📋 PLANOS</h3>
+            <div id="planosContainer">
+                <!-- Planos serão carregados pelo JavaScript -->
+            </div>
+            <button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button>
+        </div>
+
+        <!-- Agendamentos -->
+        <div class="card">
+            <h3>📅 AGENDAMENTOS</h3>
+            <div id="agendamentosBarbeiroContainer">
+                <!-- Agendamentos serão carregados pelo JavaScript -->
+            </div>
+        </div>
+
+        <!-- Posts -->
+        <button class="btn btn-primary" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
+        <button class="btn btn-outline" onclick="mostrarTela('extratoScreen')">📊 EXTRATO COMPLETO</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: AGENDAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="agendamentoScreen">
+        <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📅 Data</label>
+                <input type="date" id="agendamentoData">
+            </div>
+            <div class="input-group">
+                <label>⏰ Horário</label>
+                <select id="agendamentoHorario">
+                    <option value="09:00">09:00</option>
+                    <option value="09:30">09:30</option>
+                    <option value="10:00">10:00</option>
+                    <option value="10:30">10:30</option>
+                    <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
+                    <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
+                    <option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option>
+                    <option value="18:00">18:00</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>✂️ Tipo de Corte</label>
+                <select id="agendamentoTipo">
+                    <option value="Corte Social">Corte Social</option>
+                    <option value="Corte Degradê">Corte Degradê</option>
+                    <option value="Corte Navalhado">Corte Navalhado</option>
+                    <option value="Corte Máquina">Corte Máquina</option>
+                    <option value="Barba">Barba</option>
+                    <option value="Barba + Corte">Barba + Corte</option>
+                    <option value="Pintura">Pintura</option>
+                    <option value="Luzes">Luzes</option>
+                    <option value="Platinado">Platinado</option>
+                    <option value="Selagem">Selagem</option>
+                    <option value="Progressiva">Progressiva</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPostScreen">
+        <h2 class="screen-title">📸 NOVO POST</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Título</label>
+                <input type="text" id="postTitulo" placeholder="Título do corte">
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📷 URL da Imagem</label>
+                <input type="text" id="postImagem" placeholder="https://...">
+            </div>
+            <div class="input-group">
+                <label>🎬 URL do Vídeo (opcional)</label>
+                <input type="text" id="postVideo" placeholder="https://youtube.com/...">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR PLANO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPlanoScreen">
+        <h2 class="screen-title">📋 CRIAR PLANO</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Nome do Plano</label>
+                <input type="text" id="planoNome" placeholder="Ex: Plano Mensal">
+            </div>
+            <div class="input-group">
+                <label>📅 Período</label>
+                <select id="planoPeriodo">
+                    <option value="semanal">Semanal</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR PLANO</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: EXTRATO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="extratoScreen">
+        <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
+        <div class="card">
+            <div class="filtro-extrato">
+                <button class="btn btn-small" onclick="filtrarExtrato('dia')">📅 Dia</button>
+                <button class="btn btn-small" onclick="filtrarExtrato('semana')">📆 Semana</button>
+                <button class="btn btn-small" onclick="filtrarExtrato('mes')">📊 Mês</button>
+                <button class="btn btn-small" onclick="filtrarExtrato('ano')">📈 Ano</button>
+                <button class="btn btn-small" onclick="filtrarExtrato('todos')">📋 Todos</button>
+            </div>
+            <div id="extratoContainer">
+                <!-- Extrato será carregado pelo JavaScript -->
+            </div>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="pagamentoScreen">
+        <h2 class="screen-title">💳 PAGAMENTO</h2>
+        <div class="card" style="text-align:center;">
+            <div id="qrcodeContainer" style="margin: 20px auto;"></div>
+            <p><strong>Chave PIX:</strong> <span id="pixChave">barbearia.rm@email.com</span></p>
+            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+            <hr style="margin:20px 0;">
+            <div class="input-group">
+                <label>💳 Cartão de Crédito</label>
+                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-group" style="flex:1;">
+                    <label>📅 Validade</label>
+                    <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="input-group" style="flex:1;">
+                    <label>🔐 CVV</label>
+                    <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="processarPagamento()">💳 PAGAR</button>
+            <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: DETALHE POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="detalhePostScreen">
+        <div id="detalhePostConteudo"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAIS -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalComentario">
+        <div class="modal-content">
+            <h3>💬 Comentários</h3>
+            <div id="comentariosContainer"></div>
+            <div class="input-group">
+                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
+            <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOAST -->
+    <!-- ============================================================ -->
+    <div class="toast" id="toast" style="display:none;"></div>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Cliente -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')">
+            <span class="nav-icon">✂️</span> Agendar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Barbeiro -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('criarPostScreen')">
+            <span class="nav-icon">📸</span> Postar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('extratoScreen')">
+            <span class="nav-icon">📊</span> Extrato
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilClienteScreen">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <span id="perfilClienteAvatar">👤</span>
+            </div>
+            <h2 id="perfilClienteNome">Cliente</h2>
+            <p id="perfilClienteEmail">cliente@email.com</p>
+        </div>
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editClienteNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editClienteCelular">
+            </div>
+            <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
+        </div>
+        <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilBarbeiroScreen">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <span id="perfilBarbeiroAvatar">✂️</span>
+            </div>
+            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
+            <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
+        </div>
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editBarbeiroNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editBarbeiroCelular">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="editBarbeiroEmail">
+            </div>
+            <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
+        </div>
+        <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
