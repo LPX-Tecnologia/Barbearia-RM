@@ -131,6 +131,83 @@ if (!carregarDados('pagamentos')) {
 }
 
 // =============================================================
+// ===== NOTIFICAÇÕES DIÁRIAS =====
+// =============================================================
+
+function iniciarNotificacoesDiarias() {
+    // Verifica se já enviou notificação hoje
+    const ultimaNotificacao = localStorage.getItem('ultimaNotificacao');
+    const hoje = new Date().toDateString();
+
+    if (ultimaNotificacao !== hoje) {
+        // Agenda a notificação para daqui a 5 segundos (simula notificação diária)
+        setTimeout(() => {
+            enviarNotificacao();
+            localStorage.setItem('ultimaNotificacao', hoje);
+        }, 5000);
+    }
+
+    // Agenda para verificar novamente a cada hora
+    setInterval(() => {
+        const hoje2 = new Date().toDateString();
+        const ultima = localStorage.getItem('ultimaNotificacao');
+        if (ultima !== hoje2) {
+            enviarNotificacao();
+            localStorage.setItem('ultimaNotificacao', hoje2);
+        }
+    }, 3600000); // 1 hora
+}
+
+function enviarNotificacao() {
+    if (!("Notification" in window)) {
+        console.log("Este navegador não suporta notificações");
+        return;
+    }
+
+    // Pede permissão se ainda não tiver
+    if (Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+
+    if (Notification.permission === "granted") {
+        const mensagens = [
+            "✂️ Não perca tempo! Agende seu corte hoje mesmo na Barbearia RM!",
+            "💈 Novidade! Plano Mensal com 20% de desconto na Barbearia RM!",
+            "✂️ Corte + Barba por apenas R$ 60,00 na Barbearia RM! Agende já!",
+            "💈 Promoção relâmpago! 30% off em qualquer corte hoje!",
+            "✂️ Seu estilo merece o melhor. Agende na Barbearia RM agora!"
+        ];
+
+        const mensagem = mensagens[Math.floor(Math.random() * mensagens.length)];
+
+        const notificacao = new Notification("✂️ Barbearia RM", {
+            body: mensagem,
+            icon: "imagem/logobarbearia-rm.jpeg",
+            tag: "barbearia-rm",
+            requireInteraction: true
+        });
+
+        notificacao.onclick = function() {
+            window.focus();
+            if (tipoUsuario === 'cliente' || tipoUsuario === 'barbeiro') {
+                mostrarTela('homeClienteScreen');
+            }
+            this.close();
+        };
+    }
+}
+
+// =============================================================
+// ===== LOCALIZAÇÃO =====
+// =============================================================
+
+function abrirLocalizacao() {
+    const endereco = "Rua das Barbearias, 123 - Centro, São Paulo - SP";
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+    window.open(url, '_blank');
+}
+
+// =============================================================
 // ===== VARIÁVEIS GLOBAIS =====
 // =============================================================
 
@@ -190,11 +267,11 @@ function mostrarToast(mensagem, tipo = '') {
     if (!toast) return;
 
     toast.textContent = mensagem;
-    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
+    toast.style.background = tipo === 'erro' ? 'rgba(239, 68, 68, 0.9)' : tipo === 'sucesso' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(31, 41, 55, 0.9)';
     toast.style.display = 'block';
 
     clearTimeout(toast._timeout);
-    toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 4000);
 }
 
 function fecharModal(id) {
@@ -231,8 +308,12 @@ function loginCliente() {
     if (cliente) {
         usuarioLogado = cliente;
         tipoUsuario = 'cliente';
-        mostrarToast('Bem-vindo, ' + cliente.nome + '!', 'sucesso');
+        mostrarToast('👋 Bem-vindo, ' + cliente.nome + '!', 'sucesso');
         mostrarTela('homeClienteScreen');
+        // Envia notificação de boas-vindas
+        setTimeout(() => {
+            mostrarToast('✂️ Agende seu corte agora mesmo!', '');
+        }, 1500);
     } else {
         mostrarToast('E-mail ou senha inválidos!', 'erro');
     }
@@ -253,7 +334,7 @@ function loginBarbeiro() {
     if (barbeiro) {
         usuarioLogado = barbeiro;
         tipoUsuario = 'barbeiro';
-        mostrarToast('Bem-vindo, ' + barbeiro.nome + '!', 'sucesso');
+        mostrarToast('👋 Bem-vindo, ' + barbeiro.nome + '!', 'sucesso');
         mostrarTela('homeBarbeiroScreen');
     } else {
         mostrarToast('E-mail ou senha inválidos!', 'erro');
@@ -300,7 +381,8 @@ function cadastrarCliente() {
     clientes.push(novo);
     salvarDados('clientes', clientes);
 
-    mostrarToast('Cadastro realizado com sucesso!', 'sucesso');
+    // Mensagem de boas-vindas
+    mostrarToast('🎉 Bem-vindo à Barbearia RM, ' + nome + '! Agende seu primeiro corte com desconto especial!', 'sucesso');
     mostrarTela('loginScreen');
 }
 
@@ -312,14 +394,14 @@ function sairCliente() {
     usuarioLogado = null;
     tipoUsuario = null;
     mostrarTela('loginScreen');
-    mostrarToast('👋 Até logo!');
+    mostrarToast('👋 Até logo! Volte sempre!', '');
 }
 
 function sairBarbeiro() {
     usuarioLogado = null;
     tipoUsuario = null;
     mostrarTela('loginScreen');
-    mostrarToast('👋 Até logo!');
+    mostrarToast('👋 Até logo!', '');
 }
 
 // =============================================================
@@ -585,8 +667,8 @@ function carregarFeedCliente() {
         container.innerHTML = `
             <div class="card" style="text-align:center;padding:40px;">
                 <div style="font-size:60px;">✂️</div>
-                <h3 style="margin-top:10px;">Nenhum post ainda</h3>
-                <p style="color:#6B7280;">Aguardando novidades do barbeiro!</p>
+                <h3 style="margin-top:10px; color:#C9A84C;">Nenhum post ainda</h3>
+                <p style="color:#6A6A6A;">Aguardando novidades do barbeiro!</p>
             </div>
         `;
         return;
@@ -656,8 +738,8 @@ function carregarFeedBarbeiro() {
         container.innerHTML = `
             <div class="card" style="text-align:center;padding:40px;">
                 <div style="font-size:60px;">📸</div>
-                <h3 style="margin-top:10px;">Nenhum post ainda</h3>
-                <p style="color:#6B7280;">Crie seu primeiro post!</p>
+                <h3 style="margin-top:10px; color:#C9A84C;">Nenhum post ainda</h3>
+                <p style="color:#6A6A6A;">Crie seu primeiro post!</p>
             </div>
         `;
         return;
@@ -752,13 +834,13 @@ function abrirComentarios(postId) {
     const comentarios = post.comentarios || [];
 
     if (comentarios.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
     } else {
         container.innerHTML = comentarios.map(c => `
-            <div style="padding:10px 0; border-bottom:1px solid #e5e7eb;">
-                <strong style="color:#1A1A1A;">${c.nome}</strong>
-                <p style="margin:4px 0; font-size:14px; color:#4B5563;">${c.texto}</p>
-                <span style="font-size:11px; color:#9CA3AF;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
+            <div style="padding:10px 0; border-bottom:1px solid #2A2A2A;">
+                <strong style="color:#C9A84C;">${c.nome}</strong>
+                <p style="margin:4px 0; font-size:14px; color:#F5F0E8;">${c.texto}</p>
+                <span style="font-size:11px; color:#6A6A6A;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
             </div>
         `).join('');
     }
@@ -859,7 +941,7 @@ function criarPost() {
     });
 
     salvarDados('posts', posts);
-    mostrarToast('Post publicado com sucesso!', 'sucesso');
+    mostrarToast('📸 Post publicado com sucesso!', 'sucesso');
 
     document.getElementById('postTitulo').value = '';
     document.getElementById('postPreco').value = '';
@@ -880,7 +962,7 @@ function carregarPlanos() {
     if (!container) return;
 
     if (planos.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum plano criado</p>';
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum plano criado</p>';
         return;
     }
 
@@ -889,7 +971,7 @@ function carregarPlanos() {
             <div class="plano-info">
                 <div class="plano-nome">${plano.nome}</div>
                 <div class="plano-periodo">📅 ${plano.periodo.charAt(0).toUpperCase() + plano.periodo.slice(1)}</div>
-                <div style="font-size:12px; color:#6B7280;">${plano.descricao || ''}</div>
+                <div style="font-size:12px; color:#6A6A6A;">${plano.descricao || ''}</div>
             </div>
             <div class="plano-preco">R$ ${plano.preco.toFixed(2)}</div>
         </div>
@@ -922,7 +1004,7 @@ function criarPlano() {
     });
 
     salvarDados('planos', planos);
-    mostrarToast('Plano criado com sucesso!', 'sucesso');
+    mostrarToast('📋 Plano criado com sucesso!', 'sucesso');
 
     document.getElementById('planoNome').value = '';
     document.getElementById('planoPreco').value = '';
@@ -984,7 +1066,7 @@ function carregarAgendaCliente() {
     if (!container) return;
 
     if (meus.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>';
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum agendamento</p>';
         return;
     }
 
@@ -993,7 +1075,7 @@ function carregarAgendaCliente() {
     container.innerHTML = meus.map(a => `
         <div class="agenda-item">
             <div class="agenda-info">
-                <div style="font-weight:600;">✂️ ${a.tipo}</div>
+                <div style="font-weight:600; color:#C9A84C;">✂️ ${a.tipo}</div>
                 <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
             </div>
             <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
@@ -1007,7 +1089,7 @@ function carregarAgendamentosBarbeiro() {
     if (!container) return;
 
     if (agendamentos.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>';
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum agendamento</p>';
         return;
     }
 
@@ -1017,7 +1099,7 @@ function carregarAgendamentosBarbeiro() {
         <div class="agenda-item">
             <div class="agenda-info">
                 <div class="agenda-cliente">${a.clienteNome}</div>
-                <div>✂️ ${a.tipo}</div>
+                <div style="color:#C9A84C;">✂️ ${a.tipo}</div>
                 <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
             </div>
             <div>
@@ -1113,7 +1195,7 @@ function carregarExtrato() {
     filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
 
     if (filtrados.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#6B7280;padding:20px;">Nenhum pagamento encontrado</p>';
+        container.innerHTML = '<p style="text-align:center;color:#6A6A6A;padding:20px;">Nenhum pagamento encontrado</p>';
         return;
     }
 
@@ -1121,19 +1203,19 @@ function carregarExtrato() {
     container.innerHTML = filtrados.map(p => {
         total += p.valor;
         return `
-            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;">
+            <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #2A2A2A;">
                 <div>
-                    <div style="font-weight:600;">${p.clienteNome}</div>
-                    <div style="font-size:12px;color:#6B7280;">${p.tipo}</div>
-                    <div style="font-size:12px;color:#9CA3AF;">${new Date(p.data).toLocaleString('pt-BR')}</div>
+                    <div style="font-weight:600; color:#F5F0E8;">${p.clienteNome}</div>
+                    <div style="font-size:12px;color:#6A6A6A;">${p.tipo}</div>
+                    <div style="font-size:12px;color:#4A4A4A;">${new Date(p.data).toLocaleString('pt-BR')}</div>
                 </div>
-                <div style="font-weight:700;color:#D4A84B;">R$ ${p.valor.toFixed(2)}</div>
+                <div style="font-weight:700;color:#C9A84C;">R$ ${p.valor.toFixed(2)}</div>
             </div>
         `;
     }).join('');
 
     container.innerHTML += `
-        <div style="text-align:right;padding:10px 0;font-weight:700;font-size:20px;border-top:2px solid #D4A84B;color:#1A1A1A;">
+        <div style="text-align:right;padding:10px 0;font-weight:700;font-size:20px;border-top:2px solid #C9A84C;color:#C9A84C;">
             Total: R$ ${total.toFixed(2)}
         </div>
     `;
@@ -1175,12 +1257,12 @@ function abrirPagamento(postId) {
             text: pixString,
             width: 200,
             height: 200,
-            colorDark: '#1A1A1A',
+            colorDark: '#C9A84C',
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.H
         });
     } catch (e) {
-        container.innerHTML = '<p style="color:#6B7280;">Erro ao gerar QR Code. Use a chave PIX abaixo.</p>';
+        container.innerHTML = '<p style="color:#6A6A6A;">Erro ao gerar QR Code. Use a chave PIX abaixo.</p>';
     }
 
     document.getElementById('pixChave').textContent = chavePix;
@@ -1236,6 +1318,10 @@ function fecharPagamento() {
 // ===== INICIALIZAÇÃO =====
 // =============================================================
 
+// Inicia notificações diárias
+iniciarNotificacoesDiarias();
+
+// Verifica se já está logado
 const usuarioSalvo = carregarDados('usuarioLogado');
 if (usuarioSalvo) {
     const clientes = carregarDados('clientes') || [];
@@ -1259,3 +1345,6 @@ if (usuarioSalvo) {
 console.log('✂️ Barbearia RM carregada com sucesso!');
 console.log('🔒 Sistema com proteção contra XSS e sanitização de dados.');
 console.log('📸 Foto de perfil e troca de senha disponíveis!');
+console.log('📢 Notificações diárias ativadas!');
+console.log('📍 Localização disponível na home do cliente!');
+console.log('📊 Anúncios integrados!');
