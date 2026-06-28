@@ -135,19 +135,16 @@ if (!carregarDados('pagamentos')) {
 // =============================================================
 
 function iniciarNotificacoesDiarias() {
-    // Verifica se já enviou notificação hoje
     const ultimaNotificacao = localStorage.getItem('ultimaNotificacao');
     const hoje = new Date().toDateString();
 
     if (ultimaNotificacao !== hoje) {
-        // Agenda a notificação para daqui a 5 segundos (simula notificação diária)
         setTimeout(() => {
             enviarNotificacao();
             localStorage.setItem('ultimaNotificacao', hoje);
         }, 5000);
     }
 
-    // Agenda para verificar novamente a cada hora
     setInterval(() => {
         const hoje2 = new Date().toDateString();
         const ultima = localStorage.getItem('ultimaNotificacao');
@@ -155,7 +152,7 @@ function iniciarNotificacoesDiarias() {
             enviarNotificacao();
             localStorage.setItem('ultimaNotificacao', hoje2);
         }
-    }, 3600000); // 1 hora
+    }, 3600000);
 }
 
 function enviarNotificacao() {
@@ -164,7 +161,6 @@ function enviarNotificacao() {
         return;
     }
 
-    // Pede permissão se ainda não tiver
     if (Notification.permission === "default") {
         Notification.requestPermission();
     }
@@ -310,7 +306,6 @@ function loginCliente() {
         tipoUsuario = 'cliente';
         mostrarToast('👋 Bem-vindo, ' + cliente.nome + '!', 'sucesso');
         mostrarTela('homeClienteScreen');
-        // Envia notificação de boas-vindas
         setTimeout(() => {
             mostrarToast('✂️ Agende seu corte agora mesmo!', '');
         }, 1500);
@@ -381,7 +376,6 @@ function cadastrarCliente() {
     clientes.push(novo);
     salvarDados('clientes', clientes);
 
-    // Mensagem de boas-vindas
     mostrarToast('🎉 Bem-vindo à Barbearia RM, ' + nome + '! Agende seu primeiro corte com desconto especial!', 'sucesso');
     mostrarTela('loginScreen');
 }
@@ -456,9 +450,11 @@ function carregarPerfilBarbeiro() {
 
     if (usuarioLogado.foto) {
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            `<img src="${usuarioLogado.foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">`;
     } else {
-        document.getElementById('perfilBarbeiroAvatar').textContent = '✂️';
+        // LOGO DA BARBEARIA COMO AVATAR PADRÃO
+        document.getElementById('perfilBarbeiroAvatar').innerHTML =
+            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">';
     }
 }
 
@@ -540,7 +536,7 @@ function uploadFotoBarbeiro(event) {
         const fotoBase64 = e.target.result;
 
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            `<img src="${fotoBase64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            `<img src="${fotoBase64}" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">`;
 
         if (usuarioLogado && tipoUsuario === 'barbeiro') {
             usuarioLogado.foto = fotoBase64;
@@ -694,7 +690,9 @@ function carregarFeedCliente() {
         return `
             <div class="feed-post">
                 <div class="feed-post-header">
-                    <div class="feed-post-avatar">✂️</div>
+                    <div class="feed-post-avatar" style="background:transparent; overflow:hidden; padding:0;">
+                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                    </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
                         <div class="feed-post-user-time">${new Date(post.data).toLocaleDateString('pt-BR')}</div>
@@ -764,7 +762,9 @@ function carregarFeedBarbeiro() {
         return `
             <div class="feed-post">
                 <div class="feed-post-header">
-                    <div class="feed-post-avatar">✂️</div>
+                    <div class="feed-post-avatar" style="background:transparent; overflow:hidden; padding:0;">
+                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                    </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
                         <div class="feed-post-user-time">${new Date(post.data).toLocaleDateString('pt-BR')}</div>
@@ -1348,3 +1348,4 @@ console.log('📸 Foto de perfil e troca de senha disponíveis!');
 console.log('📢 Notificações diárias ativadas!');
 console.log('📍 Localização disponível na home do cliente!');
 console.log('📊 Anúncios integrados!');
+console.log('🖼️ Logo da barbearia em todos os lugares!');
