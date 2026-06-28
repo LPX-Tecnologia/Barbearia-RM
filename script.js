@@ -50,6 +50,67 @@ function gerarId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
+function mostrarToast(mensagem, tipo) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = mensagem;
+    toast.style.background = tipo === 'erro' ? '#EF4444' : '#10B981';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// =============================================================
+// ===== CONTROLE DE TELAS =====
+// =============================================================
+
+function mostrarTela(id) {
+    console.log('🔄 Mostrando tela:', id);
+    
+    // Esconde todas as telas
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+    });
+    
+    // Mostra a tela solicitada
+    const tela = document.getElementById(id);
+    if (tela) {
+        tela.classList.add('active');
+        console.log('✅ Tela', id, 'ativada!');
+    } else {
+        console.error('❌ Tela não encontrada:', id);
+        return;
+    }
+
+    // Controla navegação inferior
+    const navCliente = document.getElementById('bottomNavCliente');
+    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
+
+    if (navCliente) navCliente.style.display = 'none';
+    if (navBarbeiro) navBarbeiro.style.display = 'none';
+
+    if (tipoUsuario === 'cliente' && ['homeClienteScreen', 'agendamentoScreen', 'perfilClienteScreen'].includes(id)) {
+        if (navCliente) navCliente.style.display = 'flex';
+    }
+
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
+        if (navBarbeiro) navBarbeiro.style.display = 'flex';
+    }
+
+    // Carrega dados da tela
+    if (id === 'homeClienteScreen') {
+        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
+        carregarFeedCliente();
+        carregarAgendaCliente();
+    }
+    if (id === 'homeBarbeiroScreen') {
+        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
+        carregarFeedBarbeiro();
+        carregarAgendamentosBarbeiro();
+        carregarPlanos();
+        carregarFaturamento();
+    }
+}
+
 // =============================================================
 // ===== DADOS INICIAIS =====
 // =============================================================
@@ -126,68 +187,6 @@ let postSelecionado = null;
 let extratoFiltro = 'todos';
 
 // =============================================================
-// ===== CONTROLE DE TELAS (VERSÃO SIMPLIFICADA) =====
-// =============================================================
-
-function mostrarTela(id) {
-    console.log('🔄 Mostrando tela:', id);
-    
-    // Esconde todas as telas
-    document.querySelectorAll('.screen').forEach(s => {
-        s.classList.remove('active');
-    });
-    
-    // Mostra a tela solicitada
-    const tela = document.getElementById(id);
-    if (tela) {
-        tela.classList.add('active');
-        console.log('✅ Tela', id, 'ativada!');
-    } else {
-        console.error('❌ Tela não encontrada:', id);
-        alert('Erro: Tela "' + id + '" não encontrada!');
-        return;
-    }
-
-    // Controla navegação inferior
-    const navCliente = document.getElementById('bottomNavCliente');
-    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
-
-    if (navCliente) navCliente.style.display = 'none';
-    if (navBarbeiro) navBarbeiro.style.display = 'none';
-
-    if (tipoUsuario === 'cliente' && ['homeClienteScreen', 'agendamentoScreen', 'perfilClienteScreen'].includes(id)) {
-        if (navCliente) navCliente.style.display = 'flex';
-    }
-
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
-        if (navBarbeiro) navBarbeiro.style.display = 'flex';
-    }
-
-    // Carrega dados da tela
-    if (id === 'homeClienteScreen') {
-        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
-        carregarFeedCliente();
-        carregarAgendaCliente();
-    }
-    if (id === 'homeBarbeiroScreen') {
-        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
-        carregarFeedBarbeiro();
-        carregarAgendamentosBarbeiro();
-        carregarPlanos();
-        carregarFaturamento();
-    }
-    if (id === 'perfilClienteScreen') {
-        carregarPerfilCliente();
-    }
-    if (id === 'perfilBarbeiroScreen') {
-        carregarPerfilBarbeiro();
-    }
-    if (id === 'extratoScreen') {
-        carregarExtrato();
-    }
-}
-
-// =============================================================
 // ===== LOGIN =====
 // =============================================================
 
@@ -201,39 +200,52 @@ function mostrarLoginBarbeiro() {
     document.getElementById('loginFormBarbeiro').style.display = 'block';
 }
 
-// =============================================================
-// ===== LOGIN BARBEIRO =====
-// =============================================================
+function loginCliente() {
+    const email = document.getElementById('loginEmailCliente').value.trim();
+    const senha = document.getElementById('loginSenhaCliente').value;
+
+    if (!email || !senha) {
+        mostrarToast('Preencha todos os campos!', 'erro');
+        return;
+    }
+
+    const clientes = carregarDados('clientes') || [];
+    const cliente = clientes.find(c => c.email === email && c.senha === senha);
+
+    if (cliente) {
+        usuarioLogado = cliente;
+        tipoUsuario = 'cliente';
+        salvarDados('usuarioLogado', cliente);
+        mostrarToast('👋 Bem-vindo, ' + cliente.nome + '!', 'sucesso');
+        mostrarTela('homeClienteScreen');
+    } else {
+        mostrarToast('E-mail ou senha inválidos!', 'erro');
+    }
+}
 
 function loginBarbeiro() {
     console.log('✅ FUNÇÃO loginBarbeiro() EXECUTADA!');
     
-    var email = document.getElementById('loginEmailBarbeiro').value.trim();
-    var senha = document.getElementById('loginSenhaBarbeiro').value;
+    const email = document.getElementById('loginEmailBarbeiro').value.trim();
+    const senha = document.getElementById('loginSenhaBarbeiro').value;
     
     console.log('📧 Email:', email);
     console.log('🔒 Senha:', senha);
     
     if (!email || !senha) {
-        alert('⚠️ Preencha todos os campos!');
+        mostrarToast('Preencha todos os campos!', 'erro');
         return;
     }
     
-    var barbeiros = carregarDados('barbeiros');
+    const barbeiros = carregarDados('barbeiros');
     console.log('📋 Barbeiros:', barbeiros);
     
     if (!barbeiros || barbeiros.length === 0) {
-        alert('⚠️ Nenhum barbeiro cadastrado!');
+        mostrarToast('Nenhum barbeiro cadastrado!', 'erro');
         return;
     }
     
-    var encontrado = null;
-    for (var i = 0; i < barbeiros.length; i++) {
-        if (barbeiros[i].email === email && barbeiros[i].senha === senha) {
-            encontrado = barbeiros[i];
-            break;
-        }
-    }
+    const encontrado = barbeiros.find(b => b.email === email && b.senha === senha);
     
     console.log('👤 Encontrado:', encontrado);
     
@@ -241,101 +253,48 @@ function loginBarbeiro() {
         usuarioLogado = encontrado;
         tipoUsuario = 'barbeiro';
         salvarDados('usuarioLogado', encontrado);
-        alert('✅ Bem-vindo, ' + encontrado.nome + '!');
-        
-        // Força a troca de tela
+        mostrarToast('✅ Bem-vindo, ' + encontrado.nome + '!', 'sucesso');
         mostrarTela('homeBarbeiroScreen');
-        
-        // Esconde os vídeos e mostra o mapa se existir
-        var blocoVideos = document.getElementById('blocoVideos');
-        var blocoMapa = document.getElementById('blocoMapa');
-        if (blocoVideos) blocoVideos.style.display = 'none';
-        if (blocoMapa) blocoMapa.style.display = 'block';
-        
     } else {
-        alert('❌ E-mail ou senha inválidos!\n\nUse:\nE-mail: barbeiro@barbeariarm.com\nSenha: 123456');
+        mostrarToast('❌ E-mail ou senha inválidos!\nUse: barbeiro@barbeariarm.com / 123456', 'erro');
     }
 }
-
-// =============================================================
-// ===== LOGIN CLIENTE =====
-// =============================================================
-
-function loginCliente() {
-    console.log('✅ FUNÇÃO loginCliente() EXECUTADA!');
-    
-    var email = document.getElementById('loginEmailCliente').value.trim();
-    var senha = document.getElementById('loginSenhaCliente').value;
-    
-    if (!email || !senha) {
-        alert('⚠️ Preencha todos os campos!');
-        return;
-    }
-    
-    var clientes = carregarDados('clientes') || [];
-    
-    var encontrado = null;
-    for (var i = 0; i < clientes.length; i++) {
-        if (clientes[i].email === email && clientes[i].senha === senha) {
-            encontrado = clientes[i];
-            break;
-        }
-    }
-    
-    if (encontrado) {
-        usuarioLogado = encontrado;
-        tipoUsuario = 'cliente';
-        salvarDados('usuarioLogado', encontrado);
-        alert('✅ Bem-vindo, ' + encontrado.nome + '!');
-        mostrarTela('homeClienteScreen');
-    } else {
-        alert('❌ E-mail ou senha inválidos!');
-    }
-}
-
-// =============================================================
-// ===== CADASTRO CLIENTE =====
-// =============================================================
 
 function cadastrarCliente() {
-    var nome = document.getElementById('cadNomeCliente').value.trim();
-    var email = document.getElementById('cadEmailCliente').value.trim();
-    var celular = document.getElementById('cadCelularCliente').value.trim();
-    var senha = document.getElementById('cadSenhaCliente').value;
-    
+    const nome = document.getElementById('cadNomeCliente').value.trim();
+    const email = document.getElementById('cadEmailCliente').value.trim();
+    const celular = document.getElementById('cadCelularCliente').value.trim();
+    const senha = document.getElementById('cadSenhaCliente').value;
+
     if (!nome || !email || !celular || !senha) {
-        alert('⚠️ Preencha todos os campos!');
+        mostrarToast('Preencha todos os campos!', 'erro');
         return;
     }
-    
+
     if (senha.length < 6) {
-        alert('⚠️ Senha deve ter no mínimo 6 caracteres!');
+        mostrarToast('Senha deve ter no mínimo 6 caracteres!', 'erro');
         return;
     }
-    
-    var clientes = carregarDados('clientes') || [];
-    
-    for (var i = 0; i < clientes.length; i++) {
-        if (clientes[i].email === email) {
-            alert('⚠️ E-mail já cadastrado!');
-            return;
-        }
+
+    const clientes = carregarDados('clientes') || [];
+    if (clientes.find(c => c.email === email)) {
+        mostrarToast('E-mail já cadastrado!', 'erro');
+        return;
     }
-    
-    var novo = {
+
+    const novo = {
         id: gerarId(),
-        nome: nome,
-        email: email,
-        celular: celular,
-        senha: senha,
+        nome,
+        email,
+        celular,
+        senha,
         foto: '',
         dataCadastro: new Date().toISOString()
     };
-    
+
     clientes.push(novo);
     salvarDados('clientes', clientes);
-    
-    alert('🎉 Cadastro realizado com sucesso, ' + nome + '!');
+    mostrarToast('🎉 Cadastro realizado com sucesso, ' + nome + '!', 'sucesso');
     mostrarTela('loginScreen');
 }
 
@@ -348,7 +307,6 @@ function sairCliente() {
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
     mostrarTela('loginScreen');
-    alert('👋 Até logo!');
 }
 
 function sairBarbeiro() {
@@ -356,7 +314,6 @@ function sairBarbeiro() {
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
     mostrarTela('loginScreen');
-    alert('👋 Até logo!');
 }
 
 // =============================================================
@@ -436,13 +393,9 @@ function carregarFeedBarbeiro() {
     carregarFeedCliente();
 }
 
-// =============================================================
-// ===== INTERAÇÕES COM POSTS =====
-// =============================================================
-
 function curtirPost(postId) {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para curtir!');
+        mostrarToast('Faça login como cliente para curtir!', 'erro');
         return;
     }
 
@@ -491,13 +444,13 @@ function abrirComentarios(postId) {
 
 function adicionarComentario() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para comentar!');
+        mostrarToast('Faça login como cliente para comentar!', 'erro');
         return;
     }
 
     const texto = document.getElementById('novoComentario').value.trim();
     if (!texto) {
-        alert('Digite um comentário!');
+        mostrarToast('Digite um comentário!', 'erro');
         return;
     }
 
@@ -515,7 +468,7 @@ function adicionarComentario() {
 
     salvarDados('posts', posts);
     document.getElementById('novoComentario').value = '';
-    alert('Comentário adicionado!');
+    mostrarToast('Comentário adicionado!', 'sucesso');
     abrirComentarios(postSelecionado);
 }
 
@@ -529,9 +482,9 @@ function compartilharPost(postId) {
         }).catch(() => {});
     } else {
         navigator.clipboard.writeText(url).then(() => {
-            alert('Link copiado para compartilhar!');
+            mostrarToast('Link copiado para compartilhar!', 'sucesso');
         }).catch(() => {
-            alert('Compartilhe: ' + url);
+            mostrarToast('Compartilhe: ' + url, '');
         });
     }
 }
@@ -542,13 +495,13 @@ function excluirPost(postId) {
     let posts = carregarDados('posts') || [];
     posts = posts.filter(p => p.id !== postId);
     salvarDados('posts', posts);
-    alert('Post excluído!');
+    mostrarToast('Post excluído!', 'sucesso');
     carregarFeedBarbeiro();
 }
 
 function criarPost() {
     if (!usuarioLogado || tipoUsuario !== 'barbeiro') {
-        alert('Apenas barbeiros podem criar posts!');
+        mostrarToast('Apenas barbeiros podem criar posts!', 'erro');
         return;
     }
 
@@ -559,7 +512,7 @@ function criarPost() {
     const descricao = document.getElementById('postDescricao').value.trim();
 
     if (!titulo || !preco) {
-        alert('Título e preço são obrigatórios!');
+        mostrarToast('Título e preço são obrigatórios!', 'erro');
         return;
     }
 
@@ -578,7 +531,7 @@ function criarPost() {
     });
 
     salvarDados('posts', posts);
-    alert('Post publicado com sucesso!');
+    mostrarToast('Post publicado com sucesso!', 'sucesso');
 
     document.getElementById('postTitulo').value = '';
     document.getElementById('postPreco').value = '';
@@ -617,7 +570,7 @@ function carregarPlanos() {
 
 function criarPlano() {
     if (!usuarioLogado || tipoUsuario !== 'barbeiro') {
-        alert('Apenas barbeiros podem criar planos!');
+        mostrarToast('Apenas barbeiros podem criar planos!', 'erro');
         return;
     }
 
@@ -627,7 +580,7 @@ function criarPlano() {
     const descricao = document.getElementById('planoDescricao').value.trim();
 
     if (!nome || !preco) {
-        alert('Nome e preço são obrigatórios!');
+        mostrarToast('Nome e preço são obrigatórios!', 'erro');
         return;
     }
 
@@ -641,7 +594,7 @@ function criarPlano() {
     });
 
     salvarDados('planos', planos);
-    alert('Plano criado com sucesso!');
+    mostrarToast('Plano criado com sucesso!', 'sucesso');
 
     document.getElementById('planoNome').value = '';
     document.getElementById('planoPreco').value = '';
@@ -656,7 +609,7 @@ function criarPlano() {
 
 function agendarCorte() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para agendar!');
+        mostrarToast('Faça login como cliente para agendar!', 'erro');
         return;
     }
 
@@ -665,7 +618,7 @@ function agendarCorte() {
     const tipo = document.getElementById('agendamentoTipo').value;
 
     if (!data || !horario) {
-        alert('Selecione data e horário!');
+        mostrarToast('Selecione data e horário!', 'erro');
         return;
     }
 
@@ -673,7 +626,7 @@ function agendarCorte() {
     const conflito = agendamentos.some(a => a.data === data && a.horario === horario && a.status !== 'cancelado');
     
     if (conflito) {
-        alert('Horário já ocupado! Escolha outro.');
+        mostrarToast('Horário já ocupado! Escolha outro.', 'erro');
         return;
     }
 
@@ -689,7 +642,7 @@ function agendarCorte() {
     });
 
     salvarDados('agendamentos', agendamentos);
-    alert('✅ Agendamento confirmado para ' + data + ' às ' + horario);
+    mostrarToast('✅ Agendamento confirmado para ' + data + ' às ' + horario, 'sucesso');
     mostrarTela('homeClienteScreen');
 }
 
@@ -756,7 +709,7 @@ function cancelarAgendamento(id) {
 
     agendamentos[idx].status = 'cancelado';
     salvarDados('agendamentos', agendamentos);
-    alert('❌ Agendamento cancelado!');
+    mostrarToast('❌ Agendamento cancelado!', 'erro');
     carregarAgendamentosBarbeiro();
 }
 
@@ -866,7 +819,7 @@ let pagamentoPostId = null;
 
 function abrirPagamento(postId) {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para pagar!');
+        mostrarToast('Faça login como cliente para pagar!', 'erro');
         return;
     }
 
@@ -903,22 +856,22 @@ function abrirPagamento(postId) {
 function copiarPix() {
     const chave = document.getElementById('pixChave').textContent;
     navigator.clipboard.writeText(chave).then(() => {
-        alert('Chave PIX copiada!');
+        mostrarToast('Chave PIX copiada!', 'sucesso');
     }).catch(() => {
-        alert('Chave: ' + chave);
+        mostrarToast('Chave: ' + chave, '');
     });
 }
 
 function processarPagamento() {
     if (!pagamentoPostId) {
-        alert('Erro no pagamento!');
+        mostrarToast('Erro no pagamento!', 'erro');
         return;
     }
 
     const posts = carregarDados('posts') || [];
     const post = posts.find(p => p.id === pagamentoPostId);
     if (!post) {
-        alert('Post não encontrado!');
+        mostrarToast('Post não encontrado!', 'erro');
         return;
     }
 
@@ -936,7 +889,7 @@ function processarPagamento() {
     });
 
     salvarDados('pagamentos', pagamentos);
-    alert('✅ Pagamento confirmado!');
+    mostrarToast('✅ Pagamento confirmado!', 'sucesso');
     pagamentoPostId = null;
     mostrarTela('homeClienteScreen');
 }
@@ -972,7 +925,7 @@ function salvarPerfilCliente() {
         salvarDados('clientes', clientes);
     }
 
-    alert('Perfil atualizado!');
+    mostrarToast('Perfil atualizado!', 'sucesso');
     carregarPerfilCliente();
 }
 
@@ -1000,7 +953,7 @@ function salvarPerfilBarbeiro() {
         salvarDados('barbeiros', barbeiros);
     }
 
-    alert('Perfil atualizado!');
+    mostrarToast('Perfil atualizado!', 'sucesso');
     carregarPerfilBarbeiro();
 }
 
@@ -1009,7 +962,7 @@ function uploadFotoCliente(event) {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 2MB!');
+        mostrarToast('A imagem deve ter no máximo 2MB!', 'erro');
         return;
     }
 
@@ -1027,7 +980,7 @@ function uploadFotoCliente(event) {
                 clientes[idx].foto = fotoBase64;
                 salvarDados('clientes', clientes);
             }
-            alert('📸 Foto atualizada!');
+            mostrarToast('📸 Foto atualizada!', 'sucesso');
         }
     };
     reader.readAsDataURL(file);
@@ -1038,7 +991,7 @@ function uploadFotoBarbeiro(event) {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 2MB!');
+        mostrarToast('A imagem deve ter no máximo 2MB!', 'erro');
         return;
     }
 
@@ -1056,7 +1009,7 @@ function uploadFotoBarbeiro(event) {
                 barbeiros[idx].foto = fotoBase64;
                 salvarDados('barbeiros', barbeiros);
             }
-            alert('📸 Foto atualizada!');
+            mostrarToast('📸 Foto atualizada!', 'sucesso');
         }
     };
     reader.readAsDataURL(file);
@@ -1064,7 +1017,7 @@ function uploadFotoBarbeiro(event) {
 
 function trocarSenhaCliente() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente!');
+        mostrarToast('Faça login como cliente!', 'erro');
         return;
     }
 
@@ -1073,22 +1026,22 @@ function trocarSenhaCliente() {
     const confirmarSenha = document.getElementById('confirmarSenhaCliente').value;
 
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
-        alert('Preencha todos os campos!');
+        mostrarToast('Preencha todos os campos!', 'erro');
         return;
     }
 
     if (senhaAtual !== usuarioLogado.senha) {
-        alert('Senha atual incorreta!');
+        mostrarToast('Senha atual incorreta!', 'erro');
         return;
     }
 
     if (novaSenha.length < 6) {
-        alert('Nova senha deve ter no mínimo 6 caracteres!');
+        mostrarToast('Nova senha deve ter no mínimo 6 caracteres!', 'erro');
         return;
     }
 
     if (novaSenha !== confirmarSenha) {
-        alert('As senhas não coincidem!');
+        mostrarToast('As senhas não coincidem!', 'erro');
         return;
     }
 
@@ -1104,12 +1057,12 @@ function trocarSenhaCliente() {
     document.getElementById('novaSenhaCliente').value = '';
     document.getElementById('confirmarSenhaCliente').value = '';
 
-    alert('✅ Senha alterada com sucesso!');
+    mostrarToast('✅ Senha alterada com sucesso!', 'sucesso');
 }
 
 function trocarSenhaBarbeiro() {
     if (!usuarioLogado || tipoUsuario !== 'barbeiro') {
-        alert('Faça login como barbeiro!');
+        mostrarToast('Faça login como barbeiro!', 'erro');
         return;
     }
 
@@ -1118,22 +1071,22 @@ function trocarSenhaBarbeiro() {
     const confirmarSenha = document.getElementById('confirmarSenhaBarbeiro').value;
 
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
-        alert('Preencha todos os campos!');
+        mostrarToast('Preencha todos os campos!', 'erro');
         return;
     }
 
     if (senhaAtual !== usuarioLogado.senha) {
-        alert('Senha atual incorreta!');
+        mostrarToast('Senha atual incorreta!', 'erro');
         return;
     }
 
     if (novaSenha.length < 6) {
-        alert('Nova senha deve ter no mínimo 6 caracteres!');
+        mostrarToast('Nova senha deve ter no mínimo 6 caracteres!', 'erro');
         return;
     }
 
     if (novaSenha !== confirmarSenha) {
-        alert('As senhas não coincidem!');
+        mostrarToast('As senhas não coincidem!', 'erro');
         return;
     }
 
@@ -1149,7 +1102,7 @@ function trocarSenhaBarbeiro() {
     document.getElementById('novaSenhaBarbeiro').value = '';
     document.getElementById('confirmarSenhaBarbeiro').value = '';
 
-    alert('✅ Senha alterada com sucesso!');
+    mostrarToast('✅ Senha alterada com sucesso!', 'sucesso');
 }
 
 // =============================================================
