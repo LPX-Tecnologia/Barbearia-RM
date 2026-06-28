@@ -1,1070 +1,526 @@
-/* ===== RESET E BASE ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    background: #0D0D0D;
-    color: #F5F0E8;
-    padding-bottom: 80px;
-    -webkit-tap-highlight-color: transparent;
-    min-height: 100vh;
-    background-image: url('https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-}
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.75);
-    z-index: -1;
-}
-
-/* ===== HEADER ===== */
-.header {
-    background: linear-gradient(180deg, rgba(26, 10, 10, 0.95) 0%, rgba(13, 13, 13, 0.9) 100%);
-    padding: 20px 16px 16px;
-    text-align: center;
-    border-bottom: 3px solid #C9A84C;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
-}
-
-.header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.08) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-.header-content {
-    position: relative;
-    z-index: 1;
-}
-
-.logo-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 8px;
-}
-
-.logo-header {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #C9A84C;
-    box-shadow: 0 0 40px rgba(201, 168, 76, 0.25);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-.logo-header:hover {
-    transform: scale(1.08) rotate(-5deg);
-    box-shadow: 0 0 60px rgba(201, 168, 76, 0.4);
-}
-
-.header-subtitle {
-    font-size: 13px;
-    color: #8A7A5A;
-    font-weight: 500;
-    margin-top: 4px;
-    letter-spacing: 4px;
-}
-
-/* ===== TELAS ===== */
-.screen {
-    display: none;
-    padding: 16px;
-    max-width: 500px;
-    margin: 0 auto;
-    animation: fadeIn 0.4s ease;
-}
-
-.screen.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.screen-title {
-    text-align: center;
-    color: #C9A84C;
-    margin-bottom: 16px;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
-}
-
-/* ===== LOGIN ===== */
-.login-container {
-    text-align: center;
-    margin: 20px 0 30px 0;
-}
-
-.login-logo {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
-}
-
-.logo-login {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #C9A84C;
-    box-shadow: 0 0 60px rgba(201, 168, 76, 0.3);
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-.logo-login:hover {
-    transform: scale(1.05) rotate(-5deg);
-    box-shadow: 0 0 80px rgba(201, 168, 76, 0.4);
-}
-
-.login-container h2 {
-    color: #C9A84C;
-    margin-top: 5px;
-    font-size: 28px;
-    letter-spacing: 3px;
-    text-shadow: 0 0 30px rgba(201, 168, 76, 0.15);
-}
-
-.login-container .subtitle {
-    color: #8A7A5A;
-    font-weight: 500;
-    font-size: 14px;
-    margin-top: 4px;
-    letter-spacing: 2px;
-}
-
-/* ===== CARDS ===== */
-.card {
-    background: rgba(26, 26, 26, 0.85);
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 40px rgba(0,0,0,0.5);
-    transition: 0.3s;
-    border: 1px solid rgba(201, 168, 76, 0.08);
-}
-
-.card:hover {
-    box-shadow: 0 8px 50px rgba(0,0,0,0.6);
-    border-color: rgba(201, 168, 76, 0.15);
-}
-
-.card h3 {
-    color: #C9A84C;
-    margin-bottom: 12px;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-/* ===== INPUTS ===== */
-.input-group {
-    margin-bottom: 14px;
-}
-
-.input-group label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: #8A7A5A;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-}
-
-.input-group input,
-.input-group select,
-.input-group textarea {
-    width: 100%;
-    padding: 12px 14px;
-    border: 2px solid #2A2A2A;
-    border-radius: 12px;
-    font-size: 15px;
-    background: rgba(13, 13, 13, 0.8);
-    color: #F5F0E8;
-    transition: 0.3s;
-    font-family: inherit;
-}
-
-.input-group input::placeholder,
-.input-group textarea::placeholder {
-    color: #4A4A4A;
-}
-
-.input-group input:focus,
-.input-group select:focus,
-.input-group textarea:focus {
-    outline: none;
-    border-color: #C9A84C;
-    background: rgba(26, 26, 26, 0.9);
-    box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.1), 0 0 20px rgba(201, 168, 76, 0.05);
-}
-
-.input-group select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23C9A84C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 40px;
-}
-
-.input-group select option {
-    background: #1A1A1A;
-    color: #F5F0E8;
-}
-
-/* ===== BOTÕES ===== */
-.btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    margin-bottom: 8px;
-    font-family: inherit;
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-    opacity: 0;
-    transition: 0.4s;
-    transform: scale(0.5);
-}
-
-.btn:hover::after {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #C9A84C, #B8923A);
-    color: #0D0D0D;
-    box-shadow: 0 4px 25px rgba(201, 168, 76, 0.25);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px) scale(1.01);
-    box-shadow: 0 8px 40px rgba(201, 168, 76, 0.4);
-}
-
-.btn-secondary {
-    background: linear-gradient(135deg, #2A2A2A, #1A1A1A);
-    color: #C9A84C;
-    border: 2px solid #C9A84C;
-}
-
-.btn-secondary:hover {
-    background: linear-gradient(135deg, #3A3A3A, #2A2A2A);
-    transform: translateY(-3px) scale(1.01);
-    box-shadow: 0 8px 30px rgba(201, 168, 76, 0.2);
-}
-
-.btn.neon {
-    position: relative;
-    z-index: 1;
-}
-
-.btn.neon::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 14px;
-    background: linear-gradient(45deg, #C9A84C, #F5E08A, #C9A84C, #8A7A5A);
-    background-size: 400% 400%;
-    z-index: -1;
-    opacity: 0;
-    transition: 0.6s;
-    animation: neonBorder 3s ease infinite;
-}
-
-.btn.neon:hover::before {
-    opacity: 1;
-}
-
-@keyframes neonBorder {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.btn-outline {
-    background: transparent;
-    color: #8A7A5A;
-    border: 2px solid #2A2A2A;
-}
-
-.btn-outline:hover {
-    background: rgba(201, 168, 76, 0.08);
-    border-color: #C9A84C;
-    color: #C9A84C;
-    transform: translateY(-2px);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, #10B981, #059669);
-    color: white;
-    box-shadow: 0 4px 25px rgba(16, 185, 129, 0.2);
-}
-
-.btn-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 35px rgba(16, 185, 129, 0.35);
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, #EF4444, #DC2626);
-    color: white;
-    box-shadow: 0 4px 25px rgba(239, 68, 68, 0.2);
-}
-
-.btn-danger:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 35px rgba(239, 68, 68, 0.35);
-}
-
-.btn-small {
-    padding: 8px 16px;
-    font-size: 12px;
-    margin-bottom: 0;
-    border-radius: 8px;
-    width: auto;
-}
-
-.btn-group {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-group .btn {
-    flex: 1;
-}
-
-/* ===== NAVEGAÇÃO INFERIOR ===== */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(13, 13, 13, 0.95);
-    backdrop-filter: blur(10px);
-    display: none;
-    justify-content: space-around;
-    padding: 8px 0 14px;
-    border-top: 3px solid #C9A84C;
-    z-index: 100;
-    max-width: 500px;
-    margin: 0 auto;
-    box-shadow: 0 -4px 30px rgba(0,0,0,0.6);
-}
-
-.nav-item {
-    background: none;
-    border: none;
-    text-align: center;
-    font-size: 10px;
-    color: #4A4A4A;
-    cursor: pointer;
-    padding: 4px 12px;
-    transition: 0.3s;
-    font-family: inherit;
-    position: relative;
-}
-
-.nav-item.active {
-    color: #C9A84C;
-}
-
-.nav-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 20px;
-    height: 3px;
-    background: #C9A84C;
-    border-radius: 2px;
-    box-shadow: 0 0 15px rgba(201, 168, 76, 0.4);
-}
-
-.nav-item .nav-icon {
-    font-size: 22px;
-    display: block;
-    margin-bottom: 2px;
-}
-
-.nav-item:hover {
-    color: #C9A84C;
-}
-
-/* ===== FEED ===== */
-.feed-container {
-    margin-bottom: 16px;
-}
-
-.feed-post {
-    background: rgba(26, 26, 26, 0.85);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.4);
-    border: 1px solid rgba(201, 168, 76, 0.06);
-    transition: 0.3s;
-}
-
-.feed-post:hover {
-    border-color: rgba(201, 168, 76, 0.15);
-    transform: translateY(-2px);
-}
-
-.feed-post-header {
-    display: flex;
-    align-items: center;
-    padding: 12px 14px;
-    background: linear-gradient(90deg, rgba(13, 13, 13, 0.9), rgba(26, 10, 10, 0.9));
-}
-
-.feed-post-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: transparent;
-    padding: 0;
-    border: 2px solid #C9A84C;
-}
-
-.feed-post-avatar img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.feed-post-user {
-    margin-left: 12px;
-    flex: 1;
-    color: #F5F0E8;
-}
-
-.feed-post-user-name {
-    font-weight: 700;
-    font-size: 14px;
-    color: #C9A84C;
-}
-
-.feed-post-user-time {
-    font-size: 11px;
-    color: #6A6A6A;
-}
-
-.feed-post-image {
-    width: 100%;
-    max-height: 350px;
-    object-fit: cover;
-    background: #0D0D0D;
-}
-
-.feed-post-video {
-    width: 100%;
-    aspect-ratio: 16/9;
-    background: #0D0D0D;
-}
-
-.feed-post-video iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-.feed-post-body {
-    padding: 14px;
-}
-
-.feed-post-title {
-    font-weight: 700;
-    font-size: 17px;
-    color: #F5F0E8;
-}
-
-.feed-post-price {
-    font-weight: 800;
-    color: #C9A84C;
-    font-size: 20px;
-    margin: 4px 0;
-    text-shadow: 0 0 20px rgba(201, 168, 76, 0.15);
-}
-
-.feed-post-desc {
-    color: #8A7A5A;
-    font-size: 14px;
-    margin: 4px 0;
-}
-
-.feed-post-actions {
-    display: flex;
-    gap: 16px;
-    padding: 8px 14px 14px;
-    border-top: 1px solid #2A2A2A;
-}
-
-.feed-post-actions button {
-    background: none;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    color: #6A6A6A;
-    transition: 0.3s;
-    font-family: inherit;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.feed-post-actions button:hover {
-    color: #C9A84C;
-}
-
-.feed-post-actions button.liked {
-    color: #C9A84C;
-}
-
-.feed-post-actions button.liked i {
-    animation: likePulse 0.3s ease;
-}
-
-@keyframes likePulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
-}
-
-.feed-post-actions .count {
-    font-size: 12px;
-    color: #6A6A6A;
-}
-
-/* ===== WELCOME BANNER ===== */
-.welcome-banner {
-    background: linear-gradient(135deg, #C9A84C, #A8893A);
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 16px;
-    color: #0D0D0D;
-    box-shadow: 0 4px 30px rgba(201, 168, 76, 0.25);
-}
-
-.welcome-banner h2 {
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.welcome-banner h2 span {
-    color: #0D0D0D;
-    text-decoration: underline;
-}
-
-.welcome-banner p {
-    font-size: 14px;
-    opacity: 0.8;
-    margin-top: 4px;
-}
-
-.welcome-banner.barbeiro {
-    background: linear-gradient(135deg, rgba(26, 10, 10, 0.95), rgba(13, 13, 13, 0.95));
-    color: #C9A84C;
-    border: 1px solid #C9A84C;
-}
-
-.welcome-banner.barbeiro h2 span {
-    color: #C9A84C;
-}
-
-/* ===== LOCALIZAÇÃO ===== */
-.location-card {
-    background: rgba(26, 26, 26, 0.85);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border: 1px solid rgba(201, 168, 76, 0.1);
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.location-card:hover {
-    border-color: #C9A84C;
-    transform: translateX(4px);
-    box-shadow: 0 4px 20px rgba(201, 168, 76, 0.1);
-}
-
-.location-card i:first-child {
-    color: #C9A84C;
-    font-size: 20px;
-}
-
-.location-card span {
-    flex: 1;
-    color: #F5F0E8;
-    font-size: 14px;
-}
-
-.location-card i:last-child {
-    color: #6A6A6A;
-    font-size: 14px;
-}
-
-/* ===== ANÚNCIOS ===== */
-.ad-banner {
-    background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(201, 168, 76, 0.02));
-    border: 1px solid rgba(201, 168, 76, 0.15);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-    transition: 0.3s;
-}
-
-.ad-banner:hover {
-    background: rgba(201, 168, 76, 0.08);
-    border-color: rgba(201, 168, 76, 0.25);
-}
-
-.ad-banner .ad-icon {
-    font-size: 24px;
-    color: #C9A84C;
-}
-
-.ad-banner .ad-text {
-    flex: 1;
-    color: #F5F0E8;
-    font-size: 13px;
-}
-
-.ad-banner .ad-text strong {
-    color: #C9A84C;
-}
-
-.ad-banner .ad-close {
-    color: #6A6A6A;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0 4px;
-    transition: 0.3s;
-}
-
-.ad-banner .ad-close:hover {
-    color: #EF4444;
-}
-
-/* ===== PLANOS ===== */
-.plano-card {
-    background: rgba(13, 13, 13, 0.8);
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 10px;
-    border-left: 4px solid #C9A84C;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.3s;
-}
-
-.plano-card:hover {
-    background: rgba(26, 26, 26, 0.9);
-    transform: translateX(4px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-.plano-card .plano-info {
-    flex: 1;
-}
-
-.plano-card .plano-nome {
-    font-weight: 700;
-    color: #F5F0E8;
-}
-
-.plano-card .plano-periodo {
-    font-size: 12px;
-    color: #6A6A6A;
-}
-
-.plano-card .plano-preco {
-    font-weight: 700;
-    color: #C9A84C;
-    font-size: 18px;
-    text-shadow: 0 0 15px rgba(201, 168, 76, 0.1);
-}
-
-/* ===== AGENDA ===== */
-.agenda-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #2A2A2A;
-}
-
-.agenda-item:last-child {
-    border-bottom: none;
-}
-
-.agenda-item .agenda-info {
-    flex: 1;
-}
-
-.agenda-item .agenda-cliente {
-    font-weight: 600;
-    color: #F5F0E8;
-}
-
-.agenda-item .agenda-data {
-    font-size: 12px;
-    color: #6A6A6A;
-}
-
-.agenda-item .agenda-status {
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
-}
-
-.agenda-item .agenda-status.confirmado {
-    background: rgba(16, 185, 129, 0.15);
-    color: #10B981;
-}
-
-.agenda-item .agenda-status.pendente {
-    background: rgba(201, 168, 76, 0.15);
-    color: #C9A84C;
-}
-
-.agenda-item .agenda-status.cancelado {
-    background: rgba(239, 68, 68, 0.15);
-    color: #EF4444;
-}
-
-/* ===== FINANCEIRO ===== */
-.financeiro-resumo {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.financeiro-item {
-    background: rgba(13, 13, 13, 0.8);
-    border-radius: 12px;
-    padding: 14px 10px;
-    text-align: center;
-    border: 1px solid rgba(201, 168, 76, 0.08);
-    transition: 0.3s;
-}
-
-.financeiro-item:hover {
-    border-color: rgba(201, 168, 76, 0.25);
-    transform: translateY(-3px);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-.financeiro-item span {
-    font-size: 12px;
-    color: #6A6A6A;
-    display: block;
-}
-
-.financeiro-item strong {
-    font-size: 20px;
-    color: #C9A84C;
-    display: block;
-    margin-top: 4px;
-    text-shadow: 0 0 20px rgba(201, 168, 76, 0.1);
-}
-
-/* ===== FILTRO EXTRATO ===== */
-.filtro-extrato {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
-.filtro-extrato .btn {
-    flex: 1;
-    min-width: 50px;
-    font-size: 12px;
-    padding: 8px 12px;
-}
-
-/* ===== PERFIL ===== */
-.profile-header {
-    text-align: center;
-    padding: 30px 20px 25px;
-    background: rgba(26, 26, 26, 0.85);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.4);
-    border: 1px solid rgba(201, 168, 76, 0.06);
-}
-
-.profile-avatar {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    margin: 0 auto 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: pointer;
-    transition: 0.3s;
-    overflow: hidden;
-    border: 3px solid #C9A84C;
-    background: #0D0D0D;
-}
-
-.profile-avatar:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 50px rgba(201, 168, 76, 0.2);
-}
-
-.profile-avatar img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.camera-icon {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    background: #C9A84C;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: #0D0D0D;
-    border: 2px solid #1A1A1A;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-.profile-header h2 {
-    color: #F5F0E8;
-    font-size: 22px;
-}
-
-.profile-header p {
-    color: #8A7A5A;
-    font-size: 14px;
-}
-
-/* ===== MODAL ===== */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(8px);
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: rgba(26, 26, 26, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 24px;
-    max-width: 400px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: fadeIn 0.25s ease;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    border: 1px solid rgba(201, 168, 76, 0.06);
-}
-
-.modal-content h3 {
-    color: #C9A84C;
-    margin-bottom: 16px;
-    text-align: center;
-}
-
-/* ===== TOAST ===== */
-.toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 14px 24px;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    z-index: 300;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-    max-width: 90%;
-    text-align: center;
-    animation: slideDown 0.4s ease;
-    backdrop-filter: blur(10px);
-}
-
-@keyframes slideDown {
-    from { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.95); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-}
-
-/* ===== QR CODE ===== */
-#qrcodeContainer {
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    display: inline-block;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-
-#qrcodeContainer img {
-    margin: 0 auto;
-}
-
-.logo-pagamento {
-    display: flex;
-    justify-content: center;
-}
-
-.logo-small {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #C9A84C;
-}
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-}
-
-::-webkit-scrollbar-track {
-    background: #0D0D0D;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #C9A84C;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #B8923A;
-}
-
-/* ===== RESPONSIVO ===== */
-@media (max-width: 500px) {
-    .header-title {
-        font-size: 20px;
-    }
-    .screen {
-        padding: 12px;
-    }
-    .card {
-        padding: 16px;
-    }
-    .financeiro-resumo {
-        grid-template-columns: 1fr 1fr;
-    }
-    .btn-group {
-        flex-direction: column;
-    }
-    .filtro-extrato .btn {
-        min-width: 40px;
-        font-size: 10px;
-        padding: 6px 8px;
-    }
-    .logo-login {
-        width: 90px;
-        height: 90px;
-    }
-    .logo-header {
-        width: 60px;
-        height: 60px;
-    }
-    .profile-avatar {
-        width: 75px;
-        height: 75px;
-    }
-    .welcome-banner h2 {
-        font-size: 18px;
-    }
-    .feed-post-title {
-        font-size: 15px;
-    }
-    .feed-post-price {
-        font-size: 17px;
-    }
-    .ad-banner .ad-text {
-        font-size: 12px;
-    }
-    .location-card span {
-        font-size: 13px;
-    }
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0D0D0D">
+    <title>Barbearia RM</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ===== FIREBASE SDK ===== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- ===== QRCODE.JS ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-header">
+            </div>
+            <div class="header-subtitle">✂️ Estilo e Tradição</div>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- TELA: LOGIN -->
+    <!-- ============================================================ -->
+    <section class="screen active" id="loginScreen">
+        <div class="login-container">
+            <div class="login-logo">
+                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-login">
+            </div>
+            <h2>Barbearia RM</h2>
+            <p class="subtitle">✂️ Estilo e Tradição</p>
+            <div class="card">
+                <div class="btn-group">
+                    <button class="btn btn-primary neon" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
+                    <button class="btn btn-secondary neon" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
+                </div>
+                <div id="loginFormCliente" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-primary neon" onclick="loginCliente()">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
+                </div>
+                <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-secondary neon" onclick="loginBarbeiro()">🔑 ENTRAR</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="cadastroClienteScreen">
+        <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999">
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
+            </div>
+            <button class="btn btn-primary neon" onclick="cadastrarCliente()">✅ FINALIZAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeClienteScreen">
+        <div class="ad-banner">
+            <span class="ad-icon">📢</span>
+            <div class="ad-text">
+                <strong>Promoção Especial!</strong> Corte + Barba por apenas R$ 60,00
+            </div>
+            <span class="ad-close" onclick="this.parentElement.style.display='none'">✕</span>
+        </div>
+
+        <div class="welcome-banner">
+            <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
+            <p>Confira os cortes e agende seu horário</p>
+        </div>
+
+        <div class="location-card" onclick="abrirLocalizacao()">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>📍 Rua das Barbearias, 123 - Centro</span>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+
+        <div class="feed-container" id="feedClienteContainer"></div>
+
+        <div class="card" id="agendaClienteCard">
+            <h3>📅 Meus Agendamentos</h3>
+            <div id="agendaClienteContainer">
+                <p style="color:#6A6A6A; text-align:center;">🔄 Carregando...</p>
+            </div>
+        </div>
+
+        <button class="btn btn-primary neon" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+
+        <div class="ad-banner" style="margin-top:16px;">
+            <span class="ad-icon">💈</span>
+            <div class="ad-text">
+                <strong>Plano Mensal</strong> 1 corte + barba grátis por R$ 150,00
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeBarbeiroScreen">
+        <div class="welcome-banner barbeiro">
+            <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
+            <p>Gerencie sua barbearia</p>
+        </div>
+
+        <div class="card">
+            <h3>💰 FATURAMENTO</h3>
+            <div class="financeiro-resumo">
+                <div class="financeiro-item">
+                    <span>📅 Hoje</span>
+                    <strong id="faturamentoHoje">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📆 Semana</span>
+                    <strong id="faturamentoSemana">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📊 Mês</span>
+                    <strong id="faturamentoMes">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📈 Ano</span>
+                    <strong id="faturamentoAno">R$ 0,00</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 PLANOS</h3>
+            <div id="planosContainer"></div>
+            <button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button>
+        </div>
+
+        <div class="card">
+            <h3>📅 AGENDAMENTOS</h3>
+            <div id="agendamentosBarbeiroContainer">
+                <p style="color:#6A6A6A; text-align:center;">🔄 Carregando...</p>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary neon" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
+            <button class="btn btn-secondary neon" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: AGENDAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="agendamentoScreen">
+        <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📅 Data</label>
+                <input type="date" id="agendamentoData">
+            </div>
+            <div class="input-group">
+                <label>⏰ Horário</label>
+                <select id="agendamentoHorario">
+                    <option value="09:00">09:00</option>
+                    <option value="09:30">09:30</option>
+                    <option value="10:00">10:00</option>
+                    <option value="10:30">10:30</option>
+                    <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
+                    <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
+                    <option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option>
+                    <option value="18:00">18:00</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>✂️ Tipo de Corte</label>
+                <select id="agendamentoTipo">
+                    <option value="Corte Social">Corte Social</option>
+                    <option value="Corte Degradê">Corte Degradê</option>
+                    <option value="Corte Navalhado">Corte Navalhado</option>
+                    <option value="Corte Máquina">Corte Máquina</option>
+                    <option value="Barba">Barba</option>
+                    <option value="Barba + Corte">Barba + Corte</option>
+                    <option value="Pintura">Pintura</option>
+                    <option value="Luzes">Luzes</option>
+                    <option value="Platinado">Platinado</option>
+                    <option value="Selagem">Selagem</option>
+                    <option value="Progressiva">Progressiva</option>
+                </select>
+            </div>
+            <button class="btn btn-primary neon" onclick="agendarCorte()">✅ AGENDAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPostScreen">
+        <h2 class="screen-title">📸 NOVO POST</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Título</label>
+                <input type="text" id="postTitulo" placeholder="Título do corte">
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📷 URL da Imagem</label>
+                <input type="text" id="postImagem" placeholder="https://...">
+            </div>
+            <div class="input-group">
+                <label>🎬 URL do Vídeo (opcional)</label>
+                <input type="text" id="postVideo" placeholder="https://youtube.com/...">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
+            </div>
+            <button class="btn btn-primary neon" onclick="criarPost()">📤 PUBLICAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR PLANO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPlanoScreen">
+        <h2 class="screen-title">📋 CRIAR PLANO</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Nome do Plano</label>
+                <input type="text" id="planoNome" placeholder="Ex: Plano Mensal">
+            </div>
+            <div class="input-group">
+                <label>📅 Período</label>
+                <select id="planoPeriodo">
+                    <option value="semanal">Semanal</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+            </div>
+            <button class="btn btn-primary neon" onclick="criarPlano()">💾 SALVAR PLANO</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: EXTRATO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="extratoScreen">
+        <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
+        <div class="card">
+            <div class="filtro-extrato">
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button>
+                <button class="btn btn-small btn-primary neon" onclick="filtrarExtrato('todos')">📋 Todos</button>
+            </div>
+            <div id="extratoContainer"></div>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="pagamentoScreen">
+        <h2 class="screen-title">💳 PAGAMENTO</h2>
+        <div class="card" style="text-align:center;">
+            <div class="logo-pagamento">
+                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-small">
+            </div>
+            <h3 style="margin-top:10px; color:#C9A84C;">Barbearia RM</h3>
+            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
+            <p><strong style="color:#C9A84C;">Chave PIX:</strong> <span id="pixChave" style="color:#F5F0E8;">barbearia.rm@email.com</span></p>
+            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+            <hr style="margin:20px 0; border-color:#2A2A2A;">
+            <div class="input-group">
+                <label>💳 Cartão de Crédito</label>
+                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-group" style="flex:1;">
+                    <label>📅 Validade</label>
+                    <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="input-group" style="flex:1;">
+                    <label>🔐 CVV</label>
+                    <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
+                </div>
+            </div>
+            <button class="btn btn-primary neon" onclick="processarPagamento()">💳 PAGAR</button>
+            <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: DETALHE POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="detalhePostScreen">
+        <div id="detalhePostConteudo"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilClienteScreen">
+        <div class="profile-header">
+            <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
+                <span id="perfilClienteAvatar">
+                    <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
+                </span>
+                <div class="camera-icon">📷</div>
+            </div>
+            <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
+            <h2 id="perfilClienteNome">Cliente</h2>
+            <p id="perfilClienteEmail">cliente@email.com</p>
+        </div>
+
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editClienteNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editClienteCelular">
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarPerfilCliente()">💾 SALVAR</button>
+        </div>
+
+        <div class="card">
+            <h3>🔑 ALTERAR SENHA</h3>
+            <div class="input-group">
+                <label>🔒 Senha Atual</label>
+                <input type="password" id="senhaAtualCliente" placeholder="Digite sua senha atual">
+            </div>
+            <div class="input-group">
+                <label>🔒 Nova Senha</label>
+                <input type="password" id="novaSenhaCliente" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="input-group">
+                <label>🔒 Confirmar Nova Senha</label>
+                <input type="password" id="confirmarSenhaCliente" placeholder="Confirme a nova senha">
+            </div>
+            <button class="btn btn-primary neon" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilBarbeiroScreen">
+        <div class="profile-header">
+            <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
+                <span id="perfilBarbeiroAvatar">
+                    <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
+                </span>
+                <div class="camera-icon">📷</div>
+            </div>
+            <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
+            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
+            <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
+        </div>
+
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editBarbeiroNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editBarbeiroCelular">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="editBarbeiroEmail">
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
+        </div>
+
+        <div class="card">
+            <h3>🔑 ALTERAR SENHA</h3>
+            <div class="input-group">
+                <label>🔒 Senha Atual</label>
+                <input type="password" id="senhaAtualBarbeiro" placeholder="Digite sua senha atual">
+            </div>
+            <div class="input-group">
+                <label>🔒 Nova Senha</label>
+                <input type="password" id="novaSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="input-group">
+                <label>🔒 Confirmar Nova Senha</label>
+                <input type="password" id="confirmarSenhaBarbeiro" placeholder="Confirme a nova senha">
+            </div>
+            <button class="btn btn-primary neon" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAIS -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalComentario">
+        <div class="modal-content">
+            <h3>💬 Comentários</h3>
+            <div id="comentariosContainer"></div>
+            <div class="input-group">
+                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
+            </div>
+            <button class="btn btn-primary neon" onclick="adicionarComentario()">📤 COMENTAR</button>
+            <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOAST -->
+    <!-- ============================================================ -->
+    <div class="toast" id="toast" style="display:none;"></div>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Cliente -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')">
+            <span class="nav-icon">✂️</span> Agendar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Barbeiro -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('criarPostScreen')">
+            <span class="nav-icon">📸</span> Postar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('extratoScreen')">
+            <span class="nav-icon">📊</span> Extrato
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
