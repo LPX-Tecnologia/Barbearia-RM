@@ -12,23 +12,16 @@ const firebaseConfig = {
     measurementId: "G-TKVLVLPBJH"
 };
 
-// ===== INICIALIZA O FIREBASE (VERIFICA SE JÁ FOI INICIALIZADO) =====
+// Inicializa o Firebase com segurança
 if (typeof firebase !== 'undefined') {
     try {
-        // Verifica se já foi inicializado
         if (!firebase.apps || firebase.apps.length === 0) {
             firebase.initializeApp(firebaseConfig);
-            console.log('✅ Firebase inicializado com sucesso!');
-        } else {
-            console.log('✅ Firebase já estava inicializado.');
+            console.log('✅ Firebase inicializado!');
         }
-        const db = firebase.firestore();
-        console.log('✅ Firestore conectado!');
-    } catch (error) {
-        console.error('❌ Erro ao inicializar Firebase:', error);
+    } catch (e) {
+        console.warn('⚠️ Firebase não disponível:', e);
     }
-} else {
-    console.warn('⚠️ Firebase SDK não carregado! Verifique as tags de script no HTML.');
 }
 
 // =============================================================
@@ -53,75 +46,14 @@ function carregarDados(chave) {
     }
 }
 
-function mostrarToast(mensagem, tipo = '') {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = mensagem;
-    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
-    toast.style.display = 'block';
-    clearTimeout(toast._timeout);
-    toast._timeout = setTimeout(() => { toast.style.display = 'none'; }, 3000);
-}
-
-function mostrarTela(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const tela = document.getElementById(id);
-    if (tela) tela.classList.add('active');
-
-    const navCliente = document.getElementById('bottomNavCliente');
-    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
-
-    if (navCliente) navCliente.style.display = 'none';
-    if (navBarbeiro) navBarbeiro.style.display = 'none';
-
-    if (tipoUsuario === 'cliente' && ['homeClienteScreen', 'agendamentoScreen', 'perfilClienteScreen'].includes(id)) {
-        if (navCliente) navCliente.style.display = 'flex';
-    }
-
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
-        if (navBarbeiro) navBarbeiro.style.display = 'flex';
-    }
-
-    if (id === 'homeClienteScreen') {
-        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
-    }
-    if (id === 'homeBarbeiroScreen') {
-        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
-    }
-}
-
 function gerarId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-}
-
-function sanitizar(texto) {
-    if (!texto) return '';
-    const mapa = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '/': '&#x2F;',
-        '=': '&#x3D;',
-        '`': '&#x60;'
-    };
-    return String(texto).replace(/[&<>"'/=`]/g, function(s) { return mapa[s]; });
-}
-
-function validarEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validarSenha(senha) {
-    return senha && senha.length >= 6;
 }
 
 // =============================================================
 // ===== DADOS INICIAIS =====
 // =============================================================
 
-// CRIA O BARBEIRO PADRÃO
 if (!carregarDados('barbeiros')) {
     salvarDados('barbeiros', [
         {
@@ -180,6 +112,10 @@ if (!carregarDados('pagamentos')) {
     salvarDados('pagamentos', []);
 }
 
+if (!carregarDados('agendamentos')) {
+    salvarDados('agendamentos', []);
+}
+
 // =============================================================
 // ===== VARIÁVEIS GLOBAIS =====
 // =============================================================
@@ -188,6 +124,68 @@ let usuarioLogado = null;
 let tipoUsuario = null;
 let postSelecionado = null;
 let extratoFiltro = 'todos';
+
+// =============================================================
+// ===== CONTROLE DE TELAS (VERSÃO SIMPLIFICADA) =====
+// =============================================================
+
+function mostrarTela(id) {
+    console.log('🔄 Mostrando tela:', id);
+    
+    // Esconde todas as telas
+    document.querySelectorAll('.screen').forEach(s => {
+        s.classList.remove('active');
+    });
+    
+    // Mostra a tela solicitada
+    const tela = document.getElementById(id);
+    if (tela) {
+        tela.classList.add('active');
+        console.log('✅ Tela', id, 'ativada!');
+    } else {
+        console.error('❌ Tela não encontrada:', id);
+        alert('Erro: Tela "' + id + '" não encontrada!');
+        return;
+    }
+
+    // Controla navegação inferior
+    const navCliente = document.getElementById('bottomNavCliente');
+    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
+
+    if (navCliente) navCliente.style.display = 'none';
+    if (navBarbeiro) navBarbeiro.style.display = 'none';
+
+    if (tipoUsuario === 'cliente' && ['homeClienteScreen', 'agendamentoScreen', 'perfilClienteScreen'].includes(id)) {
+        if (navCliente) navCliente.style.display = 'flex';
+    }
+
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
+        if (navBarbeiro) navBarbeiro.style.display = 'flex';
+    }
+
+    // Carrega dados da tela
+    if (id === 'homeClienteScreen') {
+        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
+        carregarFeedCliente();
+        carregarAgendaCliente();
+    }
+    if (id === 'homeBarbeiroScreen') {
+        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
+        carregarFeedBarbeiro();
+        carregarAgendamentosBarbeiro();
+        carregarPlanos();
+        carregarFaturamento();
+    }
+    if (id === 'perfilClienteScreen') {
+        carregarPerfilCliente();
+    }
+    if (id === 'perfilBarbeiroScreen') {
+        carregarPerfilBarbeiro();
+    }
+    if (id === 'extratoScreen') {
+        carregarExtrato();
+    }
+}
 
 // =============================================================
 // ===== LOGIN =====
@@ -213,8 +211,8 @@ function loginBarbeiro() {
     var email = document.getElementById('loginEmailBarbeiro').value.trim();
     var senha = document.getElementById('loginSenhaBarbeiro').value;
     
-    console.log('📧 Email digitado:', email);
-    console.log('🔒 Senha digitada:', senha);
+    console.log('📧 Email:', email);
+    console.log('🔒 Senha:', senha);
     
     if (!email || !senha) {
         alert('⚠️ Preencha todos os campos!');
@@ -222,7 +220,7 @@ function loginBarbeiro() {
     }
     
     var barbeiros = carregarDados('barbeiros');
-    console.log('📋 Barbeiros no localStorage:', barbeiros);
+    console.log('📋 Barbeiros:', barbeiros);
     
     if (!barbeiros || barbeiros.length === 0) {
         alert('⚠️ Nenhum barbeiro cadastrado!');
@@ -237,14 +235,23 @@ function loginBarbeiro() {
         }
     }
     
-    console.log('👤 Barbeiro encontrado:', encontrado);
+    console.log('👤 Encontrado:', encontrado);
     
     if (encontrado) {
         usuarioLogado = encontrado;
         tipoUsuario = 'barbeiro';
         salvarDados('usuarioLogado', encontrado);
         alert('✅ Bem-vindo, ' + encontrado.nome + '!');
+        
+        // Força a troca de tela
         mostrarTela('homeBarbeiroScreen');
+        
+        // Esconde os vídeos e mostra o mapa se existir
+        var blocoVideos = document.getElementById('blocoVideos');
+        var blocoMapa = document.getElementById('blocoMapa');
+        if (blocoVideos) blocoVideos.style.display = 'none';
+        if (blocoMapa) blocoMapa.style.display = 'block';
+        
     } else {
         alert('❌ E-mail ou senha inválidos!\n\nUse:\nE-mail: barbeiro@barbeariarm.com\nSenha: 123456');
     }
@@ -260,16 +267,12 @@ function loginCliente() {
     var email = document.getElementById('loginEmailCliente').value.trim();
     var senha = document.getElementById('loginSenhaCliente').value;
     
-    console.log('📧 Email digitado:', email);
-    console.log('🔒 Senha digitada:', senha);
-    
     if (!email || !senha) {
         alert('⚠️ Preencha todos os campos!');
         return;
     }
     
     var clientes = carregarDados('clientes') || [];
-    console.log('📋 Clientes cadastrados:', clientes.length);
     
     var encontrado = null;
     for (var i = 0; i < clientes.length; i++) {
@@ -278,8 +281,6 @@ function loginCliente() {
             break;
         }
     }
-    
-    console.log('👤 Cliente encontrado:', encontrado);
     
     if (encontrado) {
         usuarioLogado = encontrado;
@@ -307,11 +308,6 @@ function cadastrarCliente() {
         return;
     }
     
-    if (!validarEmail(email)) {
-        alert('⚠️ E-mail inválido!');
-        return;
-    }
-    
     if (senha.length < 6) {
         alert('⚠️ Senha deve ter no mínimo 6 caracteres!');
         return;
@@ -319,7 +315,6 @@ function cadastrarCliente() {
     
     var clientes = carregarDados('clientes') || [];
     
-    // Verifica se e-mail já existe
     for (var i = 0; i < clientes.length; i++) {
         if (clientes[i].email === email) {
             alert('⚠️ E-mail já cadastrado!');
@@ -365,7 +360,7 @@ function sairBarbeiro() {
 }
 
 // =============================================================
-// ===== FUNÇÕES DO FEED =====
+// ===== FEED =====
 // =============================================================
 
 function carregarFeedCliente() {
@@ -550,10 +545,6 @@ function excluirPost(postId) {
     alert('Post excluído!');
     carregarFeedBarbeiro();
 }
-
-// =============================================================
-// ===== CRIAR POST =====
-// =============================================================
 
 function criarPost() {
     if (!usuarioLogado || tipoUsuario !== 'barbeiro') {
@@ -1169,14 +1160,6 @@ function abrirLocalizacao() {
     const endereco = "Rua das Barbearias, 123 - Centro, São Paulo - SP";
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
     window.open(url, '_blank');
-}
-
-// =============================================================
-// ===== FUNÇÕES DE NOTIFICAÇÃO =====
-// =============================================================
-
-function iniciarNotificacoesDiarias() {
-    console.log('📢 Notificações diárias ativadas!');
 }
 
 // =============================================================
