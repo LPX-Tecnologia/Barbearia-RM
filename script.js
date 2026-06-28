@@ -412,9 +412,10 @@ function carregarPerfilCliente() {
 
     if (usuarioLogado.foto) {
         document.getElementById('perfilClienteAvatar').innerHTML =
-            `<img src="${usuarioLogado.foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
     } else {
-        document.getElementById('perfilClienteAvatar').textContent = '👤';
+        document.getElementById('perfilClienteAvatar').innerHTML =
+            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
     }
 }
 
@@ -450,11 +451,10 @@ function carregarPerfilBarbeiro() {
 
     if (usuarioLogado.foto) {
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">`;
+            `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
     } else {
-        // LOGO DA BARBEARIA COMO AVATAR PADRÃO
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">';
+            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
     }
 }
 
@@ -499,7 +499,7 @@ function uploadFotoCliente(event) {
         const fotoBase64 = e.target.result;
 
         document.getElementById('perfilClienteAvatar').innerHTML =
-            `<img src="${fotoBase64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            `<img src="${fotoBase64}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
 
         if (usuarioLogado && tipoUsuario === 'cliente') {
             usuarioLogado.foto = fotoBase64;
@@ -536,7 +536,7 @@ function uploadFotoBarbeiro(event) {
         const fotoBase64 = e.target.result;
 
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            `<img src="${fotoBase64}" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">`;
+            `<img src="${fotoBase64}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
 
         if (usuarioLogado && tipoUsuario === 'barbeiro') {
             usuarioLogado.foto = fotoBase64;
@@ -690,8 +690,8 @@ function carregarFeedCliente() {
         return `
             <div class="feed-post">
                 <div class="feed-post-header">
-                    <div class="feed-post-avatar" style="background:transparent; overflow:hidden; padding:0;">
-                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                    <div class="feed-post-avatar">
+                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo">
                     </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
@@ -762,8 +762,8 @@ function carregarFeedBarbeiro() {
         return `
             <div class="feed-post">
                 <div class="feed-post-header">
-                    <div class="feed-post-avatar" style="background:transparent; overflow:hidden; padding:0;">
-                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                    <div class="feed-post-avatar">
+                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo">
                     </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
