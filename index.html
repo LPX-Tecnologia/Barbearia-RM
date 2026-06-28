@@ -359,12 +359,14 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- PERFIL CLIENTE -->
+    <!-- PERFIL CLIENTE (COM LOGO) -->
     <!-- ============================================================ -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
-                <span id="perfilClienteAvatar">👤</span>
+                <span id="perfilClienteAvatar">
+                    <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
+                </span>
                 <div class="camera-icon">📷</div>
             </div>
             <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
@@ -406,13 +408,13 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- PERFIL BARBEIRO -->
+    <!-- PERFIL BARBEIRO (COM LOGO) -->
     <!-- ============================================================ -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
                 <span id="perfilBarbeiroAvatar">
-                    <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover;">
+                    <img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
                 </span>
                 <div class="camera-icon">📷</div>
             </div>
