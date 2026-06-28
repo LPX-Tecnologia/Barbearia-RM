@@ -433,24 +433,54 @@ function loginCliente() {
 }
 
 function loginBarbeiro() {
-    const email = sanitizar(document.getElementById('loginEmailBarbeiro').value.trim());
-    const senha = document.getElementById('loginSenhaBarbeiro').value;
-
+    console.log('✅ Botão ENTRAR foi clicado!');
+    
+    var email = document.getElementById('loginEmailBarbeiro').value;
+    var senha = document.getElementById('loginSenhaBarbeiro').value;
+    
+    console.log('📧 Email:', email);
+    console.log('🔒 Senha:', senha);
+    
     if (!email || !senha) {
-        mostrarToast('Preencha todos os campos!', 'erro');
+        alert('⚠️ Preencha todos os campos!');
         return;
     }
-
-    const barbeiros = carregarDados('barbeiros') || [];
-    const barbeiro = barbeiros.find(b => b.email === email && b.senha === senha);
-
-    if (barbeiro) {
-        usuarioLogado = barbeiro;
+    
+    // Dados fixos para teste (se não houver no localStorage)
+    var barbeiros = carregarDados('barbeiros');
+    
+    if (!barbeiros || barbeiros.length === 0) {
+        // Cria o barbeiro padrão se não existir
+        barbeiros = [{
+            id: 'barbeiro1',
+            nome: 'Rafael Mendes',
+            email: 'barbeiro@barbeariarm.com',
+            celular: '11999990000',
+            senha: '123456',
+            foto: ''
+        }];
+        salvarDados('barbeiros', barbeiros);
+        console.log('✅ Barbeiro padrão criado!');
+    }
+    
+    var encontrado = null;
+    for (var i = 0; i < barbeiros.length; i++) {
+        if (barbeiros[i].email === email && barbeiros[i].senha === senha) {
+            encontrado = barbeiros[i];
+            break;
+        }
+    }
+    
+    console.log('👤 Barbeiro encontrado:', encontrado);
+    
+    if (encontrado) {
+        usuarioLogado = encontrado;
         tipoUsuario = 'barbeiro';
-        mostrarToast('👋 Bem-vindo, ' + barbeiro.nome + '!', 'sucesso');
+        salvarDados('usuarioLogado', encontrado);
+        alert('✅ Bem-vindo, ' + encontrado.nome + '!');
         mostrarTela('homeBarbeiroScreen');
     } else {
-        mostrarToast('E-mail ou senha inválidos!', 'erro');
+        alert('❌ E-mail ou senha inválidos!\n\nUse:\nE-mail: barbeiro@barbeariarm.com\nSenha: 123456');
     }
 }
 
