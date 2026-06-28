@@ -28,7 +28,7 @@
 
 ## 🚀 Como Usar
 
-1. Acesse: https://seu-usuario.github.io/barbearia-rm
+1. Acesse: (https://lpx-tecnologia.github.io/Barbearia-RM/)
 2. Cliente: cadastre-se e faça login
 3. Barbeiro: use o login padrão:
    - E-mail: `barbeiro@barbeariarm.com`
