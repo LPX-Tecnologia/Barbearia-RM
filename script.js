@@ -1,4 +1,126 @@
 // =============================================================
+// ===== CONFIGURAÇÃO DO FIREBASE =====
+// =============================================================
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
+    authDomain: "barbearia-rm.firebaseapp.com",
+    projectId: "barbearia-rm",
+    storageBucket: "barbearia-rm.firebasestorage.app",
+    messagingSenderId: "512819922057",
+    appId: "1:512819922057:web:6a913791cb6435e4f63258",
+    measurementId: "G-TKVLVLPBJH"
+};
+
+// Inicializa o Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// =============================================================
+// ===== FUNÇÕES DO BANCO DE DADOS (FIREBASE) =====
+// =============================================================
+
+// SALVAR AGENDAMENTO
+async function salvarAgendamentoFirebase(agendamento) {
+    try {
+        const docRef = await db.collection('agendamentos').add({
+            clienteId: agendamento.clienteId,
+            clienteNome: agendamento.clienteNome,
+            clienteCelular: agendamento.clienteCelular || '',
+            data: agendamento.data,
+            horario: agendamento.horario,
+            tipo: agendamento.tipo,
+            status: 'confirmado',
+            dataAgendamento: new Date().toISOString()
+        });
+        return { sucesso: true, id: docRef.id };
+    } catch (error) {
+        console.error('Erro ao salvar agendamento:', error);
+        return { sucesso: false, erro: error.message };
+    }
+}
+
+// BUSCAR TODOS OS AGENDAMENTOS (para o barbeiro)
+async function buscarAgendamentosFirebase() {
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .where('status', '!=', 'cancelado')
+            .orderBy('data')
+            .orderBy('horario')
+            .get();
+        
+        const agendamentos = [];
+        snapshot.forEach(doc => {
+            agendamentos.push({ id: doc.id, ...doc.data() });
+        });
+        return agendamentos;
+    } catch (error) {
+        console.error('Erro ao buscar agendamentos:', error);
+        return [];
+    }
+}
+
+// BUSCAR AGENDAMENTOS DE UM CLIENTE ESPECÍFICO
+async function buscarAgendamentosClienteFirebase(clienteId) {
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .where('clienteId', '==', clienteId)
+            .where('status', '!=', 'cancelado')
+            .orderBy('data')
+            .orderBy('horario')
+            .get();
+        
+        const agendamentos = [];
+        snapshot.forEach(doc => {
+            agendamentos.push({ id: doc.id, ...doc.data() });
+        });
+        return agendamentos;
+    } catch (error) {
+        console.error('Erro ao buscar agendamentos do cliente:', error);
+        return [];
+    }
+}
+
+// CANCELAR AGENDAMENTO
+async function cancelarAgendamentoFirebase(id) {
+    try {
+        await db.collection('agendamentos').doc(id).update({
+            status: 'cancelado',
+            dataCancelamento: new Date().toISOString()
+        });
+        return { sucesso: true };
+    } catch (error) {
+        console.error('Erro ao cancelar agendamento:', error);
+        return { sucesso: false, erro: error.message };
+    }
+}
+
+// ESCUTAR MUDANÇAS EM TEMPO REAL (para o barbeiro)
+let unsubscribeAgendamentos = null;
+
+function ouvirAgendamentosFirebase(callback) {
+    if (unsubscribeAgendamentos) {
+        unsubscribeAgendamentos();
+    }
+    
+    unsubscribeAgendamentos = db.collection('agendamentos')
+        .where('status', '!=', 'cancelado')
+        .orderBy('data')
+        .orderBy('horario')
+        .onSnapshot((snapshot) => {
+            const agendamentos = [];
+            snapshot.forEach(doc => {
+                agendamentos.push({ id: doc.id, ...doc.data() });
+            });
+            callback(agendamentos);
+        }, (error) => {
+            console.error('Erro ao ouvir agendamentos:', error);
+        });
+    
+    return unsubscribeAgendamentos;
+}
+
+// =============================================================
 // ===== SEGURANÇA - Sanitização de Dados =====
 // =============================================================
 
@@ -32,7 +154,7 @@ function gerarId() {
 }
 
 // =============================================================
-// ===== LOCAL STORAGE =====
+// ===== LOCAL STORAGE (PARA DADOS QUE NÃO PRECISAM COMPARTILHAR) =====
 // =============================================================
 
 function salvarDados(chave, dados) {
@@ -54,7 +176,7 @@ function carregarDados(chave) {
 }
 
 // =============================================================
-// ===== DADOS INICIAIS =====
+// ===== DADOS INICIAIS (LOCAL) =====
 // =============================================================
 
 if (!carregarDados('clientes')) {
@@ -120,10 +242,6 @@ if (!carregarDados('planos')) {
             descricao: '1 corte por mês + 1 barba + 1 luzes'
         }
     ]);
-}
-
-if (!carregarDados('agendamentos')) {
-    salvarDados('agendamentos', []);
 }
 
 if (!carregarDados('pagamentos')) {
@@ -1014,10 +1132,10 @@ function criarPlano() {
 }
 
 // =============================================================
-// ===== AGENDAMENTO =====
+// ===== AGENDAMENTO (COM FIREBASE) =====
 // =============================================================
 
-function agendarCorte() {
+async function agendarCorte() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
         mostrarToast('Faça login como cliente para agendar!', 'erro');
         return;
@@ -1032,38 +1150,42 @@ function agendarCorte() {
         return;
     }
 
-    const agendamentos = carregarDados('agendamentos') || [];
-
+    // Verifica conflitos no Firebase
+    const agendamentos = await buscarAgendamentosFirebase();
     const conflito = agendamentos.some(a => a.data === data && a.horario === horario && a.status !== 'cancelado');
+    
     if (conflito) {
-        mostrarToast('Horário já ocupado! Escolha outro.', 'erro');
+        mostrarToast('⚠️ Horário já ocupado! Escolha outro.', 'erro');
         return;
     }
 
-    agendamentos.push({
-        id: gerarId(),
+    const novoAgendamento = {
         clienteId: usuarioLogado.id,
         clienteNome: usuarioLogado.nome,
+        clienteCelular: usuarioLogado.celular || '',
         data: data,
         horario: horario,
         tipo: tipo,
-        status: 'confirmado',
-        dataAgendamento: new Date().toISOString()
-    });
+        status: 'confirmado'
+    };
 
-    salvarDados('agendamentos', agendamentos);
-    mostrarToast('✅ Agendamento confirmado para ' + data + ' às ' + horario, 'sucesso');
-    mostrarTela('homeClienteScreen');
+    const resultado = await salvarAgendamentoFirebase(novoAgendamento);
+    
+    if (resultado.sucesso) {
+        mostrarToast('✅ Agendamento confirmado para ' + data + ' às ' + horario, 'sucesso');
+        mostrarTela('homeClienteScreen');
+    } else {
+        mostrarToast('❌ Erro ao agendar: ' + resultado.erro, 'erro');
+    }
 }
 
-function carregarAgendaCliente() {
+async function carregarAgendaCliente() {
     if (!usuarioLogado || tipoUsuario !== 'cliente') return;
-
-    const agendamentos = carregarDados('agendamentos') || [];
-    const meus = agendamentos.filter(a => a.clienteId === usuarioLogado.id && a.status !== 'cancelado');
 
     const container = document.getElementById('agendaClienteContainer');
     if (!container) return;
+
+    const meus = await buscarAgendamentosClienteFirebase(usuarioLogado.id);
 
     if (meus.length === 0) {
         container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum agendamento</p>';
@@ -1083,49 +1205,45 @@ function carregarAgendaCliente() {
     `).join('');
 }
 
-function carregarAgendamentosBarbeiro() {
-    const agendamentos = carregarDados('agendamentos') || [];
+async function carregarAgendamentosBarbeiro() {
     const container = document.getElementById('agendamentosBarbeiroContainer');
     if (!container) return;
 
-    if (agendamentos.length === 0) {
-        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum agendamento</p>';
-        return;
-    }
+    // Inicia escuta em tempo real
+    ouvirAgendamentosFirebase((agendamentos) => {
+        if (agendamentos.length === 0) {
+            container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum agendamento</p>';
+            return;
+        }
 
-    agendamentos.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
-
-    container.innerHTML = agendamentos.filter(a => a.status !== 'cancelado').map(a => `
-        <div class="agenda-item">
-            <div class="agenda-info">
-                <div class="agenda-cliente">${a.clienteNome}</div>
-                <div style="color:#C9A84C;">✂️ ${a.tipo}</div>
-                <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
+        container.innerHTML = agendamentos.map(a => `
+            <div class="agenda-item">
+                <div class="agenda-info">
+                    <div class="agenda-cliente">👤 ${a.clienteNome}</div>
+                    <div style="color:#C9A84C;">✂️ ${a.tipo}</div>
+                    <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
+                    ${a.clienteCelular ? `<div class="agenda-data">📱 ${a.clienteCelular}</div>` : ''}
+                </div>
+                <div>
+                    <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
+                    ${a.status === 'confirmado' ? `<button onclick="cancelarAgendamento('${a.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:14px;margin-top:4px;display:block;">Cancelar</button>` : ''}
+                </div>
             </div>
-            <div>
-                <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
-                ${a.status === 'confirmado' ? `<button onclick="cancelarAgendamento('${a.id}')" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:14px;margin-top:4px;display:block;">Cancelar</button>` : ''}
-            </div>
-        </div>
-    `).join('');
+        `).join('');
+    });
 }
 
-function cancelarAgendamento(id) {
+async function cancelarAgendamento(id) {
     if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
 
-    const agendamentos = carregarDados('agendamentos') || [];
-    const idx = agendamentos.findIndex(a => a.id === id);
-    if (idx === -1) return;
-
-    agendamentos[idx].status = 'cancelado';
-    salvarDados('agendamentos', agendamentos);
-
-    const agendamento = agendamentos[idx];
-    if (agendamento) {
-        mostrarToast(`❌ ${agendamento.clienteNome} perdeu a vez. Precisa agendar novamente.`, 'erro');
+    const resultado = await cancelarAgendamentoFirebase(id);
+    
+    if (resultado.sucesso) {
+        mostrarToast('❌ Agendamento cancelado!', 'erro');
+        // A atualização vem em tempo real pelo listener
+    } else {
+        mostrarToast('❌ Erro ao cancelar: ' + resultado.erro, 'erro');
     }
-
-    carregarAgendamentosBarbeiro();
 }
 
 // =============================================================
@@ -1343,9 +1461,7 @@ if (usuarioSalvo) {
 }
 
 console.log('✂️ Barbearia RM carregada com sucesso!');
-console.log('🔒 Sistema com proteção contra XSS e sanitização de dados.');
-console.log('📸 Foto de perfil e troca de senha disponíveis!');
+console.log('🔥 Firebase integrado para agendamentos em tempo real!');
 console.log('📢 Notificações diárias ativadas!');
 console.log('📍 Localização disponível na home do cliente!');
-console.log('📊 Anúncios integrados!');
 console.log('🖼️ Logo da barbearia em todos os lugares!');
