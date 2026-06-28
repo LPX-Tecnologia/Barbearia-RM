@@ -178,7 +178,7 @@ function enviarNotificacao() {
 
         const notificacao = new Notification("✂️ Barbearia RM", {
             body: mensagem,
-            icon: "imagem/logobarbearia-rm.jpeg",
+            icon: "https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg",
             tag: "barbearia-rm",
             requireInteraction: true
         });
@@ -415,7 +415,7 @@ function carregarPerfilCliente() {
             `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
     } else {
         document.getElementById('perfilClienteAvatar').innerHTML =
-            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
+            '<img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
     }
 }
 
@@ -454,7 +454,7 @@ function carregarPerfilBarbeiro() {
             `<img src="${usuarioLogado.foto}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">`;
     } else {
         document.getElementById('perfilBarbeiroAvatar').innerHTML =
-            '<img src="imagem/logobarbearia-rm.jpeg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
+            '<img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">';
     }
 }
 
@@ -691,7 +691,7 @@ function carregarFeedCliente() {
             <div class="feed-post">
                 <div class="feed-post-header">
                     <div class="feed-post-avatar">
-                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo">
+                        <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo">
                     </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
@@ -763,7 +763,7 @@ function carregarFeedBarbeiro() {
             <div class="feed-post">
                 <div class="feed-post-header">
                     <div class="feed-post-avatar">
-                        <img src="imagem/logobarbearia-rm.jpeg" alt="Logo">
+                        <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo">
                     </div>
                     <div class="feed-post-user">
                         <div class="feed-post-user-name">Barbearia RM</div>
