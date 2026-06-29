@@ -1054,7 +1054,7 @@ body::before {
 }
 
 /* --------------------------------------------
-   TELA DE INFORMAÇÕES DOS CLIENTES
+   22. TELA DE INFORMAÇÕES DOS CLIENTES
    -------------------------------------------- */
 .info-status-online {
     color: #10B981;
@@ -1088,7 +1088,7 @@ body::before {
 }
 
 /* --------------------------------------------
-   22. RESPONSIVO
+   23. RESPONSIVO
    -------------------------------------------- */
 @media (max-width: 500px) {
     .header-title {
