@@ -358,6 +358,68 @@
         <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
     </section>
 
+        <!-- ============================================================ -->
+    <!-- TELA: INFORMAÇÕES DOS CLIENTES -->
+    <!-- ============================================================ -->
+    <section class="screen" id="infoClientesScreen">
+        <h2 class="screen-title">📊 INFORMAÇÕES DOS CLIENTES</h2>
+        
+        <!-- Resumo -->
+        <div class="card">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
+                    <div style="font-size:28px;">👥</div>
+                    <div style="font-size:24px; font-weight:700; color:#C9A84C;" id="infoTotalClientes">0</div>
+                    <div style="font-size:12px; color:#8A7A5A;">Total</div>
+                </div>
+                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
+                    <div style="font-size:28px;">🟢</div>
+                    <div style="font-size:24px; font-weight:700; color:#10B981;" id="infoOnlineClientes">0</div>
+                    <div style="font-size:12px; color:#8A7A5A;">Online</div>
+                </div>
+                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
+                    <div style="font-size:28px;">📍</div>
+                    <div style="font-size:24px; font-weight:700; color:#C9A84C;" id="infoComLocalizacao">0</div>
+                    <div style="font-size:12px; color:#8A7A5A;">Com Localização</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Clientes -->
+        <div class="card">
+            <h3>👤 LISTA DE CLIENTES</h3>
+            <div id="infoListaClientes">
+                <p style="color:#6A6A6A; text-align:center;">Carregando...</p>
+            </div>
+            <button class="btn btn-secondary neon" onclick="atualizarInfoClientes()" style="margin-top:10px;">
+                🔄 ATUALIZAR
+            </button>
+        </div>
+
+        <!-- Localização da Barbearia -->
+        <div class="card">
+            <h3>📍 LOCALIZAÇÃO DA BARBEARIA</h3>
+            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; flex-wrap:wrap;">
+                <i class="fas fa-map-marker-alt" style="color:#C9A84C; font-size:24px;"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:600; color:#F5F0E8;">Barbearia RM</div>
+                    <div style="font-size:13px; color:#8A7A5A;">Rua das Barbearias, 123 - Centro, São Paulo - SP</div>
+                </div>
+                <button onclick="abrirLocalizacao()" style="background:#C9A84C; border:none; border-radius:8px; padding:8px 16px; color:#0D0D0D; font-weight:700; cursor:pointer;">
+                    🗺️ Ver Mapa
+                </button>
+            </div>
+            <div id="mapaContainer" style="width:100%; height:200px; border-radius:12px; overflow:hidden; background:#1A1A1A; display:flex; align-items:center; justify-content:center; border:1px solid #2A2A2A; flex-direction:column;">
+                <i class="fas fa-map" style="font-size:40px; color:#4A4A4A; margin-bottom:10px;"></i>
+                <p style="color:#6A6A6A; text-align:center; font-size:14px;">
+                    Clique em "Ver Mapa" para abrir a localização
+                </p>
+            </div>
+        </div>
+
+        <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+    </section>
+
     <!-- ============================================================ -->
     <!-- TELA: PAGAMENTO -->
     <!-- ============================================================ -->
