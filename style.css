@@ -1054,6 +1054,40 @@ body::before {
 }
 
 /* --------------------------------------------
+   TELA DE INFORMAÇÕES DOS CLIENTES
+   -------------------------------------------- */
+.info-status-online {
+    color: #10B981;
+}
+
+.info-status-offline {
+    color: #6A6A6A;
+}
+
+.info-localizacao-btn {
+    background: none;
+    border: none;
+    color: #C9A84C;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 0;
+    transition: 0.3s;
+}
+
+.info-localizacao-btn:hover {
+    color: #F5E08A;
+    text-decoration: underline;
+}
+
+#mapaContainer {
+    transition: 0.3s;
+}
+
+#mapaContainer:hover {
+    border-color: #C9A84C;
+}
+
+/* --------------------------------------------
    22. RESPONSIVO
    -------------------------------------------- */
 @media (max-width: 500px) {
