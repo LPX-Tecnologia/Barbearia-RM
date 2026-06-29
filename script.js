@@ -66,12 +66,10 @@ function mostrarToast(mensagem, tipo) {
 function mostrarTela(id) {
     console.log('🔄 Mostrando tela:', id);
     
-    // Esconde todas as telas
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active');
     });
     
-    // Mostra a tela solicitada
     const tela = document.getElementById(id);
     if (tela) {
         tela.classList.add('active');
@@ -81,7 +79,6 @@ function mostrarTela(id) {
         return;
     }
 
-    // Controla navegação inferior
     const navCliente = document.getElementById('bottomNavCliente');
     const navBarbeiro = document.getElementById('bottomNavBarbeiro');
 
@@ -92,11 +89,10 @@ function mostrarTela(id) {
         if (navCliente) navCliente.style.display = 'flex';
     }
 
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen', 'estatisticasScreen'].includes(id)) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
 
-    // Carrega dados da tela
     if (id === 'homeClienteScreen') {
         document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
         carregarFeedCliente();
@@ -108,6 +104,9 @@ function mostrarTela(id) {
         carregarAgendamentosBarbeiro();
         carregarPlanos();
         carregarFaturamento();
+    }
+    if (id === 'estatisticasScreen') {
+        atualizarEstatisticas();
     }
 }
 
@@ -123,14 +122,37 @@ if (!carregarDados('barbeiros')) {
             email: 'barbeiro@barbeariarm.com',
             celular: '11999990000',
             senha: '123456',
-            foto: ''
+            foto: '',
+            ultimoAcesso: Date.now()
         }
     ]);
     console.log('✅ Barbeiro padrão criado!');
 }
 
 if (!carregarDados('clientes')) {
-    salvarDados('clientes', []);
+    salvarDados('clientes', [
+        {
+            id: 'cliente1',
+            nome: 'João Silva',
+            email: 'joao@email.com',
+            celular: '11999990001',
+            senha: '123456',
+            foto: '',
+            ultimoAcesso: Date.now() - 10000,
+            dataCadastro: new Date().toISOString()
+        },
+        {
+            id: 'cliente2',
+            nome: 'Maria Santos',
+            email: 'maria@email.com',
+            celular: '11999990002',
+            senha: '123456',
+            foto: '',
+            ultimoAcesso: Date.now() - 300000,
+            dataCadastro: new Date().toISOString()
+        }
+    ]);
+    console.log('✅ Clientes de exemplo criados!');
 }
 
 if (!carregarDados('posts')) {
@@ -213,6 +235,14 @@ function loginCliente() {
     const cliente = clientes.find(c => c.email === email && c.senha === senha);
 
     if (cliente) {
+        // Atualiza o último acesso
+        cliente.ultimoAcesso = Date.now();
+        const idx = clientes.findIndex(c => c.id === cliente.id);
+        if (idx !== -1) {
+            clientes[idx] = cliente;
+            salvarDados('clientes', clientes);
+        }
+        
         usuarioLogado = cliente;
         tipoUsuario = 'cliente';
         salvarDados('usuarioLogado', cliente);
@@ -250,6 +280,14 @@ function loginBarbeiro() {
     console.log('👤 Encontrado:', encontrado);
     
     if (encontrado) {
+        // Atualiza o último acesso
+        encontrado.ultimoAcesso = Date.now();
+        const idx = barbeiros.findIndex(b => b.id === encontrado.id);
+        if (idx !== -1) {
+            barbeiros[idx] = encontrado;
+            salvarDados('barbeiros', barbeiros);
+        }
+        
         usuarioLogado = encontrado;
         tipoUsuario = 'barbeiro';
         salvarDados('usuarioLogado', encontrado);
@@ -289,6 +327,7 @@ function cadastrarCliente() {
         celular,
         senha,
         foto: '',
+        ultimoAcesso: Date.now(),
         dataCadastro: new Date().toISOString()
     };
 
@@ -1116,12 +1155,71 @@ function abrirLocalizacao() {
 }
 
 // =============================================================
+// ===== ESTATÍSTICAS =====
+// =============================================================
+
+function atualizarEstatisticas() {
+    // Total de clientes
+    const clientes = carregarDados('clientes') || [];
+    document.getElementById('totalClientes').textContent = clientes.length;
+
+    // Usuários online (últimos 5 minutos)
+    const agora = Date.now();
+    const usuariosOnline = clientes.filter(c => {
+        const ultimoAcesso = c.ultimoAcesso || 0;
+        return (agora - ultimoAcesso) < 5 * 60 * 1000;
+    });
+    document.getElementById('clientesOnline').textContent = usuariosOnline.length;
+
+    // Agendamentos de hoje
+    const agendamentos = carregarDados('agendamentos') || [];
+    const hoje = new Date().toISOString().split('T')[0];
+    const agendamentosHoje = agendamentos.filter(a => 
+        a.data === hoje && a.status !== 'cancelado'
+    );
+    document.getElementById('totalAgendamentos').textContent = agendamentosHoje.length;
+
+    mostrarToast('📊 Estatísticas atualizadas!', 'sucesso');
+}
+
+// =============================================================
+// ===== VERIFICA ONLINE AUTOMATICAMENTE =====
+// =============================================================
+
+function iniciarVerificacaoOnline() {
+    setInterval(() => {
+        if (usuarioLogado) {
+            usuarioLogado.ultimoAcesso = Date.now();
+            
+            if (tipoUsuario === 'cliente') {
+                const clientes = carregarDados('clientes') || [];
+                const idx = clientes.findIndex(c => c.id === usuarioLogado.id);
+                if (idx !== -1) {
+                    clientes[idx].ultimoAcesso = usuarioLogado.ultimoAcesso;
+                    salvarDados('clientes', clientes);
+                }
+            } else if (tipoUsuario === 'barbeiro') {
+                const barbeiros = carregarDados('barbeiros') || [];
+                const idx = barbeiros.findIndex(b => b.id === usuarioLogado.id);
+                if (idx !== -1) {
+                    barbeiros[idx].ultimoAcesso = usuarioLogado.ultimoAcesso;
+                    salvarDados('barbeiros', barbeiros);
+                }
+            }
+        }
+    }, 30000);
+}
+
+// =============================================================
 // ===== INICIALIZAÇÃO =====
 // =============================================================
 
 console.log('✂️ Barbearia RM carregada com sucesso!');
 console.log('📧 Use: barbeiro@barbeariarm.com');
 console.log('🔒 Senha: 123456');
+
+// Inicia verificação online
+iniciarVerificacaoOnline();
 
 // Verifica se já está logado
 const usuarioSalvo = carregarDados('usuarioLogado');
