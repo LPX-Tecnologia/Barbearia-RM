@@ -1,4 +1,11 @@
 // =============================================================
+// ===== SCRIPT COMPLETO - BARBEARIA RM =====
+// ===== FIREBASE + LOCALSTORAGE =====
+// =============================================================
+
+console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
+
+// =============================================================
 // ===== CONFIGURAÇÃO DO FIREBASE =====
 // =============================================================
 
@@ -18,17 +25,14 @@ if (typeof firebase !== 'undefined') {
         if (!firebase.apps || firebase.apps.length === 0) {
             firebase.initializeApp(firebaseConfig);
             console.log('✅ Firebase inicializado com sucesso!');
-        } else {
-            console.log('✅ Firebase já estava inicializado.');
         }
     } catch (e) {
         console.error('❌ Erro ao inicializar Firebase:', e);
     }
 } else {
-    console.error('❌ Firebase SDK não carregado! Verifique o HTML.');
+    console.error('❌ Firebase SDK não carregado!');
 }
 
-// ===== REFERÊNCIAS =====
 const db = firebase.firestore ? firebase.firestore() : null;
 const auth = firebase.auth ? firebase.auth() : null;
 
@@ -60,6 +64,19 @@ function carregarDados(chave) {
 function gerarId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
+
+function mostrarToast(mensagem, tipo) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = mensagem;
+    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// =============================================================
+// ===== CONTROLE DE TELAS =====
+// =============================================================
 
 function mostrarTela(id) {
     console.log('🔄 Mostrando tela:', id);
@@ -103,19 +120,16 @@ function mostrarTela(id) {
         carregarPlanos();
         carregarFaturamento();
     }
-}
-
-function mostrarToast(mensagem, tipo) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = mensagem;
-    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    if (id === 'estatisticasScreen') {
+        atualizarEstatisticas();
+    }
+    if (id === 'infoClientesScreen') {
+        atualizarInfoClientes();
+    }
 }
 
 // =============================================================
-// ===== DADOS INICIAIS (LOCALSTORAGE PARA FALLBACK) =====
+// ===== DADOS INICIAIS (LOCALSTORAGE) =====
 // =============================================================
 
 if (!carregarDados('barbeiros')) {
@@ -130,7 +144,7 @@ if (!carregarDados('barbeiros')) {
             ultimoAcesso: Date.now()
         }
     ]);
-    console.log('✅ Barbeiro padrão criado no LocalStorage!');
+    console.log('✅ Barbeiro padrão criado!');
 }
 
 if (!carregarDados('clientes')) {
@@ -195,7 +209,7 @@ let qrCodeLido = false;
 let unsubscribeAgendamentos = null;
 
 // =============================================================
-// ===== FUNÇÕES DE LOGIN (COM FIREBASE) =====
+// ===== FUNÇÕES DE LOGIN =====
 // =============================================================
 
 function mostrarLoginCliente() {
@@ -208,9 +222,9 @@ function mostrarLoginBarbeiro() {
     document.getElementById('loginFormBarbeiro').style.display = 'block';
 }
 
-// ===== CADASTRO CLIENTE (FIREBASE) =====
+// ===== CADASTRO CLIENTE =====
 async function cadastrarCliente() {
-    console.log('🔥 CADASTRO CLIENTE FIREBASE CHAMADO!');
+    console.log('🔥 CADASTRO CLIENTE CHAMADO!');
     
     const nome = document.getElementById('cadNomeCliente').value.trim();
     const email = document.getElementById('cadEmailCliente').value.trim();
@@ -227,36 +241,36 @@ async function cadastrarCliente() {
         return;
     }
 
-    if (!auth) {
-        alert('❌ Firebase Auth não disponível!');
-        return;
-    }
-
     try {
         // 1. Cria no Firebase Auth
-        const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
-        const user = userCredential.user;
-        console.log('✅ Usuário criado no Auth:', user.uid);
+        if (auth) {
+            const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+            const user = userCredential.user;
+            console.log('✅ Usuário criado no Auth:', user.uid);
 
-        // 2. Salva no Firestore
-        await db.collection('clientes').doc(user.uid).set({
-            id: user.uid,
-            nome: nome,
-            email: email,
-            celular: celular,
-            foto: '',
-            ultimoAcesso: Date.now(),
-            dataCadastro: new Date().toISOString()
-        });
-        console.log('✅ Dados salvos no Firestore!');
+            // 2. Salva no Firestore
+            if (db) {
+                await db.collection('clientes').doc(user.uid).set({
+                    id: user.uid,
+                    nome: nome,
+                    email: email,
+                    celular: celular,
+                    foto: '',
+                    ultimoAcesso: Date.now(),
+                    dataCadastro: new Date().toISOString()
+                });
+                console.log('✅ Dados salvos no Firestore!');
+            }
+        }
 
         // 3. Salva no LocalStorage (fallback)
         const clientes = carregarDados('clientes') || [];
         clientes.push({
-            id: user.uid,
+            id: gerarId(),
             nome: nome,
             email: email,
             celular: celular,
+            senha: senha,
             foto: '',
             ultimoAcesso: Date.now(),
             dataCadastro: new Date().toISOString()
@@ -277,9 +291,9 @@ async function cadastrarCliente() {
     }
 }
 
-// ===== LOGIN CLIENTE (FIREBASE) =====
+// ===== LOGIN CLIENTE =====
 async function loginCliente() {
-    console.log('🔥 LOGIN CLIENTE FIREBASE CHAMADO!');
+    console.log('🔥 LOGIN CLIENTE CHAMADO!');
     
     const email = document.getElementById('loginEmailCliente').value.trim();
     const senha = document.getElementById('loginSenhaCliente').value;
@@ -289,44 +303,66 @@ async function loginCliente() {
         return;
     }
 
-    if (!auth) {
-        alert('❌ Firebase Auth não disponível!');
-        return;
-    }
-
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, senha);
-        const user = userCredential.user;
-        console.log('✅ Usuário logado:', user.email);
+        let cliente = null;
 
-        // Busca no Firestore
-        const doc = await db.collection('clientes').doc(user.uid).get();
-        const cliente = doc.exists ? { id: user.uid, ...doc.data() } : null;
+        // 1. Tenta autenticar no Firebase Auth
+        if (auth) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+                console.log('✅ Usuário logado no Auth:', user.email);
+
+                // Busca no Firestore
+                if (db) {
+                    const doc = await db.collection('clientes').doc(user.uid).get();
+                    if (doc.exists) {
+                        cliente = { id: user.uid, ...doc.data() };
+                        await db.collection('clientes').doc(user.uid).update({
+                            ultimoAcesso: Date.now()
+                        });
+                        cliente.ultimoAcesso = Date.now();
+                    }
+                }
+            } catch (authError) {
+                console.log('⚠️ Auth falhou, tentando LocalStorage:', authError.message);
+            }
+        }
+
+        // 2. Se não encontrou no Firebase, busca no LocalStorage
+        if (!cliente) {
+            const clientes = carregarDados('clientes') || [];
+            cliente = clientes.find(c => c.email === email && c.senha === senha);
+            if (cliente) {
+                cliente.ultimoAcesso = Date.now();
+                const idx = clientes.findIndex(c => c.id === cliente.id);
+                if (idx !== -1) {
+                    clientes[idx] = cliente;
+                    salvarDados('clientes', clientes);
+                }
+                console.log('✅ Cliente encontrado no LocalStorage');
+            }
+        }
 
         if (cliente) {
-            await db.collection('clientes').doc(user.uid).update({
-                ultimoAcesso: Date.now()
-            });
-
-            cliente.ultimoAcesso = Date.now();
             usuarioLogado = cliente;
             tipoUsuario = 'cliente';
             salvarDados('usuarioLogado', cliente);
-
             alert('👋 Bem-vindo, ' + cliente.nome + '!');
             mostrarTela('homeClienteScreen');
         } else {
-            alert('❌ Dados do cliente não encontrados!');
+            alert('❌ E-mail ou senha inválidos!');
         }
+
     } catch (error) {
         console.error('❌ Erro no login:', error);
-        alert('❌ E-mail ou senha inválidos!');
+        alert('❌ Erro: ' + error.message);
     }
 }
 
-// ===== LOGIN BARBEIRO (FIREBASE) =====
+// ===== LOGIN BARBEIRO =====
 async function loginBarbeiro() {
-    console.log('🔥 LOGIN BARBEIRO FIREBASE CHAMADO!');
+    console.log('🔥 LOGIN BARBEIRO CHAMADO!');
     
     const email = document.getElementById('loginEmailBarbeiro').value.trim();
     const senha = document.getElementById('loginSenhaBarbeiro').value;
@@ -336,38 +372,59 @@ async function loginBarbeiro() {
         return;
     }
 
-    if (!auth) {
-        alert('❌ Firebase Auth não disponível!');
-        return;
-    }
-
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, senha);
-        const user = userCredential.user;
-        console.log('✅ Barbeiro logado:', user.email);
+        let barbeiro = null;
 
-        // Busca no Firestore
-        const doc = await db.collection('barbeiros').doc(user.uid).get();
-        const barbeiro = doc.exists ? { id: user.uid, ...doc.data() } : null;
+        // 1. Tenta autenticar no Firebase Auth
+        if (auth) {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+                console.log('✅ Barbeiro logado no Auth:', user.email);
+
+                if (db) {
+                    const doc = await db.collection('barbeiros').doc(user.uid).get();
+                    if (doc.exists) {
+                        barbeiro = { id: user.uid, ...doc.data() };
+                        await db.collection('barbeiros').doc(user.uid).update({
+                            ultimoAcesso: Date.now()
+                        });
+                        barbeiro.ultimoAcesso = Date.now();
+                    }
+                }
+            } catch (authError) {
+                console.log('⚠️ Auth falhou, tentando LocalStorage:', authError.message);
+            }
+        }
+
+        // 2. Se não encontrou no Firebase, busca no LocalStorage
+        if (!barbeiro) {
+            const barbeiros = carregarDados('barbeiros') || [];
+            barbeiro = barbeiros.find(b => b.email === email && b.senha === senha);
+            if (barbeiro) {
+                barbeiro.ultimoAcesso = Date.now();
+                const idx = barbeiros.findIndex(b => b.id === barbeiro.id);
+                if (idx !== -1) {
+                    barbeiros[idx] = barbeiro;
+                    salvarDados('barbeiros', barbeiros);
+                }
+                console.log('✅ Barbeiro encontrado no LocalStorage');
+            }
+        }
 
         if (barbeiro) {
-            await db.collection('barbeiros').doc(user.uid).update({
-                ultimoAcesso: Date.now()
-            });
-
-            barbeiro.ultimoAcesso = Date.now();
             usuarioLogado = barbeiro;
             tipoUsuario = 'barbeiro';
             salvarDados('usuarioLogado', barbeiro);
-
             alert('✅ Bem-vindo, ' + barbeiro.nome + '!');
             mostrarTela('homeBarbeiroScreen');
         } else {
-            alert('❌ Dados do barbeiro não encontrados!');
+            alert('❌ E-mail ou senha inválidos!\n\nUse:\nE-mail: barbeiro@barbeariarm.com\nSenha: 123456');
         }
+
     } catch (error) {
         console.error('❌ Erro no login:', error);
-        alert('❌ E-mail ou senha inválidos!');
+        alert('❌ Erro: ' + error.message);
     }
 }
 
@@ -398,6 +455,8 @@ function sairBarbeiro() {
 // =============================================================
 
 function carregarFeedCliente() {
+    console.log('📱 carregarFeedCliente() CHAMADA!');
+    
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
     if (!container) return;
@@ -467,6 +526,8 @@ function carregarFeedCliente() {
 }
 
 function carregarFeedBarbeiro() {
+    console.log('📱 carregarFeedBarbeiro() CHAMADA!');
+    
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
     if (!container) return;
@@ -537,6 +598,106 @@ function carregarFeedBarbeiro() {
             </div>
         `;
     }).join('');
+}
+
+// =============================================================
+// ===== INTERAÇÕES COM POSTS =====
+// =============================================================
+
+function curtirPost(postId) {
+    if (!usuarioLogado || tipoUsuario !== 'cliente') {
+        alert('Faça login como cliente para curtir!');
+        return;
+    }
+
+    const posts = carregarDados('posts') || [];
+    const idx = posts.findIndex(p => p.id === postId);
+    if (idx === -1) return;
+
+    if (!posts[idx].curtidas) posts[idx].curtidas = [];
+
+    const jaCurtiu = posts[idx].curtidas.includes(usuarioLogado.id);
+    if (jaCurtiu) {
+        posts[idx].curtidas = posts[idx].curtidas.filter(id => id !== usuarioLogado.id);
+    } else {
+        posts[idx].curtidas.push(usuarioLogado.id);
+    }
+
+    salvarDados('posts', posts);
+    carregarFeedCliente();
+}
+
+function abrirComentarios(postId) {
+    postSelecionado = postId;
+    const posts = carregarDados('posts') || [];
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const container = document.getElementById('comentariosContainer');
+    if (!container) return;
+
+    const comentarios = post.comentarios || [];
+
+    if (comentarios.length === 0) {
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
+    } else {
+        container.innerHTML = comentarios.map(c => `
+            <div style="padding:10px 0; border-bottom:1px solid #2A2A2A;">
+                <strong style="color:#C9A84C;">${c.nome}</strong>
+                <p style="margin:4px 0; color:#F5F0E8;">${c.texto}</p>
+                <span style="font-size:11px; color:#6A6A6A;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('modalComentario').classList.add('active');
+}
+
+function adicionarComentario() {
+    if (!usuarioLogado || tipoUsuario !== 'cliente') {
+        alert('Faça login como cliente para comentar!');
+        return;
+    }
+
+    const texto = document.getElementById('novoComentario').value.trim();
+    if (!texto) {
+        alert('Digite um comentário!');
+        return;
+    }
+
+    const posts = carregarDados('posts') || [];
+    const idx = posts.findIndex(p => p.id === postSelecionado);
+    if (idx === -1) return;
+
+    if (!posts[idx].comentarios) posts[idx].comentarios = [];
+
+    posts[idx].comentarios.push({
+        nome: usuarioLogado.nome,
+        texto: texto,
+        data: new Date().toISOString()
+    });
+
+    salvarDados('posts', posts);
+    document.getElementById('novoComentario').value = '';
+    alert('Comentário adicionado!');
+    abrirComentarios(postSelecionado);
+}
+
+function compartilharPost(postId) {
+    const url = window.location.href + '?post=' + postId;
+    if (navigator.share) {
+        navigator.share({
+            title: '✂️ Barbearia RM',
+            text: 'Confira esse corte incrível!',
+            url: url
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copiado para compartilhar!');
+        }).catch(() => {
+            alert('Compartilhe: ' + url);
+        });
+    }
 }
 
 // =============================================================
@@ -771,7 +932,7 @@ function excluirPlano(planoId) {
 }
 
 // =============================================================
-// ===== AGENDAMENTO (COM FIREBASE) =====
+// ===== AGENDAMENTO =====
 // =============================================================
 
 async function agendarCorte() {
@@ -801,33 +962,34 @@ async function agendarCorte() {
     }
     
     try {
-        // Verifica conflitos no Firestore
-        const snapshot = await db.collection('agendamentos')
-            .where('data', '==', data)
-            .where('horario', '==', horario)
-            .where('status', '!=', 'cancelado')
-            .get();
+        // Verifica conflitos no Firestore (se disponível)
+        if (db) {
+            const snapshot = await db.collection('agendamentos')
+                .where('data', '==', data)
+                .where('horario', '==', horario)
+                .where('status', '!=', 'cancelado')
+                .get();
 
-        if (!snapshot.empty) {
-            alert('⚠️ Horário já ocupado! Escolha outro.');
-            return;
+            if (!snapshot.empty) {
+                alert('⚠️ Horário já ocupado! Escolha outro.');
+                return;
+            }
+
+            // Salva no Firestore
+            const docRef = await db.collection('agendamentos').add({
+                clienteId: usuarioLogado.id,
+                clienteNome: usuarioLogado.nome,
+                clienteCelular: usuarioLogado.celular || '',
+                data: data,
+                horario: horario,
+                tipo: tipo,
+                status: 'confirmado',
+                dataAgendamento: new Date().toISOString()
+            });
+            console.log('✅ Agendamento salvo no Firestore! ID:', docRef.id);
         }
 
-        // Salva no Firestore
-        await db.collection('agendamentos').add({
-            clienteId: usuarioLogado.id,
-            clienteNome: usuarioLogado.nome,
-            clienteCelular: usuarioLogado.celular || '',
-            data: data,
-            horario: horario,
-            tipo: tipo,
-            status: 'confirmado',
-            dataAgendamento: new Date().toISOString()
-        });
-
-        console.log('✅ Agendamento salvo no Firestore!');
-        
-        // Salva também no LocalStorage (fallback)
+        // Salva no LocalStorage (sempre)
         const agendamentos = carregarDados('agendamentos') || [];
         agendamentos.push({
             id: gerarId(),
@@ -861,21 +1023,40 @@ async function carregarAgendaCliente() {
     if (!container) return;
 
     try {
-        // Busca no Firestore
-        const snapshot = await db.collection('agendamentos')
-            .where('clienteId', '==', usuarioLogado.id)
-            .where('status', '!=', 'cancelado')
-            .orderBy('data')
-            .orderBy('horario')
-            .get();
+        let meus = [];
 
-        const meus = [];
-        snapshot.forEach(doc => meus.push({ id: doc.id, ...doc.data() }));
+        // 1. Tenta buscar no Firestore
+        if (db) {
+            try {
+                const snapshot = await db.collection('agendamentos')
+                    .where('clienteId', '==', usuarioLogado.id)
+                    .where('status', '!=', 'cancelado')
+                    .orderBy('data')
+                    .orderBy('horario')
+                    .get();
+
+                snapshot.forEach(doc => meus.push({ id: doc.id, ...doc.data() }));
+                console.log('📋 Agendamentos do Firestore:', meus.length);
+            } catch (firestoreError) {
+                console.log('⚠️ Erro ao buscar no Firestore:', firestoreError.message);
+            }
+        }
+
+        // 2. Se não encontrou no Firestore, busca no LocalStorage
+        if (meus.length === 0) {
+            const agendamentos = carregarDados('agendamentos') || [];
+            meus = agendamentos.filter(a => 
+                a.clienteId === usuarioLogado.id && a.status !== 'cancelado'
+            );
+            console.log('📋 Agendamentos do LocalStorage:', meus.length);
+        }
 
         if (meus.length === 0) {
             container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>';
             return;
         }
+
+        meus.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
 
         container.innerHTML = meus.map(a => `
             <div class="agenda-item">
@@ -901,27 +1082,24 @@ function carregarAgendamentosBarbeiro() {
         unsubscribeAgendamentos();
     }
 
-    if (!db) {
-        // Fallback para LocalStorage
+    if (db) {
+        unsubscribeAgendamentos = db.collection('agendamentos')
+            .where('status', '!=', 'cancelado')
+            .orderBy('data')
+            .orderBy('horario')
+            .onSnapshot((snapshot) => {
+                const agendamentos = [];
+                snapshot.forEach(doc => agendamentos.push({ id: doc.id, ...doc.data() }));
+                renderizarAgendamentosBarbeiro(agendamentos);
+            }, (error) => {
+                console.error('❌ Erro ao ouvir agendamentos:', error);
+                const agendamentos = carregarDados('agendamentos') || [];
+                renderizarAgendamentosBarbeiro(agendamentos);
+            });
+    } else {
         const agendamentos = carregarDados('agendamentos') || [];
         renderizarAgendamentosBarbeiro(agendamentos);
-        return;
     }
-
-    // Escuta em tempo real no Firestore
-    unsubscribeAgendamentos = db.collection('agendamentos')
-        .where('status', '!=', 'cancelado')
-        .orderBy('data')
-        .orderBy('horario')
-        .onSnapshot((snapshot) => {
-            const agendamentos = [];
-            snapshot.forEach(doc => agendamentos.push({ id: doc.id, ...doc.data() }));
-            renderizarAgendamentosBarbeiro(agendamentos);
-        }, (error) => {
-            console.error('❌ Erro ao ouvir agendamentos:', error);
-            const agendamentos = carregarDados('agendamentos') || [];
-            renderizarAgendamentosBarbeiro(agendamentos);
-        });
 }
 
 function renderizarAgendamentosBarbeiro(agendamentos) {
@@ -993,11 +1171,13 @@ async function atualizarAgendamento() {
 
     try {
         // Atualiza no Firestore
-        await db.collection('agendamentos').doc(id).update({
-            data: data,
-            horario: horario,
-            tipo: tipo
-        });
+        if (db && id) {
+            await db.collection('agendamentos').doc(id).update({
+                data: data,
+                horario: horario,
+                tipo: tipo
+            });
+        }
 
         // Atualiza no LocalStorage
         const agendamentos = carregarDados('agendamentos') || [];
@@ -1031,122 +1211,22 @@ function excluirAgendamento(agendamentoId) {
 
     try {
         // Exclui do Firestore
-        db.collection('agendamentos').doc(agendamentoId).delete()
-            .then(() => {
-                // Exclui do LocalStorage
-                let agendamentos = carregarDados('agendamentos') || [];
-                agendamentos = agendamentos.filter(a => a.id !== agendamentoId);
-                salvarDados('agendamentos', agendamentos);
-                alert('🗑️ Agendamento excluído!');
-                carregarAgendamentosBarbeiro();
-            })
-            .catch((error) => {
-                console.error('❌ Erro ao excluir:', error);
-                alert('❌ Erro ao excluir: ' + error.message);
-            });
+        if (db && agendamentoId) {
+            db.collection('agendamentos').doc(agendamentoId).delete()
+                .catch(err => console.warn('⚠️ Erro ao excluir do Firestore:', err));
+        }
+
+        // Exclui do LocalStorage
+        let agendamentos = carregarDados('agendamentos') || [];
+        agendamentos = agendamentos.filter(a => a.id !== agendamentoId);
+        salvarDados('agendamentos', agendamentos);
+
+        alert('🗑️ Agendamento excluído!');
+        carregarAgendamentosBarbeiro();
+
     } catch (error) {
         console.error('❌ Erro ao excluir:', error);
         alert('❌ Erro ao excluir: ' + error.message);
-    }
-}
-
-// =============================================================
-// ===== FUNÇÕES DE INTERAÇÃO =====
-// =============================================================
-
-function curtirPost(postId) {
-    if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para curtir!');
-        return;
-    }
-
-    const posts = carregarDados('posts') || [];
-    const idx = posts.findIndex(p => p.id === postId);
-    if (idx === -1) return;
-
-    if (!posts[idx].curtidas) posts[idx].curtidas = [];
-
-    const jaCurtiu = posts[idx].curtidas.includes(usuarioLogado.id);
-    if (jaCurtiu) {
-        posts[idx].curtidas = posts[idx].curtidas.filter(id => id !== usuarioLogado.id);
-    } else {
-        posts[idx].curtidas.push(usuarioLogado.id);
-    }
-
-    salvarDados('posts', posts);
-    carregarFeedCliente();
-}
-
-function abrirComentarios(postId) {
-    postSelecionado = postId;
-    const posts = carregarDados('posts') || [];
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-
-    const container = document.getElementById('comentariosContainer');
-    if (!container) return;
-
-    const comentarios = post.comentarios || [];
-
-    if (comentarios.length === 0) {
-        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
-    } else {
-        container.innerHTML = comentarios.map(c => `
-            <div style="padding:10px 0; border-bottom:1px solid #2A2A2A;">
-                <strong style="color:#C9A84C;">${c.nome}</strong>
-                <p style="margin:4px 0; color:#F5F0E8;">${c.texto}</p>
-                <span style="font-size:11px; color:#6A6A6A;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
-            </div>
-        `).join('');
-    }
-
-    document.getElementById('modalComentario').classList.add('active');
-}
-
-function adicionarComentario() {
-    if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para comentar!');
-        return;
-    }
-
-    const texto = document.getElementById('novoComentario').value.trim();
-    if (!texto) {
-        alert('Digite um comentário!');
-        return;
-    }
-
-    const posts = carregarDados('posts') || [];
-    const idx = posts.findIndex(p => p.id === postSelecionado);
-    if (idx === -1) return;
-
-    if (!posts[idx].comentarios) posts[idx].comentarios = [];
-
-    posts[idx].comentarios.push({
-        nome: usuarioLogado.nome,
-        texto: texto,
-        data: new Date().toISOString()
-    });
-
-    salvarDados('posts', posts);
-    document.getElementById('novoComentario').value = '';
-    alert('Comentário adicionado!');
-    abrirComentarios(postSelecionado);
-}
-
-function compartilharPost(postId) {
-    const url = window.location.href + '?post=' + postId;
-    if (navigator.share) {
-        navigator.share({
-            title: '✂️ Barbearia RM',
-            text: 'Confira esse corte incrível!',
-            url: url
-        }).catch(() => {});
-    } else {
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Link copiado para compartilhar!');
-        }).catch(() => {
-            alert('Compartilhe: ' + url);
-        });
     }
 }
 
@@ -1458,10 +1538,14 @@ function abrirLocalizacao() {
 
 async function atualizarEstatisticas() {
     let clientes = [];
-    try {
-        const snapshot = await db.collection('clientes').get();
-        snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
-    } catch (error) {
+    if (db) {
+        try {
+            const snapshot = await db.collection('clientes').get();
+            snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            clientes = carregarDados('clientes') || [];
+        }
+    } else {
         clientes = carregarDados('clientes') || [];
     }
 
@@ -1472,12 +1556,16 @@ async function atualizarEstatisticas() {
     document.getElementById('clientesOnline').textContent = online.length;
 
     let agendamentos = [];
-    try {
-        const snapshot = await db.collection('agendamentos')
-            .where('status', '!=', 'cancelado')
-            .get();
-        snapshot.forEach(doc => agendamentos.push({ ...doc.data() }));
-    } catch (error) {
+    if (db) {
+        try {
+            const snapshot = await db.collection('agendamentos')
+                .where('status', '!=', 'cancelado')
+                .get();
+            snapshot.forEach(doc => agendamentos.push({ ...doc.data() }));
+        } catch (error) {
+            agendamentos = carregarDados('agendamentos') || [];
+        }
+    } else {
         agendamentos = carregarDados('agendamentos') || [];
     }
 
@@ -1494,10 +1582,14 @@ async function atualizarEstatisticas() {
 
 async function atualizarInfoClientes() {
     let clientes = [];
-    try {
-        const snapshot = await db.collection('clientes').get();
-        snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
-    } catch (error) {
+    if (db) {
+        try {
+            const snapshot = await db.collection('clientes').get();
+            snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            clientes = carregarDados('clientes') || [];
+        }
+    } else {
         clientes = carregarDados('clientes') || [];
     }
 
@@ -1822,10 +1914,9 @@ function excluirCliente(clienteId) {
 // =============================================================
 
 console.log('✂️ Barbearia RM carregada com sucesso!');
-console.log('🔥 Firebase:', db ? '✅ Conectado' : '❌ Offline');
-console.log('🔐 Auth:', auth ? '✅ Disponível' : '❌ Offline');
+console.log('📧 Barbeiro: barbeiro@barbeariarm.com');
+console.log('🔒 Senha: 123456');
 
-// Listeners para os campos de cartão
 document.addEventListener('DOMContentLoaded', function() {
     const cartaoNumero = document.getElementById('cartaoNumero');
     const cartaoValidade = document.getElementById('cartaoValidade');
@@ -1851,32 +1942,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Verifica se já está logado
-if (auth) {
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            console.log('👤 Usuário autenticado:', user.email);
-            try {
-                const docCliente = await db.collection('clientes').doc(user.uid).get();
-                if (docCliente.exists) {
-                    usuarioLogado = { id: user.uid, ...docCliente.data() };
-                    tipoUsuario = 'cliente';
-                    mostrarTela('homeClienteScreen');
-                    return;
-                }
-
-                const docBarbeiro = await db.collection('barbeiros').doc(user.uid).get();
-                if (docBarbeiro.exists) {
-                    usuarioLogado = { id: user.uid, ...docBarbeiro.data() };
-                    tipoUsuario = 'barbeiro';
-                    mostrarTela('homeBarbeiroScreen');
-                    return;
-                }
-            } catch (error) {
-                console.error('❌ Erro ao buscar dados:', error);
-            }
-        } else {
-            console.log('👤 Nenhum usuário logado');
-        }
-    });
+const usuarioSalvo = carregarDados('usuarioLogado');
+if (usuarioSalvo) {
+    const clientes = carregarDados('clientes') || [];
+    const barbeiros = carregarDados('barbeiros') || [];
+    
+    const isCliente = clientes.some(c => c.id === usuarioSalvo.id);
+    const isBarbeiro = barbeiros.some(b => b.id === usuarioSalvo.id);
+    
+    if (isCliente) {
+        usuarioLogado = usuarioSalvo;
+        tipoUsuario = 'cliente';
+        mostrarTela('homeClienteScreen');
+    } else if (isBarbeiro) {
+        usuarioLogado = usuarioSalvo;
+        tipoUsuario = 'barbeiro';
+        mostrarTela('homeBarbeiroScreen');
+    }
 }
