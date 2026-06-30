@@ -1151,7 +1151,7 @@ function excluirPlano(planoId) {
 }
 
 // =============================================================
-// ===== AGENDAMENTO =====
+// ===== AGENDAMENTO (CORRIGIDO - SEM ÍNDICE) =====
 // =============================================================
 
 async function agendarCorte() {
@@ -1201,21 +1201,26 @@ async function agendarCorte() {
             }
         }
 
-        // Verifica conflitos
+        // VERIFICA CONFLITOS - SEM FILTRAR STATUS (NÃO PRECISA DE ÍNDICE!)
         if (db) {
+            // Busca TODOS os agendamentos da data e horário (sem filtrar status)
             const snapshot = await db.collection('agendamentos')
                 .where('data', '==', data)
                 .where('horario', '==', horario)
                 .get();
 
-            const conflito = snapshot.docs.some(doc => doc.data().status !== 'cancelado');
+            // Filtra MANUALMENTE os cancelados no JavaScript
+            const conflito = snapshot.docs.some(doc => {
+                const dados = doc.data();
+                return dados.status !== 'cancelado';
+            });
 
             if (conflito) {
                 alert('⚠️ Horário já ocupado! Escolha outro.');
                 return;
             }
 
-            // Salva no Firestore com localização
+            // Salva no Firestore
             const docRef = await db.collection('agendamentos').add({
                 clienteId: usuarioLogado.id,
                 clienteNome: usuarioLogado.nome,
