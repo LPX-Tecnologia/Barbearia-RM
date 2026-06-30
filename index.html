@@ -13,6 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- ===== GOOGLE MAPS API ===== -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnSISQpOEO0jcPYkzFySU8BFYtNNhYwSM&libraries=places"></script>
+    
     <!-- ===== FIREBASE SDK ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -123,7 +126,7 @@
 
         <div class="location-card" onclick="abrirLocalizacao()">
             <i class="fas fa-map-marker-alt"></i>
-            <span>📍 Rua das Barbearias, 123 - Centro</span>
+            <span id="enderecoCliente">📍 Rua das Barbearias, 123 - Centro</span>
             <i class="fas fa-chevron-right"></i>
         </div>
 
@@ -183,6 +186,17 @@
             <button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button>
         </div>
 
+        <!-- ===== CLIENTES DO DIA (COM MAPA) ===== -->
+        <div class="card">
+            <h3>📍 CLIENTES DE HOJE</h3>
+            <div id="mapaClientesHoje" style="width:100%; height:250px; border-radius:12px; background:#1A1A1A; border:1px solid #2A2A2A; margin-bottom:10px;"></div>
+            <div id="listaClientesHoje" style="max-height:200px; overflow-y:auto;">
+                <p style="color:#6A6A6A; text-align:center;">Carregando clientes do dia...</p>
+            </div>
+            <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="carregarClientesDoDia()">🔄 ATUALIZAR</button>
+        </div>
+
+        <!-- ===== AGENDAMENTOS ===== -->
         <div class="card">
             <h3>📅 AGENDAMENTOS</h3>
             <div id="agendamentosBarbeiroContainer"></div>
@@ -196,6 +210,7 @@
         <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('estatisticasScreen'); atualizarEstatisticas();">📊 ESTATÍSTICAS</button>
         <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('infoClientesScreen'); atualizarInfoClientes();">📊 INFORMAÇÕES DOS CLIENTES</button>
         <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="abrirEditarPix()">💳 EDITAR CHAVE PIX</button>
+        <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="abrirEditarLocalizacao()">📍 EDITAR LOCALIZAÇÃO</button>
     </section>
 
     <!-- ============================================================ -->
@@ -470,8 +485,8 @@
             <div style="display:flex; align-items:center; gap:12px; padding:12px 0; flex-wrap:wrap;">
                 <i class="fas fa-map-marker-alt" style="color:#C9A84C; font-size:24px;"></i>
                 <div style="flex:1;">
-                    <div style="font-weight:600; color:#F5F0E8;">Barbearia RM</div>
-                    <div style="font-size:13px; color:#8A7A5A;">Rua das Barbearias, 123 - Centro, São Paulo - SP</div>
+                    <div style="font-weight:600; color:#F5F0E8;" id="infoEndereco">Barbearia RM</div>
+                    <div style="font-size:13px; color:#8A7A5A;" id="infoEnderecoCompleto">Rua das Barbearias, 123 - Centro, São Paulo - SP</div>
                 </div>
                 <button onclick="abrirLocalizacao()" style="background:#C9A84C; border:none; border-radius:8px; padding:8px 16px; color:#0D0D0D; font-weight:700; cursor:pointer;">
                     🗺️ Ver Mapa
@@ -512,7 +527,30 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: PAGAMENTO MELHORADA -->
+    <!-- TELA: EDITAR LOCALIZAÇÃO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="editarLocalizacaoScreen">
+        <h2 class="screen-title">📍 EDITAR LOCALIZAÇÃO</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📍 Endereço</label>
+                <input type="text" id="editEndereco" placeholder="Rua, número, bairro, cidade">
+            </div>
+            <div class="input-group">
+                <label>🌐 Latitude</label>
+                <input type="text" id="editLatitude" placeholder="-23.5505">
+            </div>
+            <div class="input-group">
+                <label>🌐 Longitude</label>
+                <input type="text" id="editLongitude" placeholder="-46.6333">
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarLocalizacao()">💾 SALVAR LOCALIZAÇÃO</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO -->
     <!-- ============================================================ -->
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
