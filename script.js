@@ -1,6 +1,5 @@
 // =============================================================
 // ===== SCRIPT COMPLETO - BARBEARIA RM =====
-// ===== FIREBASE + LOCALSTORAGE =====
 // =============================================================
 
 console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
@@ -104,7 +103,7 @@ function mostrarTela(id) {
         if (navCliente) navCliente.style.display = 'flex';
     }
 
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen', 'estatisticasScreen', 'infoClientesScreen', 'editarPixScreen'].includes(id)) {
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen', 'estatisticasScreen', 'infoClientesScreen', 'editarPixScreen', 'editarLocalizacaoScreen'].includes(id)) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
 
@@ -112,6 +111,7 @@ function mostrarTela(id) {
         document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
         carregarFeedCliente();
         carregarAgendaCliente();
+        atualizarEnderecoCliente();
     }
     if (id === 'homeBarbeiroScreen') {
         document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
@@ -119,12 +119,14 @@ function mostrarTela(id) {
         carregarAgendamentosBarbeiro();
         carregarPlanos();
         carregarFaturamento();
+        carregarClientesDoDia();
     }
     if (id === 'estatisticasScreen') {
         atualizarEstatisticas();
     }
     if (id === 'infoClientesScreen') {
         atualizarInfoClientes();
+        atualizarEnderecoInfo();
     }
 }
 
@@ -193,6 +195,217 @@ if (!carregarDados('pagamentos')) {
 
 if (!carregarDados('agendamentos')) {
     salvarDados('agendamentos', []);
+}
+
+// =============================================================
+// ===== LOCALIZAÇÃO DA BARBEARIA =====
+// =============================================================
+
+function carregarLocalizacao() {
+    const endereco = localStorage.getItem('barbeariaEndereco') || 'Rua das Barbearias, 123 - Centro, São Paulo - SP';
+    const lat = localStorage.getItem('barbeariaLat') || '-23.5505';
+    const lng = localStorage.getItem('barbeariaLng') || '-46.6333';
+    return { endereco, lat, lng };
+}
+
+function salvarLocalizacao() {
+    const endereco = document.getElementById('editEndereco').value.trim();
+    const lat = document.getElementById('editLatitude').value.trim();
+    const lng = document.getElementById('editLongitude').value.trim();
+
+    if (!endereco || !lat || !lng) {
+        alert('⚠️ Preencha todos os campos!');
+        return;
+    }
+
+    if (isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+        alert('⚠️ Latitude e Longitude devem ser números!');
+        return;
+    }
+
+    localStorage.setItem('barbeariaEndereco', endereco);
+    localStorage.setItem('barbeariaLat', lat);
+    localStorage.setItem('barbeariaLng', lng);
+
+    alert('✅ Localização atualizada!');
+    mostrarTela('homeBarbeiroScreen');
+}
+
+function abrirEditarLocalizacao() {
+    const config = carregarLocalizacao();
+    document.getElementById('editEndereco').value = config.endereco;
+    document.getElementById('editLatitude').value = config.lat;
+    document.getElementById('editLongitude').value = config.lng;
+    mostrarTela('editarLocalizacaoScreen');
+}
+
+function abrirLocalizacao() {
+    const config = carregarLocalizacao();
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.endereco)}`;
+    window.open(url, '_blank');
+}
+
+function atualizarEnderecoCliente() {
+    const config = carregarLocalizacao();
+    const enderecoElement = document.getElementById('enderecoCliente');
+    if (enderecoElement) {
+        enderecoElement.textContent = '📍 ' + config.endereco;
+    }
+}
+
+function atualizarEnderecoInfo() {
+    const config = carregarLocalizacao();
+    const enderecoElement = document.getElementById('infoEnderecoCompleto');
+    if (enderecoElement) {
+        enderecoElement.textContent = config.endereco;
+    }
+}
+
+// =============================================================
+// ===== LOCALIZAÇÃO DOS CLIENTES DO DIA =====
+// =============================================================
+
+function carregarClientesDoDia() {
+    console.log('📍 carregarClientesDoDia() CHAMADA!');
+    
+    const hoje = new Date().toISOString().split('T')[0];
+    const container = document.getElementById('listaClientesHoje');
+    const mapaContainer = document.getElementById('mapaClientesHoje');
+    
+    if (!container || !mapaContainer) return;
+
+    // Busca agendamentos de hoje
+    const agendamentos = carregarDados('agendamentos') || [];
+    const clientesHoje = agendamentos.filter(a => a.data === hoje && a.status !== 'cancelado');
+    
+    console.log('📋 Clientes de hoje:', clientesHoje.length);
+
+    if (clientesHoje.length === 0) {
+        container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Nenhum cliente agendado para hoje</p>';
+        mapaContainer.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#6A6A6A;">📍 Nenhum cliente hoje</div>';
+        return;
+    }
+
+    // Lista os clientes
+    container.innerHTML = clientesHoje.map(a => `
+        <div class="agenda-item">
+            <div class="agenda-info">
+                <div class="agenda-cliente">👤 ${a.clienteNome}</div>
+                <div style="color:#C9A84C;">✂️ ${a.tipo}</div>
+                <div class="agenda-data">⏰ ${a.horario}</div>
+                ${a.clienteCelular ? `<div class="agenda-data">📱 ${a.clienteCelular}</div>` : ''}
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                <span class="agenda-status confirmado">✅ Confirmado</span>
+                ${a.latitude && a.longitude ? 
+                    `<button onclick="verLocalizacaoCliente(${a.latitude}, ${a.longitude})" 
+                             style="background:none; border:none; color:#C9A84C; cursor:pointer; font-size:12px; text-decoration:underline;">
+                        📍 Ver localização
+                    </button>` : 
+                    `<span style="font-size:11px; color:#4A4A4A;">📍 Sem localização</span>`
+                }
+            </div>
+        </div>
+    `).join('');
+
+    // Mapa com a localização dos clientes
+    carregarMapaClientesHoje(clientesHoje);
+}
+
+function carregarMapaClientesHoje(clientes) {
+    const mapaContainer = document.getElementById('mapaClientesHoje');
+    if (!mapaContainer) return;
+
+    const config = carregarLocalizacao();
+    const barbeariaLat = parseFloat(config.lat);
+    const barbeariaLng = parseFloat(config.lng);
+
+    // Verifica se o mapa já existe
+    if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
+        try {
+            const map = new google.maps.Map(mapaContainer, {
+                center: { lat: barbeariaLat, lng: barbeariaLng },
+                zoom: 13
+            });
+
+            // Marca a barbearia
+            new google.maps.Marker({
+                position: { lat: barbeariaLat, lng: barbeariaLng },
+                map: map,
+                icon: {
+                    url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                    scaledSize: new google.maps.Size(40, 40)
+                },
+                title: 'Barbearia RM'
+            });
+
+            // Marca cada cliente
+            clientes.forEach(a => {
+                if (a.latitude && a.longitude) {
+                    const lat = parseFloat(a.latitude);
+                    const lng = parseFloat(a.longitude);
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        new google.maps.Marker({
+                            position: { lat: lat, lng: lng },
+                            map: map,
+                            icon: {
+                                url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                                scaledSize: new google.maps.Size(32, 32)
+                            },
+                            title: a.clienteNome + ' - ' + a.horario
+                        });
+                    }
+                }
+            });
+
+            return;
+        } catch (e) {
+            console.warn('Erro ao criar mapa:', e);
+        }
+    }
+
+    // Fallback: mostra link para abrir o mapa
+    mapaContainer.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px; text-align:center; color:#6A6A6A;">
+            <i class="fas fa-map" style="font-size:32px; margin-bottom:10px; color:#C9A84C;"></i>
+            <p>Clique no botão abaixo para ver os clientes no mapa</p>
+            <button onclick="abrirMapaClientesHoje()" 
+                    style="background:#C9A84C; border:none; border-radius:8px; padding:8px 16px; color:#0D0D0D; font-weight:700; cursor:pointer; margin-top:10px;">
+                🗺️ Abrir Mapa
+            </button>
+        </div>
+    `;
+}
+
+function abrirMapaClientesHoje() {
+    const config = carregarLocalizacao();
+    const agendamentos = carregarDados('agendamentos') || [];
+    const hoje = new Date().toISOString().split('T')[0];
+    const clientesHoje = agendamentos.filter(a => a.data === hoje && a.status !== 'cancelado');
+
+    // Constrói a URL do Google Maps com todos os clientes
+    let url = `https://www.google.com/maps/dir/${config.lat},${config.lng}/`;
+
+    clientesHoje.forEach(a => {
+        if (a.latitude && a.longitude) {
+            url += `${a.latitude},${a.longitude}/`;
+        }
+    });
+
+    if (url.endsWith('/')) {
+        url = url.slice(0, -1);
+    }
+
+    window.open(url, '_blank');
+}
+
+function verLocalizacaoCliente(lat, lng) {
+    if (!lat || !lng) {
+        alert('📍 Cliente não compartilhou localização');
+        return;
+    }
+    const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    window.open(url, '_blank');
 }
 
 // =============================================================
@@ -968,20 +1181,41 @@ async function agendarCorte() {
     }
     
     try {
-        // VERIFICA CONFLITOS (AGORA COM ÍNDICE!)
+        // Obtém a localização do cliente
+        let latitude = null;
+        let longitude = null;
+        
+        if (navigator.geolocation) {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 5000
+                    });
+                });
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+                console.log('📍 Localização do cliente:', latitude, longitude);
+            } catch (geoError) {
+                console.log('⚠️ Não foi possível obter localização:', geoError.message);
+            }
+        }
+
+        // Verifica conflitos
         if (db) {
             const snapshot = await db.collection('agendamentos')
                 .where('data', '==', data)
                 .where('horario', '==', horario)
-                .where('status', '!=', 'cancelado')
                 .get();
 
-            if (!snapshot.empty) {
+            const conflito = snapshot.docs.some(doc => doc.data().status !== 'cancelado');
+
+            if (conflito) {
                 alert('⚠️ Horário já ocupado! Escolha outro.');
                 return;
             }
 
-            // Salva no Firestore
+            // Salva no Firestore com localização
             const docRef = await db.collection('agendamentos').add({
                 clienteId: usuarioLogado.id,
                 clienteNome: usuarioLogado.nome,
@@ -990,12 +1224,14 @@ async function agendarCorte() {
                 horario: horario,
                 tipo: tipo,
                 status: 'confirmado',
+                latitude: latitude,
+                longitude: longitude,
                 dataAgendamento: new Date().toISOString()
             });
             console.log('✅ Agendamento salvo no Firestore! ID:', docRef.id);
         }
 
-        // Salva no LocalStorage (sempre)
+        // Salva no LocalStorage
         const agendamentos = carregarDados('agendamentos') || [];
         agendamentos.push({
             id: gerarId(),
@@ -1006,6 +1242,8 @@ async function agendarCorte() {
             horario: horario,
             tipo: tipo,
             status: 'confirmado',
+            latitude: latitude,
+            longitude: longitude,
             dataAgendamento: new Date().toISOString()
         });
         salvarDados('agendamentos', agendamentos);
@@ -1126,6 +1364,10 @@ function renderizarAgendamentosBarbeiro(agendamentos) {
                 <div style="color:#C9A84C;">✂️ ${a.tipo}</div>
                 <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
                 ${a.clienteCelular ? `<div class="agenda-data">📱 ${a.clienteCelular}</div>` : ''}
+                ${a.latitude && a.longitude ? 
+                    `<div style="font-size:11px; color:#6A6A6A;">📍 Com localização</div>` : 
+                    `<div style="font-size:11px; color:#4A4A4A;">📍 Sem localização</div>`
+                }
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
                 <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
@@ -1530,15 +1772,6 @@ function fecharPagamento() {
 }
 
 // =============================================================
-// ===== LOCALIZAÇÃO =====
-// =============================================================
-
-function abrirLocalizacao() {
-    const endereco = "Rua das Barbearias, 123 - Centro, São Paulo - SP";
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`, '_blank');
-}
-
-// =============================================================
 // ===== ESTATÍSTICAS =====
 // =============================================================
 
@@ -1656,14 +1889,6 @@ async function atualizarInfoClientes() {
     }).join('');
 
     alert('📊 Informações atualizadas!');
-}
-
-function verLocalizacaoCliente(lat, lng) {
-    if (!lat || !lng) {
-        alert('📍 Cliente não compartilhou localização');
-        return;
-    }
-    window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
 }
 
 // =============================================================
