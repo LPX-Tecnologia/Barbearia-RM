@@ -16,6 +16,7 @@
     <!-- ===== FIREBASE SDK ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     
     <!-- ===== QRCODE.JS ===== -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -193,6 +194,8 @@
         </div>
         
         <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('estatisticasScreen'); atualizarEstatisticas();">📊 ESTATÍSTICAS</button>
+        <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('infoClientesScreen'); atualizarInfoClientes();">📊 INFORMAÇÕES DOS CLIENTES</button>
+        <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="abrirEditarPix()">💳 EDITAR CHAVE PIX</button>
     </section>
 
     <!-- ============================================================ -->
@@ -201,6 +204,7 @@
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
+            <input type="hidden" id="agendamentoId" value="">
             <div class="input-group">
                 <label>📅 Data</label>
                 <input type="date" id="agendamentoData">
@@ -281,6 +285,38 @@
     </section>
 
     <!-- ============================================================ -->
+    <!-- TELA: EDITAR POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="editarPostScreen">
+        <h2 class="screen-title">✏️ EDITAR POST</h2>
+        <div class="card">
+            <input type="hidden" id="editarPostId">
+            <div class="input-group">
+                <label>📝 Título</label>
+                <input type="text" id="editarPostTitulo" placeholder="Título do corte">
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="editarPostPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📷 URL da Imagem</label>
+                <input type="text" id="editarPostImagem" placeholder="https://...">
+            </div>
+            <div class="input-group">
+                <label>🎬 URL do Vídeo (opcional)</label>
+                <input type="text" id="editarPostVideo" placeholder="https://youtube.com/...">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="editarPostDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarEdicaoPost()">💾 SALVAR ALTERAÇÕES</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Cancelar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
     <!-- TELA: CRIAR PLANO -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPlanoScreen">
@@ -311,6 +347,41 @@
             </div>
             <button class="btn btn-primary neon" onclick="criarPlano()">💾 SALVAR PLANO</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: EDITAR PLANO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="editarPlanoScreen">
+        <h2 class="screen-title">✏️ EDITAR PLANO</h2>
+        <div class="card">
+            <input type="hidden" id="editarPlanoId">
+            <div class="input-group">
+                <label>📝 Nome do Plano</label>
+                <input type="text" id="editarPlanoNome" placeholder="Ex: Plano Mensal">
+            </div>
+            <div class="input-group">
+                <label>📅 Período</label>
+                <select id="editarPlanoPeriodo">
+                    <option value="semanal">Semanal</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="editarPlanoPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="editarPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Cancelar</button>
         </div>
     </section>
 
@@ -358,13 +429,12 @@
         <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
     </section>
 
-        <!-- ============================================================ -->
+    <!-- ============================================================ -->
     <!-- TELA: INFORMAÇÕES DOS CLIENTES -->
     <!-- ============================================================ -->
     <section class="screen" id="infoClientesScreen">
         <h2 class="screen-title">📊 INFORMAÇÕES DOS CLIENTES</h2>
         
-        <!-- Resumo -->
         <div class="card">
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
                 <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
@@ -385,7 +455,6 @@
             </div>
         </div>
 
-        <!-- Lista de Clientes -->
         <div class="card">
             <h3>👤 LISTA DE CLIENTES</h3>
             <div id="infoListaClientes">
@@ -396,7 +465,6 @@
             </button>
         </div>
 
-        <!-- Localização da Barbearia -->
         <div class="card">
             <h3>📍 LOCALIZAÇÃO DA BARBEARIA</h3>
             <div style="display:flex; align-items:center; gap:12px; padding:12px 0; flex-wrap:wrap;">
@@ -421,7 +489,30 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: PAGAMENTO -->
+    <!-- TELA: EDITAR CHAVE PIX -->
+    <!-- ============================================================ -->
+    <section class="screen" id="editarPixScreen">
+        <h2 class="screen-title">💳 EDITAR CHAVE PIX</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📧 Chave PIX (e-mail)</label>
+                <input type="email" id="editPixChave" placeholder="barbearia@email.com">
+            </div>
+            <div class="input-group">
+                <label>🏢 Nome do Recebedor</label>
+                <input type="text" id="editPixNome" placeholder="Nome da barbearia">
+            </div>
+            <div class="input-group">
+                <label>📍 Cidade</label>
+                <input type="text" id="editPixCidade" placeholder="São Paulo">
+            </div>
+            <button class="btn btn-primary neon" onclick="salvarConfigPix()">💾 SALVAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO MELHORADA -->
     <!-- ============================================================ -->
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
@@ -430,12 +521,21 @@
                 <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-small">
             </div>
             <h3 style="margin-top:10px; color:#C9A84C;">Barbearia RM</h3>
-            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
+            <p style="color:#8A7A5A;">Valor: <strong id="pixValor" style="color:#C9A84C;">R$ 0,00</strong></p>
+            
+            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block; cursor:pointer;"></div>
+            <p id="qrCodeStatus" style="color:#6A6A6A; font-size:12px;">Clique no QR Code para simular leitura</p>
+            
             <p><strong style="color:#C9A84C;">Chave PIX:</strong> <span id="pixChave" style="color:#F5F0E8;">barbearia.rm@email.com</span></p>
-            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+            <p style="font-size:12px; color:#6A6A6A;">Recebedor: <span id="pixNome">Barbearia RM</span></p>
+            <button class="btn btn-outline" onclick="copiarPix()">📋 COPIAR CHAVE PIX</button>
+            <p id="pixStatus" style="color:#6A6A6A; font-size:12px; margin-top:5px;">Clique em "Copiar" para confirmar</p>
+            
             <hr style="margin:20px 0; border-color:#2A2A2A;">
+            
+            <p style="color:#8A7A5A; font-size:13px; margin-bottom:10px;">💳 Ou pague com cartão</p>
             <div class="input-group">
-                <label>💳 Cartão de Crédito</label>
+                <label>💳 Número do Cartão</label>
                 <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
             </div>
             <div style="display:flex; gap:10px;">
@@ -448,7 +548,10 @@
                     <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
                 </div>
             </div>
-            <button class="btn btn-primary neon" onclick="processarPagamento()">💳 PAGAR</button>
+            
+            <button class="btn btn-primary neon" onclick="processarPagamento()" disabled style="opacity:0.5; cursor:not-allowed;">
+                💳 AGUARDANDO CONFIRMAÇÃO...
+            </button>
             <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
         </div>
     </section>
