@@ -1151,7 +1151,7 @@ function excluirPlano(planoId) {
 }
 
 // =============================================================
-// ===== AGENDAMENTO (CORRIGIDO - SEM ÍNDICE) =====
+// ===== AGENDAMENTO (OTIMIZADO COM ÍNDICE) =====
 // =============================================================
 
 async function agendarCorte() {
@@ -1201,21 +1201,15 @@ async function agendarCorte() {
             }
         }
 
-        // VERIFICA CONFLITOS - SEM FILTRAR STATUS (NÃO PRECISA DE ÍNDICE!)
+        // VERIFICA CONFLITOS - USANDO O ÍNDICE CRIADO
         if (db) {
-            // Busca TODOS os agendamentos da data e horário (sem filtrar status)
             const snapshot = await db.collection('agendamentos')
                 .where('data', '==', data)
                 .where('horario', '==', horario)
+                .where('status', '!=', 'cancelado')
                 .get();
 
-            // Filtra MANUALMENTE os cancelados no JavaScript
-            const conflito = snapshot.docs.some(doc => {
-                const dados = doc.data();
-                return dados.status !== 'cancelado';
-            });
-
-            if (conflito) {
+            if (!snapshot.empty) {
                 alert('⚠️ Horário já ocupado! Escolha outro.');
                 return;
             }
