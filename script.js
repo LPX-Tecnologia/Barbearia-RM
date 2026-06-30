@@ -1,8 +1,39 @@
 // =============================================================
-// ===== SCRIPT - BARBEARIA RM (100% FUNCIONAL) =====
+// ===== CONFIGURAÇÃO DO FIREBASE =====
 // =============================================================
 
-console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
+const firebaseConfig = {
+    apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
+    authDomain: "barbearia-rm.firebaseapp.com",
+    projectId: "barbearia-rm",
+    storageBucket: "barbearia-rm.firebasestorage.app",
+    messagingSenderId: "512819922057",
+    appId: "1:512819922057:web:6a913791cb6435e4f63258",
+    measurementId: "G-TKVLVLPBJH"
+};
+
+// ===== INICIALIZA O FIREBASE =====
+if (typeof firebase !== 'undefined') {
+    try {
+        if (!firebase.apps || firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+            console.log('✅ Firebase inicializado com sucesso!');
+        } else {
+            console.log('✅ Firebase já estava inicializado.');
+        }
+    } catch (e) {
+        console.error('❌ Erro ao inicializar Firebase:', e);
+    }
+} else {
+    console.error('❌ Firebase SDK não carregado! Verifique o HTML.');
+}
+
+// ===== REFERÊNCIAS =====
+const db = firebase.firestore ? firebase.firestore() : null;
+const auth = firebase.auth ? firebase.auth() : null;
+
+console.log('🔥 Firestore:', db ? '✅ Conectado' : '❌ Offline');
+console.log('🔐 Auth:', auth ? '✅ Disponível' : '❌ Offline');
 
 // =============================================================
 // ===== FUNÇÕES AUXILIARES =====
@@ -11,7 +42,6 @@ console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
 function salvarDados(chave, dados) {
     try {
         localStorage.setItem(chave, JSON.stringify(dados));
-        console.log('💾 Dados salvos:', chave);
     } catch (e) {
         console.error('Erro ao salvar:', e);
     }
@@ -57,16 +87,17 @@ function mostrarTela(id) {
         if (navCliente) navCliente.style.display = 'flex';
     }
 
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen', 'estatisticasScreen', 'infoClientesScreen', 'editarPixScreen'].includes(id)) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
 
-    // Carrega dados quando entra nas telas
     if (id === 'homeClienteScreen') {
+        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
         carregarFeedCliente();
         carregarAgendaCliente();
     }
     if (id === 'homeBarbeiroScreen') {
+        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
         carregarFeedBarbeiro();
         carregarAgendamentosBarbeiro();
         carregarPlanos();
@@ -84,10 +115,9 @@ function mostrarToast(mensagem, tipo) {
 }
 
 // =============================================================
-// ===== DADOS INICIAIS =====
+// ===== DADOS INICIAIS (LOCALSTORAGE PARA FALLBACK) =====
 // =============================================================
 
-// BARBEIRO PADRÃO
 if (!carregarDados('barbeiros')) {
     salvarDados('barbeiros', [
         {
@@ -100,15 +130,13 @@ if (!carregarDados('barbeiros')) {
             ultimoAcesso: Date.now()
         }
     ]);
-    console.log('✅ Barbeiro padrão criado!');
+    console.log('✅ Barbeiro padrão criado no LocalStorage!');
 }
 
-// CLIENTES
 if (!carregarDados('clientes')) {
     salvarDados('clientes', []);
 }
 
-// POSTS (FEED)
 if (!carregarDados('posts')) {
     salvarDados('posts', [
         {
@@ -136,27 +164,21 @@ if (!carregarDados('posts')) {
             comentarios: []
         }
     ]);
-    console.log('✅ Posts de exemplo criados!');
 }
 
-// PLANOS
 if (!carregarDados('planos')) {
     salvarDados('planos', [
         { id: 'plano1', nome: 'Plano Mensal', periodo: 'mensal', preco: 150.00, descricao: '1 corte por mês + barba grátis' },
         { id: 'plano2', nome: 'Plano Trimestral', periodo: 'trimestral', preco: 400.00, descricao: '1 corte por mês + 1 barba + 1 luzes' }
     ]);
-    console.log('✅ Planos de exemplo criados!');
 }
 
-// PAGAMENTOS
 if (!carregarDados('pagamentos')) {
     salvarDados('pagamentos', []);
 }
 
-// AGENDAMENTOS
 if (!carregarDados('agendamentos')) {
     salvarDados('agendamentos', []);
-    console.log('✅ Agendamentos iniciados!');
 }
 
 // =============================================================
@@ -170,120 +192,191 @@ let extratoFiltro = 'todos';
 let pagamentoPostId = null;
 let pixCopiado = false;
 let qrCodeLido = false;
+let unsubscribeAgendamentos = null;
 
 // =============================================================
-// ===== FUNÇÕES DE LOGIN =====
+// ===== FUNÇÕES DE LOGIN (COM FIREBASE) =====
 // =============================================================
 
 function mostrarLoginCliente() {
-    console.log('🔄 MOSTRAR LOGIN CLIENTE');
     document.getElementById('loginFormCliente').style.display = 'block';
     document.getElementById('loginFormBarbeiro').style.display = 'none';
 }
 
 function mostrarLoginBarbeiro() {
-    console.log('🔄 MOSTRAR LOGIN BARBEIRO');
     document.getElementById('loginFormCliente').style.display = 'none';
     document.getElementById('loginFormBarbeiro').style.display = 'block';
 }
 
-function loginCliente() {
-    console.log('🔥 LOGIN CLIENTE CHAMADO!');
-    
-    const email = document.getElementById('loginEmailCliente').value.trim();
-    const senha = document.getElementById('loginSenhaCliente').value;
-    
-    if (!email || !senha) {
-        alert('⚠️ Preencha todos os campos!');
-        return;
-    }
-    
-    const clientes = carregarDados('clientes') || [];
-    const cliente = clientes.find(c => c.email === email && c.senha === senha);
-    
-    if (cliente) {
-        usuarioLogado = cliente;
-        tipoUsuario = 'cliente';
-        salvarDados('usuarioLogado', cliente);
-        alert('✅ Bem-vindo, ' + cliente.nome + '!');
-        mostrarTela('homeClienteScreen');
-    } else {
-        alert('❌ E-mail ou senha inválidos!');
-    }
-}
-
-function loginBarbeiro() {
-    console.log('🔥 LOGIN BARBEIRO CHAMADO!');
-    
-    const email = document.getElementById('loginEmailBarbeiro').value.trim();
-    const senha = document.getElementById('loginSenhaBarbeiro').value;
-    
-    console.log('📧 Email:', email);
-    console.log('🔒 Senha:', senha);
-    
-    if (!email || !senha) {
-        alert('⚠️ Preencha todos os campos!');
-        return;
-    }
-    
-    const barbeiros = carregarDados('barbeiros') || [];
-    console.log('📋 Barbeiros:', barbeiros);
-    
-    const barbeiro = barbeiros.find(b => b.email === email && b.senha === senha);
-    
-    if (barbeiro) {
-        usuarioLogado = barbeiro;
-        tipoUsuario = 'barbeiro';
-        salvarDados('usuarioLogado', barbeiro);
-        alert('✅ Bem-vindo, ' + barbeiro.nome + '!');
-        mostrarTela('homeBarbeiroScreen');
-    } else {
-        alert('❌ E-mail ou senha inválidos!\n\nUse:\nE-mail: barbeiro@barbeariarm.com\nSenha: 123456');
-    }
-}
-
-function cadastrarCliente() {
-    console.log('🔥 CADASTRO CHAMADO!');
+// ===== CADASTRO CLIENTE (FIREBASE) =====
+async function cadastrarCliente() {
+    console.log('🔥 CADASTRO CLIENTE FIREBASE CHAMADO!');
     
     const nome = document.getElementById('cadNomeCliente').value.trim();
     const email = document.getElementById('cadEmailCliente').value.trim();
     const celular = document.getElementById('cadCelularCliente').value.trim();
     const senha = document.getElementById('cadSenhaCliente').value;
-    
+
     if (!nome || !email || !celular || !senha) {
         alert('⚠️ Preencha todos os campos!');
         return;
     }
-    
+
     if (senha.length < 6) {
         alert('⚠️ Senha deve ter no mínimo 6 caracteres!');
         return;
     }
-    
-    const clientes = carregarDados('clientes') || [];
-    
-    if (clientes.find(c => c.email === email)) {
-        alert('⚠️ E-mail já cadastrado!');
+
+    if (!auth) {
+        alert('❌ Firebase Auth não disponível!');
         return;
     }
-    
-    const novo = {
-        id: gerarId(),
-        nome: nome,
-        email: email,
-        celular: celular,
-        senha: senha,
-        foto: '',
-        dataCadastro: new Date().toISOString()
-    };
-    
-    clientes.push(novo);
-    salvarDados('clientes', clientes);
-    alert('🎉 Cadastro realizado com sucesso, ' + nome + '!');
-    mostrarTela('loginScreen');
+
+    try {
+        // 1. Cria no Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+        const user = userCredential.user;
+        console.log('✅ Usuário criado no Auth:', user.uid);
+
+        // 2. Salva no Firestore
+        await db.collection('clientes').doc(user.uid).set({
+            id: user.uid,
+            nome: nome,
+            email: email,
+            celular: celular,
+            foto: '',
+            ultimoAcesso: Date.now(),
+            dataCadastro: new Date().toISOString()
+        });
+        console.log('✅ Dados salvos no Firestore!');
+
+        // 3. Salva no LocalStorage (fallback)
+        const clientes = carregarDados('clientes') || [];
+        clientes.push({
+            id: user.uid,
+            nome: nome,
+            email: email,
+            celular: celular,
+            foto: '',
+            ultimoAcesso: Date.now(),
+            dataCadastro: new Date().toISOString()
+        });
+        salvarDados('clientes', clientes);
+
+        alert('🎉 Cadastro realizado com sucesso, ' + nome + '!');
+        mostrarTela('loginScreen');
+
+        document.getElementById('cadNomeCliente').value = '';
+        document.getElementById('cadEmailCliente').value = '';
+        document.getElementById('cadCelularCliente').value = '';
+        document.getElementById('cadSenhaCliente').value = '';
+
+    } catch (error) {
+        console.error('❌ Erro no cadastro:', error);
+        alert('❌ Erro: ' + error.message);
+    }
 }
 
+// ===== LOGIN CLIENTE (FIREBASE) =====
+async function loginCliente() {
+    console.log('🔥 LOGIN CLIENTE FIREBASE CHAMADO!');
+    
+    const email = document.getElementById('loginEmailCliente').value.trim();
+    const senha = document.getElementById('loginSenhaCliente').value;
+
+    if (!email || !senha) {
+        alert('⚠️ Preencha todos os campos!');
+        return;
+    }
+
+    if (!auth) {
+        alert('❌ Firebase Auth não disponível!');
+        return;
+    }
+
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, senha);
+        const user = userCredential.user;
+        console.log('✅ Usuário logado:', user.email);
+
+        // Busca no Firestore
+        const doc = await db.collection('clientes').doc(user.uid).get();
+        const cliente = doc.exists ? { id: user.uid, ...doc.data() } : null;
+
+        if (cliente) {
+            await db.collection('clientes').doc(user.uid).update({
+                ultimoAcesso: Date.now()
+            });
+
+            cliente.ultimoAcesso = Date.now();
+            usuarioLogado = cliente;
+            tipoUsuario = 'cliente';
+            salvarDados('usuarioLogado', cliente);
+
+            alert('👋 Bem-vindo, ' + cliente.nome + '!');
+            mostrarTela('homeClienteScreen');
+        } else {
+            alert('❌ Dados do cliente não encontrados!');
+        }
+    } catch (error) {
+        console.error('❌ Erro no login:', error);
+        alert('❌ E-mail ou senha inválidos!');
+    }
+}
+
+// ===== LOGIN BARBEIRO (FIREBASE) =====
+async function loginBarbeiro() {
+    console.log('🔥 LOGIN BARBEIRO FIREBASE CHAMADO!');
+    
+    const email = document.getElementById('loginEmailBarbeiro').value.trim();
+    const senha = document.getElementById('loginSenhaBarbeiro').value;
+
+    if (!email || !senha) {
+        alert('⚠️ Preencha todos os campos!');
+        return;
+    }
+
+    if (!auth) {
+        alert('❌ Firebase Auth não disponível!');
+        return;
+    }
+
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, senha);
+        const user = userCredential.user;
+        console.log('✅ Barbeiro logado:', user.email);
+
+        // Busca no Firestore
+        const doc = await db.collection('barbeiros').doc(user.uid).get();
+        const barbeiro = doc.exists ? { id: user.uid, ...doc.data() } : null;
+
+        if (barbeiro) {
+            await db.collection('barbeiros').doc(user.uid).update({
+                ultimoAcesso: Date.now()
+            });
+
+            barbeiro.ultimoAcesso = Date.now();
+            usuarioLogado = barbeiro;
+            tipoUsuario = 'barbeiro';
+            salvarDados('usuarioLogado', barbeiro);
+
+            alert('✅ Bem-vindo, ' + barbeiro.nome + '!');
+            mostrarTela('homeBarbeiroScreen');
+        } else {
+            alert('❌ Dados do barbeiro não encontrados!');
+        }
+    } catch (error) {
+        console.error('❌ Erro no login:', error);
+        alert('❌ E-mail ou senha inválidos!');
+    }
+}
+
+// =============================================================
+// ===== SAIR =====
+// =============================================================
+
 function sairCliente() {
+    if (auth) auth.signOut();
     usuarioLogado = null;
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
@@ -292,6 +385,7 @@ function sairCliente() {
 }
 
 function sairBarbeiro() {
+    if (auth) auth.signOut();
     usuarioLogado = null;
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
@@ -304,16 +398,9 @@ function sairBarbeiro() {
 // =============================================================
 
 function carregarFeedCliente() {
-    console.log('📱 carregarFeedCliente() CHAMADA!');
-    
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
-    if (!container) {
-        console.error('❌ Container feedClienteContainer não encontrado!');
-        return;
-    }
-
-    console.log('📋 Posts carregados:', posts.length);
+    if (!container) return;
 
     if (posts.length === 0) {
         container.innerHTML = `
@@ -380,16 +467,9 @@ function carregarFeedCliente() {
 }
 
 function carregarFeedBarbeiro() {
-    console.log('📱 carregarFeedBarbeiro() CHAMADA!');
-    
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
-    if (!container) {
-        console.error('❌ Container feedClienteContainer não encontrado!');
-        return;
-    }
-
-    console.log('📋 Posts carregados:', posts.length);
+    if (!container) return;
 
     if (posts.length === 0) {
         container.innerHTML = `
@@ -457,106 +537,6 @@ function carregarFeedBarbeiro() {
             </div>
         `;
     }).join('');
-}
-
-// =============================================================
-// ===== INTERAÇÕES COM POSTS =====
-// =============================================================
-
-function curtirPost(postId) {
-    if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para curtir!');
-        return;
-    }
-
-    const posts = carregarDados('posts') || [];
-    const idx = posts.findIndex(p => p.id === postId);
-    if (idx === -1) return;
-
-    if (!posts[idx].curtidas) posts[idx].curtidas = [];
-
-    const jaCurtiu = posts[idx].curtidas.includes(usuarioLogado.id);
-    if (jaCurtiu) {
-        posts[idx].curtidas = posts[idx].curtidas.filter(id => id !== usuarioLogado.id);
-    } else {
-        posts[idx].curtidas.push(usuarioLogado.id);
-    }
-
-    salvarDados('posts', posts);
-    carregarFeedCliente();
-}
-
-function abrirComentarios(postId) {
-    postSelecionado = postId;
-    const posts = carregarDados('posts') || [];
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
-
-    const container = document.getElementById('comentariosContainer');
-    if (!container) return;
-
-    const comentarios = post.comentarios || [];
-
-    if (comentarios.length === 0) {
-        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
-    } else {
-        container.innerHTML = comentarios.map(c => `
-            <div style="padding:10px 0; border-bottom:1px solid #2A2A2A;">
-                <strong style="color:#C9A84C;">${c.nome}</strong>
-                <p style="margin:4px 0; color:#F5F0E8;">${c.texto}</p>
-                <span style="font-size:11px; color:#6A6A6A;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
-            </div>
-        `).join('');
-    }
-
-    document.getElementById('modalComentario').classList.add('active');
-}
-
-function adicionarComentario() {
-    if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        alert('Faça login como cliente para comentar!');
-        return;
-    }
-
-    const texto = document.getElementById('novoComentario').value.trim();
-    if (!texto) {
-        alert('Digite um comentário!');
-        return;
-    }
-
-    const posts = carregarDados('posts') || [];
-    const idx = posts.findIndex(p => p.id === postSelecionado);
-    if (idx === -1) return;
-
-    if (!posts[idx].comentarios) posts[idx].comentarios = [];
-
-    posts[idx].comentarios.push({
-        nome: usuarioLogado.nome,
-        texto: texto,
-        data: new Date().toISOString()
-    });
-
-    salvarDados('posts', posts);
-    document.getElementById('novoComentario').value = '';
-    alert('Comentário adicionado!');
-    abrirComentarios(postSelecionado);
-}
-
-function compartilharPost(postId) {
-    const url = window.location.href + '?post=' + postId;
-    if (navigator.share) {
-        navigator.share({
-            title: '✂️ Barbearia RM',
-            text: 'Confira esse corte incrível!',
-            url: url
-        }).catch(() => {});
-    } else {
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Link copiado para compartilhar!');
-        }).catch(() => {
-            alert('Compartilhe: ' + url);
-        });
-    }
 }
 
 // =============================================================
@@ -670,8 +650,6 @@ function excluirPost(postId) {
 // =============================================================
 
 function carregarPlanos() {
-    console.log('📋 carregarPlanos() CHAMADA!');
-    
     const planos = carregarDados('planos') || [];
     const container = document.getElementById('planosContainer');
     if (!container) return;
@@ -793,27 +771,22 @@ function excluirPlano(planoId) {
 }
 
 // =============================================================
-// ===== AGENDAMENTO =====
+// ===== AGENDAMENTO (COM FIREBASE) =====
 // =============================================================
 
-function agendarCorte() {
+async function agendarCorte() {
     console.log('✂️ FUNÇÃO agendarCorte() CHAMADA!');
     
-    // VERIFICA SE ESTÁ LOGADO
     if (!usuarioLogado) {
         alert('⚠️ Faça login para agendar!');
-        console.log('❌ Usuário não logado');
         return;
     }
     
-    // VERIFICA SE É CLIENTE
     if (tipoUsuario !== 'cliente') {
         alert('⚠️ Apenas clientes podem agendar!');
-        console.log('❌ Tipo de usuário:', tipoUsuario);
         return;
     }
     
-    // PEGA OS DADOS
     const data = document.getElementById('agendamentoData').value;
     const horario = document.getElementById('agendamentoHorario').value;
     const tipo = document.getElementById('agendamentoTipo').value;
@@ -822,109 +795,146 @@ function agendarCorte() {
     console.log('⏰ Horário:', horario);
     console.log('✂️ Tipo:', tipo);
     
-    // VALIDA
     if (!data || !horario) {
         alert('⚠️ Selecione data e horário!');
-        console.log('❌ Data ou horário vazio');
         return;
     }
     
-    // CARREGA AGENDAMENTOS EXISTENTES
-    const agendamentos = carregarDados('agendamentos') || [];
-    console.log('📋 Agendamentos existentes:', agendamentos.length);
-    
-    // VERIFICA CONFLITO
-    const conflito = agendamentos.some(a => a.data === data && a.horario === horario && a.status !== 'cancelado');
-    
-    if (conflito) {
-        alert('⚠️ Horário já ocupado! Escolha outro.');
-        console.log('❌ Conflito de horário');
-        return;
+    try {
+        // Verifica conflitos no Firestore
+        const snapshot = await db.collection('agendamentos')
+            .where('data', '==', data)
+            .where('horario', '==', horario)
+            .where('status', '!=', 'cancelado')
+            .get();
+
+        if (!snapshot.empty) {
+            alert('⚠️ Horário já ocupado! Escolha outro.');
+            return;
+        }
+
+        // Salva no Firestore
+        await db.collection('agendamentos').add({
+            clienteId: usuarioLogado.id,
+            clienteNome: usuarioLogado.nome,
+            clienteCelular: usuarioLogado.celular || '',
+            data: data,
+            horario: horario,
+            tipo: tipo,
+            status: 'confirmado',
+            dataAgendamento: new Date().toISOString()
+        });
+
+        console.log('✅ Agendamento salvo no Firestore!');
+        
+        // Salva também no LocalStorage (fallback)
+        const agendamentos = carregarDados('agendamentos') || [];
+        agendamentos.push({
+            id: gerarId(),
+            clienteId: usuarioLogado.id,
+            clienteNome: usuarioLogado.nome,
+            clienteCelular: usuarioLogado.celular || '',
+            data: data,
+            horario: horario,
+            tipo: tipo,
+            status: 'confirmado',
+            dataAgendamento: new Date().toISOString()
+        });
+        salvarDados('agendamentos', agendamentos);
+
+        alert('✅ Agendamento confirmado para ' + data + ' às ' + horario + '!');
+        document.getElementById('agendamentoData').value = '';
+        mostrarTela('homeClienteScreen');
+
+    } catch (error) {
+        console.error('❌ Erro ao agendar:', error);
+        alert('❌ Erro ao agendar: ' + error.message);
     }
-    
-    // CRIA NOVO AGENDAMENTO
-    const novo = {
-        id: gerarId(),
-        clienteId: usuarioLogado.id,
-        clienteNome: usuarioLogado.nome,
-        clienteCelular: usuarioLogado.celular || '',
-        data: data,
-        horario: horario,
-        tipo: tipo,
-        status: 'confirmado',
-        dataAgendamento: new Date().toISOString()
-    };
-    
-    console.log('📝 Novo agendamento:', novo);
-    
-    // SALVA
-    agendamentos.push(novo);
-    salvarDados('agendamentos', agendamentos);
-    
-    alert('✅ Agendamento confirmado para ' + data + ' às ' + horario + '!');
-    
-    // LIMPA O CAMPO DE DATA
-    document.getElementById('agendamentoData').value = '';
-    
-    // VOLTA PARA A HOME
-    mostrarTela('homeClienteScreen');
 }
 
-function carregarAgendaCliente() {
+async function carregarAgendaCliente() {
     console.log('📅 carregarAgendaCliente() CHAMADA!');
     
-    if (!usuarioLogado || tipoUsuario !== 'cliente') {
-        console.log('⚠️ Usuário não é cliente');
-        return;
-    }
+    if (!usuarioLogado || tipoUsuario !== 'cliente') return;
     
     const container = document.getElementById('agendaClienteContainer');
-    if (!container) {
-        console.error('❌ Container agendaClienteContainer não encontrado');
-        return;
-    }
-    
-    const agendamentos = carregarDados('agendamentos') || [];
-    const meus = agendamentos.filter(a => a.clienteId === usuarioLogado.id && a.status !== 'cancelado');
-    
-    console.log('📋 Agendamentos do cliente:', meus.length);
-    
-    if (meus.length === 0) {
-        container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>';
-        return;
-    }
-    
-    meus.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
-    
-    container.innerHTML = meus.map(a => `
-        <div class="agenda-item">
-            <div class="agenda-info">
-                <div style="font-weight:600; color:#C9A84C;">✂️ ${a.tipo}</div>
-                <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
+    if (!container) return;
+
+    try {
+        // Busca no Firestore
+        const snapshot = await db.collection('agendamentos')
+            .where('clienteId', '==', usuarioLogado.id)
+            .where('status', '!=', 'cancelado')
+            .orderBy('data')
+            .orderBy('horario')
+            .get();
+
+        const meus = [];
+        snapshot.forEach(doc => meus.push({ id: doc.id, ...doc.data() }));
+
+        if (meus.length === 0) {
+            container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>';
+            return;
+        }
+
+        container.innerHTML = meus.map(a => `
+            <div class="agenda-item">
+                <div class="agenda-info">
+                    <div style="font-weight:600; color:#C9A84C;">✂️ ${a.tipo}</div>
+                    <div class="agenda-data">📅 ${new Date(a.data).toLocaleDateString('pt-BR')} às ${a.horario}</div>
+                </div>
+                <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
             </div>
-            <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}</span>
-        </div>
-    `).join('');
+        `).join('');
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar agenda:', error);
+        container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Erro ao carregar agendamentos</p>';
+    }
 }
 
 function carregarAgendamentosBarbeiro() {
-    console.log('📅 carregarAgendamentosBarbeiro() CHAMADA!');
-    
     const container = document.getElementById('agendamentosBarbeiroContainer');
-    if (!container) {
-        console.error('❌ Container agendamentosBarbeiroContainer não encontrado');
+    if (!container) return;
+
+    if (unsubscribeAgendamentos) {
+        unsubscribeAgendamentos();
+    }
+
+    if (!db) {
+        // Fallback para LocalStorage
+        const agendamentos = carregarDados('agendamentos') || [];
+        renderizarAgendamentosBarbeiro(agendamentos);
         return;
     }
-    
-    const agendamentos = carregarDados('agendamentos') || [];
-    
+
+    // Escuta em tempo real no Firestore
+    unsubscribeAgendamentos = db.collection('agendamentos')
+        .where('status', '!=', 'cancelado')
+        .orderBy('data')
+        .orderBy('horario')
+        .onSnapshot((snapshot) => {
+            const agendamentos = [];
+            snapshot.forEach(doc => agendamentos.push({ id: doc.id, ...doc.data() }));
+            renderizarAgendamentosBarbeiro(agendamentos);
+        }, (error) => {
+            console.error('❌ Erro ao ouvir agendamentos:', error);
+            const agendamentos = carregarDados('agendamentos') || [];
+            renderizarAgendamentosBarbeiro(agendamentos);
+        });
+}
+
+function renderizarAgendamentosBarbeiro(agendamentos) {
+    const container = document.getElementById('agendamentosBarbeiroContainer');
+    if (!container) return;
+
     if (agendamentos.length === 0) {
         container.innerHTML = '<p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>';
         return;
     }
-    
+
     agendamentos.sort((a, b) => new Date(a.data + ' ' + a.horario) - new Date(b.data + ' ' + b.horario));
-    
+
     container.innerHTML = agendamentos.filter(a => a.status !== 'cancelado').map(a => `
         <div class="agenda-item">
             <div class="agenda-info">
@@ -970,7 +980,7 @@ function abrirEditarAgendamento(agendamentoId) {
     mostrarTela('agendamentoScreen');
 }
 
-function atualizarAgendamento() {
+async function atualizarAgendamento() {
     const id = document.getElementById('agendamentoId').value;
     const data = document.getElementById('agendamentoData').value;
     const horario = document.getElementById('agendamentoHorario').value;
@@ -981,47 +991,163 @@ function atualizarAgendamento() {
         return;
     }
 
-    const agendamentos = carregarDados('agendamentos') || [];
-    const idx = agendamentos.findIndex(a => a.id === id);
-    if (idx === -1) {
-        alert('Agendamento não encontrado!');
-        return;
+    try {
+        // Atualiza no Firestore
+        await db.collection('agendamentos').doc(id).update({
+            data: data,
+            horario: horario,
+            tipo: tipo
+        });
+
+        // Atualiza no LocalStorage
+        const agendamentos = carregarDados('agendamentos') || [];
+        const idx = agendamentos.findIndex(a => a.id === id);
+        if (idx !== -1) {
+            agendamentos[idx].data = data;
+            agendamentos[idx].horario = horario;
+            agendamentos[idx].tipo = tipo;
+            salvarDados('agendamentos', agendamentos);
+        }
+
+        alert('✅ Agendamento atualizado!');
+
+        const btnAgendar = document.querySelector('#agendamentoScreen .btn-primary');
+        if (btnAgendar) {
+            btnAgendar.textContent = '✅ AGENDAR';
+            btnAgendar.onclick = function() { agendarCorte(); };
+        }
+        document.getElementById('agendamentoId').value = '';
+
+        mostrarTela('homeBarbeiroScreen');
+
+    } catch (error) {
+        console.error('❌ Erro ao atualizar:', error);
+        alert('❌ Erro ao atualizar: ' + error.message);
     }
-
-    const conflito = agendamentos.some((a, i) => 
-        i !== idx && a.data === data && a.horario === horario && a.status !== 'cancelado'
-    );
-
-    if (conflito) {
-        alert('Horário já ocupado! Escolha outro.');
-        return;
-    }
-
-    agendamentos[idx].data = data;
-    agendamentos[idx].horario = horario;
-    agendamentos[idx].tipo = tipo;
-
-    salvarDados('agendamentos', agendamentos);
-    alert('✅ Agendamento atualizado!');
-
-    const btnAgendar = document.querySelector('#agendamentoScreen .btn-primary');
-    if (btnAgendar) {
-        btnAgendar.textContent = '✅ AGENDAR';
-        btnAgendar.onclick = function() { agendarCorte(); };
-    }
-    document.getElementById('agendamentoId').value = '';
-
-    mostrarTela('homeBarbeiroScreen');
 }
 
 function excluirAgendamento(agendamentoId) {
     if (!confirm('Tem certeza que deseja excluir este agendamento?')) return;
 
-    let agendamentos = carregarDados('agendamentos') || [];
-    agendamentos = agendamentos.filter(a => a.id !== agendamentoId);
-    salvarDados('agendamentos', agendamentos);
-    alert('🗑️ Agendamento excluído!');
-    carregarAgendamentosBarbeiro();
+    try {
+        // Exclui do Firestore
+        db.collection('agendamentos').doc(agendamentoId).delete()
+            .then(() => {
+                // Exclui do LocalStorage
+                let agendamentos = carregarDados('agendamentos') || [];
+                agendamentos = agendamentos.filter(a => a.id !== agendamentoId);
+                salvarDados('agendamentos', agendamentos);
+                alert('🗑️ Agendamento excluído!');
+                carregarAgendamentosBarbeiro();
+            })
+            .catch((error) => {
+                console.error('❌ Erro ao excluir:', error);
+                alert('❌ Erro ao excluir: ' + error.message);
+            });
+    } catch (error) {
+        console.error('❌ Erro ao excluir:', error);
+        alert('❌ Erro ao excluir: ' + error.message);
+    }
+}
+
+// =============================================================
+// ===== FUNÇÕES DE INTERAÇÃO =====
+// =============================================================
+
+function curtirPost(postId) {
+    if (!usuarioLogado || tipoUsuario !== 'cliente') {
+        alert('Faça login como cliente para curtir!');
+        return;
+    }
+
+    const posts = carregarDados('posts') || [];
+    const idx = posts.findIndex(p => p.id === postId);
+    if (idx === -1) return;
+
+    if (!posts[idx].curtidas) posts[idx].curtidas = [];
+
+    const jaCurtiu = posts[idx].curtidas.includes(usuarioLogado.id);
+    if (jaCurtiu) {
+        posts[idx].curtidas = posts[idx].curtidas.filter(id => id !== usuarioLogado.id);
+    } else {
+        posts[idx].curtidas.push(usuarioLogado.id);
+    }
+
+    salvarDados('posts', posts);
+    carregarFeedCliente();
+}
+
+function abrirComentarios(postId) {
+    postSelecionado = postId;
+    const posts = carregarDados('posts') || [];
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const container = document.getElementById('comentariosContainer');
+    if (!container) return;
+
+    const comentarios = post.comentarios || [];
+
+    if (comentarios.length === 0) {
+        container.innerHTML = '<p style="color:#6A6A6A;text-align:center;">Nenhum comentário ainda. Seja o primeiro!</p>';
+    } else {
+        container.innerHTML = comentarios.map(c => `
+            <div style="padding:10px 0; border-bottom:1px solid #2A2A2A;">
+                <strong style="color:#C9A84C;">${c.nome}</strong>
+                <p style="margin:4px 0; color:#F5F0E8;">${c.texto}</p>
+                <span style="font-size:11px; color:#6A6A6A;">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('modalComentario').classList.add('active');
+}
+
+function adicionarComentario() {
+    if (!usuarioLogado || tipoUsuario !== 'cliente') {
+        alert('Faça login como cliente para comentar!');
+        return;
+    }
+
+    const texto = document.getElementById('novoComentario').value.trim();
+    if (!texto) {
+        alert('Digite um comentário!');
+        return;
+    }
+
+    const posts = carregarDados('posts') || [];
+    const idx = posts.findIndex(p => p.id === postSelecionado);
+    if (idx === -1) return;
+
+    if (!posts[idx].comentarios) posts[idx].comentarios = [];
+
+    posts[idx].comentarios.push({
+        nome: usuarioLogado.nome,
+        texto: texto,
+        data: new Date().toISOString()
+    });
+
+    salvarDados('posts', posts);
+    document.getElementById('novoComentario').value = '';
+    alert('Comentário adicionado!');
+    abrirComentarios(postSelecionado);
+}
+
+function compartilharPost(postId) {
+    const url = window.location.href + '?post=' + postId;
+    if (navigator.share) {
+        navigator.share({
+            title: '✂️ Barbearia RM',
+            text: 'Confira esse corte incrível!',
+            url: url
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copiado para compartilhar!');
+        }).catch(() => {
+            alert('Compartilhe: ' + url);
+        });
+    }
 }
 
 // =============================================================
@@ -1029,8 +1155,6 @@ function excluirAgendamento(agendamentoId) {
 // =============================================================
 
 function carregarFaturamento() {
-    console.log('💰 carregarFaturamento() CHAMADA!');
-    
     const pagamentos = carregarDados('pagamentos') || [];
     const hoje = new Date();
     const confirmados = pagamentos.filter(p => p.status === 'confirmado');
@@ -1062,8 +1186,6 @@ function carregarFaturamento() {
 // =============================================================
 
 function carregarExtrato() {
-    console.log('📊 carregarExtrato() CHAMADA!');
-    
     const pagamentos = carregarDados('pagamentos') || [];
     const container = document.getElementById('extratoContainer');
     if (!container) return;
@@ -1158,8 +1280,6 @@ function abrirEditarPix() {
 }
 
 function abrirPagamento(postId) {
-    console.log('💳 abrirPagamento() CHAMADA!');
-    
     if (!usuarioLogado || tipoUsuario !== 'cliente') {
         alert('Faça login como cliente para pagar!');
         return;
@@ -1240,8 +1360,6 @@ function copiarPix() {
 }
 
 function verificarPagamento() {
-    console.log('💳 verificarPagamento() CHAMADA!');
-    
     const btnPagar = document.querySelector('#pagamentoScreen .btn-primary');
     if (!btnPagar) return;
 
@@ -1256,19 +1374,15 @@ function verificarPagamento() {
         btnPagar.style.opacity = '1';
         btnPagar.style.cursor = 'pointer';
         btnPagar.textContent = '💳 CONFIRMAR PAGAMENTO';
-        console.log('✅ Pagamento liberado!');
     } else {
         btnPagar.disabled = true;
         btnPagar.style.opacity = '0.5';
         btnPagar.style.cursor = 'not-allowed';
         btnPagar.textContent = '💳 AGUARDANDO CONFIRMAÇÃO...';
-        console.log('⏳ Aguardando confirmação...');
     }
 }
 
 function processarPagamento() {
-    console.log('💳 processarPagamento() CHAMADA!');
-    
     if (!pagamentoPostId) {
         alert('Erro no pagamento!');
         return;
@@ -1342,17 +1456,31 @@ function abrirLocalizacao() {
 // ===== ESTATÍSTICAS =====
 // =============================================================
 
-function atualizarEstatisticas() {
-    console.log('📊 atualizarEstatisticas() CHAMADA!');
-    
-    const clientes = carregarDados('clientes') || [];
+async function atualizarEstatisticas() {
+    let clientes = [];
+    try {
+        const snapshot = await db.collection('clientes').get();
+        snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        clientes = carregarDados('clientes') || [];
+    }
+
     document.getElementById('totalClientes').textContent = clientes.length;
 
     const agora = Date.now();
     const online = clientes.filter(c => (agora - (c.ultimoAcesso || 0)) < 5 * 60 * 1000);
     document.getElementById('clientesOnline').textContent = online.length;
 
-    const agendamentos = carregarDados('agendamentos') || [];
+    let agendamentos = [];
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .where('status', '!=', 'cancelado')
+            .get();
+        snapshot.forEach(doc => agendamentos.push({ ...doc.data() }));
+    } catch (error) {
+        agendamentos = carregarDados('agendamentos') || [];
+    }
+
     const hoje = new Date().toISOString().split('T')[0];
     const agendamentosHoje = agendamentos.filter(a => a.data === hoje && a.status !== 'cancelado');
     document.getElementById('totalAgendamentos').textContent = agendamentosHoje.length;
@@ -1364,10 +1492,15 @@ function atualizarEstatisticas() {
 // ===== INFORMAÇÕES DOS CLIENTES =====
 // =============================================================
 
-function atualizarInfoClientes() {
-    console.log('📊 atualizarInfoClientes() CHAMADA!');
-    
-    const clientes = carregarDados('clientes') || [];
+async function atualizarInfoClientes() {
+    let clientes = [];
+    try {
+        const snapshot = await db.collection('clientes').get();
+        snapshot.forEach(doc => clientes.push({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        clientes = carregarDados('clientes') || [];
+    }
+
     document.getElementById('infoTotalClientes').textContent = clientes.length;
 
     const agora = Date.now();
@@ -1689,13 +1822,11 @@ function excluirCliente(clienteId) {
 // =============================================================
 
 console.log('✂️ Barbearia RM carregada com sucesso!');
-console.log('📧 Barbeiro: barbeiro@barbeariarm.com');
-console.log('🔒 Senha: 123456');
+console.log('🔥 Firebase:', db ? '✅ Conectado' : '❌ Offline');
+console.log('🔐 Auth:', auth ? '✅ Disponível' : '❌ Offline');
 
 // Listeners para os campos de cartão
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📋 DOM carregado! Configurando listeners...');
-    
     const cartaoNumero = document.getElementById('cartaoNumero');
     const cartaoValidade = document.getElementById('cartaoValidade');
     const cartaoCVV = document.getElementById('cartaoCVV');
@@ -1721,25 +1852,31 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Verifica se já está logado
-const usuarioSalvo = carregarDados('usuarioLogado');
-console.log('👤 Usuário salvo:', usuarioSalvo);
+if (auth) {
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log('👤 Usuário autenticado:', user.email);
+            try {
+                const docCliente = await db.collection('clientes').doc(user.uid).get();
+                if (docCliente.exists) {
+                    usuarioLogado = { id: user.uid, ...docCliente.data() };
+                    tipoUsuario = 'cliente';
+                    mostrarTela('homeClienteScreen');
+                    return;
+                }
 
-if (usuarioSalvo) {
-    const clientes = carregarDados('clientes') || [];
-    const barbeiros = carregarDados('barbeiros') || [];
-    
-    const isCliente = clientes.some(c => c.id === usuarioSalvo.id);
-    const isBarbeiro = barbeiros.some(b => b.id === usuarioSalvo.id);
-    
-    if (isCliente) {
-        usuarioLogado = usuarioSalvo;
-        tipoUsuario = 'cliente';
-        console.log('✅ Cliente logado:', usuarioLogado.nome);
-        mostrarTela('homeClienteScreen');
-    } else if (isBarbeiro) {
-        usuarioLogado = usuarioSalvo;
-        tipoUsuario = 'barbeiro';
-        console.log('✅ Barbeiro logado:', usuarioLogado.nome);
-        mostrarTela('homeBarbeiroScreen');
-    }
+                const docBarbeiro = await db.collection('barbeiros').doc(user.uid).get();
+                if (docBarbeiro.exists) {
+                    usuarioLogado = { id: user.uid, ...docBarbeiro.data() };
+                    tipoUsuario = 'barbeiro';
+                    mostrarTela('homeBarbeiroScreen');
+                    return;
+                }
+            } catch (error) {
+                console.error('❌ Erro ao buscar dados:', error);
+            }
+        } else {
+            console.log('👤 Nenhum usuário logado');
+        }
+    });
 }
