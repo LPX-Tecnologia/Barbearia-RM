@@ -1,8 +1,8 @@
 // =============================================================
-// ===== SCRIPT SIMPLIFICADO - APENAS LOCALSTORAGE =====
+// ===== SCRIPT - APENAS LOCALSTORAGE (SEM FIREBASE) =====
 // =============================================================
 
-console.log('✅ Script carregado!');
+console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
 
 // =============================================================
 // ===== FUNÇÕES AUXILIARES =====
@@ -11,7 +11,6 @@ console.log('✅ Script carregado!');
 function salvarDados(chave, dados) {
     try {
         localStorage.setItem(chave, JSON.stringify(dados));
-        console.log('💾 Dados salvos:', chave);
     } catch (e) {
         console.error('Erro ao salvar:', e);
     }
@@ -31,15 +30,6 @@ function gerarId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
-function mostrarToast(mensagem, tipo) {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.textContent = mensagem;
-    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
-}
-
 function mostrarTela(id) {
     console.log('🔄 Mostrando tela:', id);
     
@@ -51,24 +41,31 @@ function mostrarTela(id) {
     if (tela) {
         tela.classList.add('active');
         console.log('✅ Tela', id, 'ativada!');
-    } else {
-        console.error('❌ Tela não encontrada:', id);
-        return;
     }
-
+    
+    // Navegação
     const navCliente = document.getElementById('bottomNavCliente');
     const navBarbeiro = document.getElementById('bottomNavBarbeiro');
-
+    
     if (navCliente) navCliente.style.display = 'none';
     if (navBarbeiro) navBarbeiro.style.display = 'none';
-
+    
     if (tipoUsuario === 'cliente' && ['homeClienteScreen', 'agendamentoScreen', 'perfilClienteScreen'].includes(id)) {
         if (navCliente) navCliente.style.display = 'flex';
     }
-
+    
     if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
+}
+
+function mostrarToast(mensagem, tipo) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = mensagem;
+    toast.style.background = tipo === 'erro' ? '#EF4444' : '#10B981';
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
 }
 
 // =============================================================
@@ -145,29 +142,26 @@ let usuarioLogado = null;
 let tipoUsuario = null;
 
 // =============================================================
-// ===== FUNÇÕES DE LOGIN (APENAS LOCALSTORAGE) =====
+// ===== FUNÇÕES DE LOGIN =====
 // =============================================================
 
 function mostrarLoginCliente() {
-    console.log('🔄 mostrarLoginCliente() chamada!');
+    console.log('🔄 MOSTRAR LOGIN CLIENTE');
     document.getElementById('loginFormCliente').style.display = 'block';
     document.getElementById('loginFormBarbeiro').style.display = 'none';
 }
 
 function mostrarLoginBarbeiro() {
-    console.log('🔄 mostrarLoginBarbeiro() chamada!');
+    console.log('🔄 MOSTRAR LOGIN BARBEIRO');
     document.getElementById('loginFormCliente').style.display = 'none';
     document.getElementById('loginFormBarbeiro').style.display = 'block';
 }
 
 function loginCliente() {
-    console.log('🔄 FUNÇÃO loginCliente() CHAMADA!');
+    console.log('🔥 LOGIN CLIENTE CHAMADO!');
     
     const email = document.getElementById('loginEmailCliente').value.trim();
     const senha = document.getElementById('loginSenhaCliente').value;
-    
-    console.log('📧 Email:', email);
-    console.log('🔒 Senha:', senha);
     
     if (!email || !senha) {
         alert('⚠️ Preencha todos os campos!');
@@ -175,8 +169,6 @@ function loginCliente() {
     }
     
     const clientes = carregarDados('clientes') || [];
-    console.log('📋 Clientes:', clientes);
-    
     const cliente = clientes.find(c => c.email === email && c.senha === senha);
     
     if (cliente) {
@@ -191,7 +183,7 @@ function loginCliente() {
 }
 
 function loginBarbeiro() {
-    console.log('🔄 FUNÇÃO loginBarbeiro() CHAMADA!');
+    console.log('🔥 LOGIN BARBEIRO CHAMADO!');
     
     const email = document.getElementById('loginEmailBarbeiro').value.trim();
     const senha = document.getElementById('loginSenhaBarbeiro').value;
@@ -221,14 +213,12 @@ function loginBarbeiro() {
 }
 
 function cadastrarCliente() {
-    console.log('🔄 FUNÇÃO cadastrarCliente() CHAMADA!');
+    console.log('🔥 CADASTRO CHAMADO!');
     
     const nome = document.getElementById('cadNomeCliente').value.trim();
     const email = document.getElementById('cadEmailCliente').value.trim();
     const celular = document.getElementById('cadCelularCliente').value.trim();
     const senha = document.getElementById('cadSenhaCliente').value;
-    
-    console.log('📝 Dados:', { nome, email, celular, senha: '***' });
     
     if (!nome || !email || !celular || !senha) {
         alert('⚠️ Preencha todos os campos!');
@@ -263,16 +253,11 @@ function cadastrarCliente() {
     mostrarTela('loginScreen');
 }
 
-// =============================================================
-// ===== SAIR =====
-// =============================================================
-
 function sairCliente() {
     usuarioLogado = null;
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
     mostrarTela('loginScreen');
-    alert('👋 Até logo!');
 }
 
 function sairBarbeiro() {
@@ -280,56 +265,55 @@ function sairBarbeiro() {
     tipoUsuario = null;
     salvarDados('usuarioLogado', null);
     mostrarTela('loginScreen');
-    alert('👋 Até logo!');
 }
 
 // =============================================================
-// ===== FUNÇÕES VAZIAS (PARA NÃO QUEBRAR O APP) =====
+// ===== FUNÇÕES VAZIAS (PARA NÃO DAR ERRO) =====
 // =============================================================
 
-function carregarFeedCliente() { console.log('📱 Feed cliente'); }
-function carregarFeedBarbeiro() { console.log('📱 Feed barbeiro'); }
-function carregarAgendaCliente() { console.log('📅 Agenda cliente'); }
-function carregarAgendamentosBarbeiro() { console.log('📅 Agendamentos barbeiro'); }
-function carregarPlanos() { console.log('📋 Planos'); }
-function carregarFaturamento() { console.log('💰 Faturamento'); }
-function criarPost() { console.log('📸 Criar post'); }
-function criarPlano() { console.log('📋 Criar plano'); }
-function curtirPost() { console.log('❤️ Curtir post'); }
-function abrirComentarios() { console.log('💬 Abrir comentários'); }
-function adicionarComentario() { console.log('💬 Adicionar comentário'); }
-function compartilharPost() { console.log('📤 Compartilhar post'); }
-function excluirPost() { console.log('🗑️ Excluir post'); }
-function abrirPagamento() { console.log('💳 Abrir pagamento'); }
-function copiarPix() { console.log('📋 Copiar PIX'); }
-function processarPagamento() { console.log('💳 Processar pagamento'); }
-function fecharPagamento() { console.log('💳 Fechar pagamento'); }
-function filtrarExtrato() { console.log('📊 Filtrar extrato'); }
-function carregarExtrato() { console.log('📊 Carregar extrato'); }
-function uploadFotoCliente() { console.log('📸 Upload foto cliente'); }
-function uploadFotoBarbeiro() { console.log('📸 Upload foto barbeiro'); }
-function trocarSenhaCliente() { console.log('🔑 Trocar senha cliente'); }
-function trocarSenhaBarbeiro() { console.log('🔑 Trocar senha barbeiro'); }
-function salvarPerfilCliente() { console.log('👤 Salvar perfil cliente'); }
-function salvarPerfilBarbeiro() { console.log('👤 Salvar perfil barbeiro'); }
-function carregarPerfilCliente() { console.log('👤 Carregar perfil cliente'); }
-function carregarPerfilBarbeiro() { console.log('👤 Carregar perfil barbeiro'); }
-function abrirLocalizacao() { console.log('📍 Abrir localização'); }
-function atualizarEstatisticas() { console.log('📊 Atualizar estatísticas'); }
-function atualizarInfoClientes() { console.log('📊 Atualizar info clientes'); }
-function verClientes() { console.log('👥 Ver clientes'); }
-function excluirCliente() { console.log('🗑️ Excluir cliente'); }
-function abrirEditarPix() { console.log('💳 Editar PIX'); }
-function salvarConfigPix() { console.log('💳 Salvar PIX'); }
-function verificarPagamento() { console.log('💳 Verificar pagamento'); }
-function agendarCorte() { console.log('✂️ Agendar corte'); }
+function carregarFeedCliente() {}
+function carregarFeedBarbeiro() {}
+function carregarAgendaCliente() {}
+function carregarAgendamentosBarbeiro() {}
+function carregarPlanos() {}
+function carregarFaturamento() {}
+function criarPost() {}
+function criarPlano() {}
+function curtirPost() {}
+function abrirComentarios() {}
+function adicionarComentario() {}
+function compartilharPost() {}
+function excluirPost() {}
+function abrirPagamento() {}
+function copiarPix() {}
+function processarPagamento() {}
+function fecharPagamento() {}
+function filtrarExtrato() {}
+function carregarExtrato() {}
+function uploadFotoCliente() {}
+function uploadFotoBarbeiro() {}
+function trocarSenhaCliente() {}
+function trocarSenhaBarbeiro() {}
+function salvarPerfilCliente() {}
+function salvarPerfilBarbeiro() {}
+function carregarPerfilCliente() {}
+function carregarPerfilBarbeiro() {}
+function abrirLocalizacao() {}
+function atualizarEstatisticas() {}
+function atualizarInfoClientes() {}
+function verClientes() {}
+function excluirCliente() {}
+function abrirEditarPix() {}
+function salvarConfigPix() {}
+function verificarPagamento() {}
+function agendarCorte() {}
 
 // =============================================================
 // ===== INICIALIZAÇÃO =====
 // =============================================================
 
-console.log('✂️ Barbearia RM carregada com sucesso!');
-console.log('📧 Use: barbeiro@barbeariarm.com');
+console.log('✂️ Barbearia RM - Modo LocalStorage');
+console.log('📧 Barbeiro: barbeiro@barbeariarm.com');
 console.log('🔒 Senha: 123456');
 
 // Verifica se já está logado
@@ -337,10 +321,10 @@ const usuarioSalvo = carregarDados('usuarioLogado');
 if (usuarioSalvo) {
     const clientes = carregarDados('clientes') || [];
     const barbeiros = carregarDados('barbeiros') || [];
-
+    
     const isCliente = clientes.some(c => c.id === usuarioSalvo.id);
     const isBarbeiro = barbeiros.some(b => b.id === usuarioSalvo.id);
-
+    
     if (isCliente) {
         usuarioLogado = usuarioSalvo;
         tipoUsuario = 'cliente';
