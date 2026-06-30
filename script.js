@@ -1,5 +1,5 @@
 // =============================================================
-// ===== SCRIPT - BARBEARIA RM (LOCALSTORAGE) =====
+// ===== SCRIPT - BARBEARIA RM (100% FUNCIONAL) =====
 // =============================================================
 
 console.log('✅ SCRIPT CARREGADO COM SUCESSO!');
@@ -57,27 +57,20 @@ function mostrarTela(id) {
         if (navCliente) navCliente.style.display = 'flex';
     }
 
-    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen', 'estatisticasScreen', 'infoClientesScreen', 'editarPixScreen'].includes(id)) {
+    if (tipoUsuario === 'barbeiro' && ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'perfilBarbeiroScreen'].includes(id)) {
         if (navBarbeiro) navBarbeiro.style.display = 'flex';
     }
 
+    // Carrega dados quando entra nas telas
     if (id === 'homeClienteScreen') {
-        document.getElementById('welcomeClienteNome').textContent = usuarioLogado?.nome || 'Cliente';
         carregarFeedCliente();
         carregarAgendaCliente();
     }
     if (id === 'homeBarbeiroScreen') {
-        document.getElementById('welcomeBarbeiroNome').textContent = usuarioLogado?.nome || 'Barbeiro';
         carregarFeedBarbeiro();
         carregarAgendamentosBarbeiro();
         carregarPlanos();
         carregarFaturamento();
-    }
-    if (id === 'estatisticasScreen') {
-        atualizarEstatisticas();
-    }
-    if (id === 'infoClientesScreen') {
-        atualizarInfoClientes();
     }
 }
 
@@ -94,6 +87,7 @@ function mostrarToast(mensagem, tipo) {
 // ===== DADOS INICIAIS =====
 // =============================================================
 
+// BARBEIRO PADRÃO
 if (!carregarDados('barbeiros')) {
     salvarDados('barbeiros', [
         {
@@ -109,10 +103,12 @@ if (!carregarDados('barbeiros')) {
     console.log('✅ Barbeiro padrão criado!');
 }
 
+// CLIENTES
 if (!carregarDados('clientes')) {
     salvarDados('clientes', []);
 }
 
+// POSTS (FEED)
 if (!carregarDados('posts')) {
     salvarDados('posts', [
         {
@@ -140,21 +136,27 @@ if (!carregarDados('posts')) {
             comentarios: []
         }
     ]);
+    console.log('✅ Posts de exemplo criados!');
 }
 
+// PLANOS
 if (!carregarDados('planos')) {
     salvarDados('planos', [
         { id: 'plano1', nome: 'Plano Mensal', periodo: 'mensal', preco: 150.00, descricao: '1 corte por mês + barba grátis' },
         { id: 'plano2', nome: 'Plano Trimestral', periodo: 'trimestral', preco: 400.00, descricao: '1 corte por mês + 1 barba + 1 luzes' }
     ]);
+    console.log('✅ Planos de exemplo criados!');
 }
 
+// PAGAMENTOS
 if (!carregarDados('pagamentos')) {
     salvarDados('pagamentos', []);
 }
 
+// AGENDAMENTOS
 if (!carregarDados('agendamentos')) {
     salvarDados('agendamentos', []);
+    console.log('✅ Agendamentos iniciados!');
 }
 
 // =============================================================
@@ -306,7 +308,12 @@ function carregarFeedCliente() {
     
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ Container feedClienteContainer não encontrado!');
+        return;
+    }
+
+    console.log('📋 Posts carregados:', posts.length);
 
     if (posts.length === 0) {
         container.innerHTML = `
@@ -377,7 +384,12 @@ function carregarFeedBarbeiro() {
     
     const posts = carregarDados('posts') || [];
     const container = document.getElementById('feedClienteContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ Container feedClienteContainer não encontrado!');
+        return;
+    }
+
+    console.log('📋 Posts carregados:', posts.length);
 
     if (posts.length === 0) {
         container.innerHTML = `
@@ -787,16 +799,21 @@ function excluirPlano(planoId) {
 function agendarCorte() {
     console.log('✂️ FUNÇÃO agendarCorte() CHAMADA!');
     
+    // VERIFICA SE ESTÁ LOGADO
     if (!usuarioLogado) {
         alert('⚠️ Faça login para agendar!');
+        console.log('❌ Usuário não logado');
         return;
     }
     
+    // VERIFICA SE É CLIENTE
     if (tipoUsuario !== 'cliente') {
         alert('⚠️ Apenas clientes podem agendar!');
+        console.log('❌ Tipo de usuário:', tipoUsuario);
         return;
     }
     
+    // PEGA OS DADOS
     const data = document.getElementById('agendamentoData').value;
     const horario = document.getElementById('agendamentoHorario').value;
     const tipo = document.getElementById('agendamentoTipo').value;
@@ -805,21 +822,27 @@ function agendarCorte() {
     console.log('⏰ Horário:', horario);
     console.log('✂️ Tipo:', tipo);
     
+    // VALIDA
     if (!data || !horario) {
         alert('⚠️ Selecione data e horário!');
+        console.log('❌ Data ou horário vazio');
         return;
     }
     
+    // CARREGA AGENDAMENTOS EXISTENTES
     const agendamentos = carregarDados('agendamentos') || [];
     console.log('📋 Agendamentos existentes:', agendamentos.length);
     
+    // VERIFICA CONFLITO
     const conflito = agendamentos.some(a => a.data === data && a.horario === horario && a.status !== 'cancelado');
     
     if (conflito) {
         alert('⚠️ Horário já ocupado! Escolha outro.');
+        console.log('❌ Conflito de horário');
         return;
     }
     
+    // CRIA NOVO AGENDAMENTO
     const novo = {
         id: gerarId(),
         clienteId: usuarioLogado.id,
@@ -834,13 +857,16 @@ function agendarCorte() {
     
     console.log('📝 Novo agendamento:', novo);
     
+    // SALVA
     agendamentos.push(novo);
     salvarDados('agendamentos', agendamentos);
     
     alert('✅ Agendamento confirmado para ' + data + ' às ' + horario + '!');
     
+    // LIMPA O CAMPO DE DATA
     document.getElementById('agendamentoData').value = '';
     
+    // VOLTA PARA A HOME
     mostrarTela('homeClienteScreen');
 }
 
@@ -854,7 +880,7 @@ function carregarAgendaCliente() {
     
     const container = document.getElementById('agendaClienteContainer');
     if (!container) {
-        console.error('❌ Container não encontrado');
+        console.error('❌ Container agendaClienteContainer não encontrado');
         return;
     }
     
@@ -886,7 +912,7 @@ function carregarAgendamentosBarbeiro() {
     
     const container = document.getElementById('agendamentosBarbeiroContainer');
     if (!container) {
-        console.error('❌ Container não encontrado');
+        console.error('❌ Container agendamentosBarbeiroContainer não encontrado');
         return;
     }
     
@@ -1668,6 +1694,8 @@ console.log('🔒 Senha: 123456');
 
 // Listeners para os campos de cartão
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📋 DOM carregado! Configurando listeners...');
+    
     const cartaoNumero = document.getElementById('cartaoNumero');
     const cartaoValidade = document.getElementById('cartaoValidade');
     const cartaoCVV = document.getElementById('cartaoCVV');
@@ -1694,6 +1722,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Verifica se já está logado
 const usuarioSalvo = carregarDados('usuarioLogado');
+console.log('👤 Usuário salvo:', usuarioSalvo);
+
 if (usuarioSalvo) {
     const clientes = carregarDados('clientes') || [];
     const barbeiros = carregarDados('barbeiros') || [];
@@ -1704,10 +1734,12 @@ if (usuarioSalvo) {
     if (isCliente) {
         usuarioLogado = usuarioSalvo;
         tipoUsuario = 'cliente';
+        console.log('✅ Cliente logado:', usuarioLogado.nome);
         mostrarTela('homeClienteScreen');
     } else if (isBarbeiro) {
         usuarioLogado = usuarioSalvo;
         tipoUsuario = 'barbeiro';
+        console.log('✅ Barbeiro logado:', usuarioLogado.nome);
         mostrarTela('homeBarbeiroScreen');
     }
 }
