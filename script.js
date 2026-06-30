@@ -1926,3 +1926,5 @@ if (usuarioSalvo) {
         mostrarTela('homeBarbeiroScreen');
     }
 }
+console.log('🔍 Verificando auth:', typeof auth);
+console.log('🔍 Verificando db:', typeof db);
