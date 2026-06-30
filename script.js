@@ -244,26 +244,30 @@ async function cadastrarCliente() {
     try {
         // 1. Cria no Firebase Auth
         if (auth) {
-            const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
-            const user = userCredential.user;
-            console.log('✅ Usuário criado no Auth:', user.uid);
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+                console.log('✅ Usuário criado no Auth:', user.uid);
 
-            // 2. Salva no Firestore
-            if (db) {
-                await db.collection('clientes').doc(user.uid).set({
-                    id: user.uid,
-                    nome: nome,
-                    email: email,
-                    celular: celular,
-                    foto: '',
-                    ultimoAcesso: Date.now(),
-                    dataCadastro: new Date().toISOString()
-                });
-                console.log('✅ Dados salvos no Firestore!');
+                // 2. Salva no Firestore
+                if (db) {
+                    await db.collection('clientes').doc(user.uid).set({
+                        id: user.uid,
+                        nome: nome,
+                        email: email,
+                        celular: celular,
+                        foto: '',
+                        ultimoAcesso: Date.now(),
+                        dataCadastro: new Date().toISOString()
+                    });
+                    console.log('✅ Dados salvos no Firestore!');
+                }
+            } catch (authError) {
+                console.log('⚠️ Auth falhou, salvando apenas no LocalStorage:', authError.message);
             }
         }
 
-        // 3. Salva no LocalStorage (fallback)
+        // 3. Salva no LocalStorage (sempre)
         const clientes = carregarDados('clientes') || [];
         clientes.push({
             id: gerarId(),
@@ -322,6 +326,7 @@ async function loginCliente() {
                             ultimoAcesso: Date.now()
                         });
                         cliente.ultimoAcesso = Date.now();
+                        console.log('✅ Dados carregados do Firestore');
                     }
                 }
             } catch (authError) {
@@ -390,6 +395,7 @@ async function loginBarbeiro() {
                             ultimoAcesso: Date.now()
                         });
                         barbeiro.ultimoAcesso = Date.now();
+                        console.log('✅ Dados carregados do Firestore');
                     }
                 }
             } catch (authError) {
@@ -962,7 +968,7 @@ async function agendarCorte() {
     }
     
     try {
-        // Verifica conflitos no Firestore (se disponível)
+        // VERIFICA CONFLITOS (AGORA COM ÍNDICE!)
         if (db) {
             const snapshot = await db.collection('agendamentos')
                 .where('data', '==', data)
