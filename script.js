@@ -2,14 +2,23 @@
 // ===== CONFIGURAÇÃO DO FIREBASE =====
 // ==========================================================
 const firebaseConfig = {
-    apiKey: "AIzaSyB_HKuYMVnBn_rhKfvazjs-7SCmb9NOrDQ",
-    authDomain: "construtorlpx.firebaseapp.com",
-    projectId: "construtorlpx",
-    storageBucket: "construtorlpx.firebasestorage.app",
-    messagingSenderId: "247671839031",
-    appId: "1:247671839031:web:1a4ecfdd28c02b802fa2b2",
-    measurementId: "G-3J4XN3K2PG"
+
+  apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
+
+  authDomain: "barbearia-rm.firebaseapp.com",
+
+  projectId: "barbearia-rm",
+
+  storageBucket: "barbearia-rm.firebasestorage.app",
+
+  messagingSenderId: "512819922057",
+
+  appId: "1:512819922057:web:6a913791cb6435e4f63258",
+
+  measurementId: "G-TKVLVLPBJH"
+
 };
+
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
