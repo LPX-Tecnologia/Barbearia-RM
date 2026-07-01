@@ -1,5 +1,5 @@
 /* ==========================================================
-   CSS COMPLETO - BARBEARIA RM (CORRIGIDO)
+   CSS COMPLETO - BARBEARIA RM
    ========================================================== */
 
 /* ===== VARIÁVEIS ===== */
@@ -41,7 +41,7 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url('https://www.iloveimg.com/download/z55lcvq1n2c35fgm04qrrwb8jtmc7vj0wh1Aryq7jrhbqk4v677m79kc9x0b0Ax4wdlrl1wv1Ax3pxj8pnpA72p200wk570jgpfh8s2fvrtn4p9bym4bqj8zrbjstb0mp96lw8th1g17jfAlq2p80zk8cxnqdhx6w5cxlrcjt67wyc7cyrrq/6');
+    background-image: url('logobarbearia-rm.png');
     background-size: 400px;
     background-repeat: no-repeat;
     background-position: center center;
@@ -64,9 +64,7 @@ body::after {
     pointer-events: none;
 }
 
-/* ==========================================================
-   HEADER - LOGO COM SLOGAN ABAIXO
-   ========================================================== */
+/* ===== HEADER - LOGO + SLOGAN ===== */
 .header {
     background: linear-gradient(135deg, #0a0a0a 0%, #1A1A1A 50%, #0a0a0a 100%);
     padding: 20px 16px 16px;
@@ -122,7 +120,6 @@ body::after {
     object-fit: cover;
 }
 
-/* ===== SLOGAN ABAIXO DA LOGO ===== */
 .slogan {
     font-size: 14px;
     color: var(--primary-light);
@@ -139,9 +136,7 @@ body::after {
     100% { opacity: 0.7; }
 }
 
-/* ==========================================================
-   TELAS
-   ========================================================== */
+/* ===== TELAS ===== */
 .screen {
     display: none;
     padding: 16px;
@@ -169,9 +164,7 @@ body::after {
     text-shadow: 0 0 20px rgba(212, 168, 75, 0.3);
 }
 
-/* ==========================================================
-   LOGIN
-   ========================================================== */
+/* ===== LOGIN ===== */
 .login-container {
     text-align: center;
     margin: 20px 0 30px 0;
@@ -206,9 +199,7 @@ body::after {
     font-size: 16px;
 }
 
-/* ==========================================================
-   CARDS
-   ========================================================== */
+/* ===== CARDS ===== */
 .card {
     background: rgba(26, 26, 26, 0.9);
     backdrop-filter: blur(10px);
@@ -229,7 +220,7 @@ body::after {
     right: -50%;
     width: 200%;
     height: 200%;
-    background-image: url('https://www.iloveimg.com/download/z55lcvq1n2c35fgm04qrrwb8jtmc7vj0wh1Aryq7jrhbqk4v677m79kc9x0b0Ax4wdlrl1wv1Ax3pxj8pnpA72p200wk570jgpfh8s2fvrtn4p9bym4bqj8zrbjstb0mp96lw8th1g17jfAlq2p80zk8cxnqdhx6w5cxlrcjt67wyc7cyrrq/6');
+    background-image: url('logobarbearia-rm.png');
     background-size: 250px;
     background-repeat: no-repeat;
     background-position: bottom right -30px;
@@ -248,9 +239,7 @@ body::after {
     margin-bottom: 12px;
 }
 
-/* ==========================================================
-   INPUTS
-   ========================================================== */
+/* ===== INPUTS ===== */
 .input-group {
     margin-bottom: 14px;
 }
@@ -296,9 +285,7 @@ body::after {
     color: #FFFFFF;
 }
 
-/* ==========================================================
-   BOTÕES
-   ========================================================== */
+/* ===== BOTÕES ===== */
 .btn {
     width: 100%;
     padding: 14px;
@@ -326,24 +313,6 @@ body::after {
     transform: translateY(-3px) scale(1.02);
     box-shadow: 0 0 30px rgba(212, 168, 75, 0.5), 0 0 60px rgba(212, 168, 75, 0.2);
     background: linear-gradient(135deg, #FFD700, #D4A84B);
-}
-
-.btn-primary::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 60%);
-    opacity: 0;
-    transition: 0.4s;
-    transform: scale(0.5);
-}
-
-.btn-primary:hover::after {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .btn-secondary {
@@ -408,9 +377,7 @@ body::after {
     flex: 1;
 }
 
-/* ==========================================================
-   BOTTOM NAV
-   ========================================================== */
+/* ===== BOTTOM NAV ===== */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -466,9 +433,7 @@ body::after {
     margin-bottom: 1px;
 }
 
-/* ==========================================================
-   FEED
-   ========================================================== */
+/* ===== FEED ===== */
 .feed-container {
     margin-bottom: 16px;
 }
@@ -594,9 +559,7 @@ body::after {
     color: #6B7280;
 }
 
-/* ==========================================================
-   WELCOME BANNER
-   ========================================================== */
+/* ===== WELCOME BANNER ===== */
 .welcome-banner {
     background: linear-gradient(135deg, #0a0a0a, #1A1A1A);
     color: white;
@@ -625,9 +588,7 @@ body::after {
     color: #10B981;
 }
 
-/* ==========================================================
-   PLANOS
-   ========================================================== */
+/* ===== PLANOS ===== */
 .plano-card {
     background: rgba(255,255,255,0.03);
     border-radius: 12px;
@@ -666,9 +627,7 @@ body::after {
     text-shadow: 0 0 20px rgba(212, 168, 75, 0.2);
 }
 
-/* ==========================================================
-   AGENDA
-   ========================================================== */
+/* ===== AGENDA ===== */
 .agenda-item {
     display: flex;
     justify-content: space-between;
@@ -720,9 +679,7 @@ body::after {
     border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* ==========================================================
-   FINANCEIRO
-   ========================================================== */
+/* ===== FINANCEIRO ===== */
 .financeiro-resumo {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -754,9 +711,7 @@ body::after {
     color: var(--primary);
 }
 
-/* ==========================================================
-   FILTRO EXTRATO
-   ========================================================== */
+/* ===== FILTRO EXTRATO ===== */
 .filtro-extrato {
     display: flex;
     flex-wrap: wrap;
@@ -769,9 +724,7 @@ body::after {
     min-width: 60px;
 }
 
-/* ==========================================================
-   PERFIL
-   ========================================================== */
+/* ===== PERFIL ===== */
 .profile-header {
     text-align: center;
     padding: 30px 20px 20px;
@@ -831,9 +784,7 @@ body::after {
     color: #6B7280;
 }
 
-/* ==========================================================
-   MODAL
-   ========================================================== */
+/* ===== MODAL ===== */
 .modal {
     display: none;
     position: fixed;
@@ -871,9 +822,7 @@ body::after {
     margin-bottom: 16px;
 }
 
-/* ==========================================================
-   TOAST
-   ========================================================== */
+/* ===== TOAST ===== */
 .toast {
     position: fixed;
     top: 20px;
@@ -907,9 +856,7 @@ body::after {
     color: white;
 }
 
-/* ==========================================================
-   QR CODE
-   ========================================================== */
+/* ===== QR CODE ===== */
 #qrcodeContainer img {
     margin: 0 auto;
 }
@@ -927,9 +874,7 @@ body::after {
     justify-content: center;
 }
 
-/* ==========================================================
-   SCROLLBAR
-   ========================================================== */
+/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -943,9 +888,7 @@ body::after {
     border-radius: 10px;
 }
 
-/* ==========================================================
-   RESPONSIVO
-   ========================================================== */
+/* ===== RESPONSIVO ===== */
 @media (max-width: 500px) {
     .screen {
         padding: 12px;
