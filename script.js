@@ -76,6 +76,82 @@ function mostrarLoginBarbeiro() {
     document.getElementById('loginFormBarbeiro').style.display = 'block';
 }
 
+// ==========================================================
+// ===== CADASTRO CLIENTE (FUNCIONANDO) =====
+// ==========================================================
+
+async function cadastrarCliente() {
+    var nome = document.getElementById('cadNomeCliente').value.trim();
+    var email = document.getElementById('cadEmailCliente').value.trim();
+    var celular = document.getElementById('cadCelularCliente').value.trim();
+    var senha = document.getElementById('cadSenhaCliente').value;
+
+    // VALIDAÇÕES
+    if (!nome || !email || !celular || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
+    }
+
+    if (senha.length < 6) {
+        mostrarToast('❌ Senha mínima de 6 caracteres!', 'error');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        mostrarToast('❌ E-mail inválido!', 'error');
+        return;
+    }
+
+    try {
+        // Verificar se e-mail já existe
+        const snapshot = await db.collection('clientes')
+            .where('email', '==', email)
+            .get();
+
+        if (!snapshot.empty) {
+            mostrarToast('❌ E-mail já cadastrado!', 'error');
+            return;
+        }
+
+        // Criar cliente
+        var cliente = {
+            id: Date.now(),
+            nome: nome,
+            email: email,
+            celular: celular,
+            senha: senha,
+            fotoPerfil: '',
+            dataCriacao: new Date().toISOString()
+        };
+
+        // Salvar no Firebase
+        await db.collection('clientes').doc(cliente.id.toString()).set(cliente);
+        
+        clienteLogado = cliente;
+        document.getElementById('welcomeClienteNome').textContent = cliente.nome;
+        document.getElementById('bottomNavCliente').style.display = 'flex';
+        document.getElementById('bottomNavBarbeiro').style.display = 'none';
+        
+        mostrarToast('✅ Cadastro realizado com sucesso!', 'success');
+        mostrarTela('homeClienteScreen');
+        
+    } catch (error) {
+        console.error('❌ Erro no cadastro:', error);
+        console.error('❌ Código do erro:', error.code);
+        console.error('❌ Mensagem:', error.message);
+        
+        if (error.code === 'permission-denied') {
+            mostrarToast('❌ Erro de permissão! Verifique as regras do Firestore.', 'error');
+        } else {
+            mostrarToast('❌ Erro ao cadastrar: ' + error.message, 'error');
+        }
+    }
+}
+
+// ==========================================================
+// ===== LOGIN CLIENTE =====
+// ==========================================================
+
 async function loginCliente() {
     var email = document.getElementById('loginEmailCliente').value.trim();
     var senha = document.getElementById('loginSenhaCliente').value;
@@ -105,60 +181,6 @@ async function loginCliente() {
     } catch (error) {
         console.error('❌ Erro no login:', error);
         mostrarToast('Erro ao fazer login!', 'error');
-    }
-}
-
-async function cadastrarCliente() {
-    var nome = document.getElementById('cadNomeCliente').value.trim();
-    var email = document.getElementById('cadEmailCliente').value.trim();
-    var celular = document.getElementById('cadCelularCliente').value.trim();
-    var senha = document.getElementById('cadSenhaCliente').value;
-
-    if (!nome || !email || !celular || !senha) {
-        mostrarToast('Preencha todos os campos!', 'error');
-        return;
-    }
-
-    if (senha.length < 6) {
-        mostrarToast('Senha mínima de 6 caracteres!', 'error');
-        return;
-    }
-
-    if (!email.includes('@')) {
-        mostrarToast('E-mail inválido!', 'error');
-        return;
-    }
-
-    try {
-        const snapshot = await db.collection('clientes')
-            .where('email', '==', email)
-            .get();
-
-        if (!snapshot.empty) {
-            mostrarToast('E-mail já cadastrado!', 'error');
-            return;
-        }
-
-        var cliente = {
-            id: Date.now(),
-            nome: nome,
-            email: email,
-            celular: celular,
-            senha: senha,
-            fotoPerfil: '',
-            dataCriacao: new Date().toISOString()
-        };
-
-        await db.collection('clientes').doc(cliente.id.toString()).set(cliente);
-        clienteLogado = cliente;
-        document.getElementById('welcomeClienteNome').textContent = cliente.nome;
-        document.getElementById('bottomNavCliente').style.display = 'flex';
-        document.getElementById('bottomNavBarbeiro').style.display = 'none';
-        mostrarToast('Cadastro realizado!', 'success');
-        mostrarTela('homeClienteScreen');
-    } catch (error) {
-        console.error('❌ Erro no cadastro:', error);
-        mostrarToast('Erro ao cadastrar!', 'error');
     }
 }
 
