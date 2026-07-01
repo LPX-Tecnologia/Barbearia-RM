@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1A1A2E">
-    <title>Barbearia-RM</title>
+    <meta name="theme-color" content="#1A0A0A">
+    <title>Barbearia RM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
     <!-- ===== FIREBASE SDKs ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -19,53 +21,59 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #f5f5f5;
+            background: #f1f5f9;
             color: #1F2937;
             padding-bottom: 80px;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         /* ===== HEADER ===== */
         .header {
-            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%);
+            background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
             padding: 20px 16px 16px;
             text-align: center;
-            border-bottom: 4px solid #E94560;
-            position: relative;
+            border-bottom: 4px solid #D4A84B;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             overflow: hidden;
+            border: 2px solid #D4A84B;
+            flex-shrink: 0;
         }
-        
-        .header::before {
-            content: '✂️';
-            position: absolute;
-            font-size: 120px;
-            right: -20px;
-            top: -30px;
-            opacity: 0.05;
-            transform: rotate(-15deg);
+
+        .logo-header {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-        
+
         .header-title {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
-            color: white;
-            letter-spacing: 2px;
-            position: relative;
-            z-index: 1;
+            color: #D4A84B;
+            letter-spacing: 1px;
         }
-        
+
         .header-subtitle {
             font-size: 13px;
-            color: #E94560;
+            color: #b0b0b0;
             font-weight: 500;
             margin-top: 2px;
-            position: relative;
-            z-index: 1;
         }
-        
+
         /* ===== TELAS ===== */
         .screen {
             display: none;
@@ -74,58 +82,100 @@
             margin: 0 auto;
             animation: fadeIn 0.3s ease;
         }
-        
-        .screen.active { display: block; }
-        
+
+        .screen.active {
+            display: block;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
+        .screen-title {
+            text-align: center;
+            color: #1A1A1A;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        /* ===== LOGIN ===== */
+        .login-container {
+            text-align: center;
+            margin: 20px 0 30px 0;
+        }
+
+        .login-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 10px;
+            border: 3px solid #D4A84B;
+        }
+
+        .logo-login {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .login-container h2 {
+            color: #1A1A1A;
+            margin-top: 5px;
+        }
+
+        .login-container .subtitle {
+            color: #D4A84B;
+            font-weight: 600;
+        }
+
+        /* ===== CARDS ===== */
         .card {
             background: white;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            transition: 0.3s;
-            border: 1px solid rgba(233, 69, 96, 0.05);
+            transition: 0.2s;
         }
-        
-        .card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-color: rgba(233, 69, 96, 0.15);
-        }
-        
+
+        /* ===== INPUTS ===== */
         .input-group {
             margin-bottom: 14px;
         }
-        
-        .input-label {
+
+        .input-group label {
+            display: block;
             font-size: 13px;
             font-weight: 600;
             color: #4B5563;
             margin-bottom: 4px;
         }
-        
-        .input-field {
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
             width: 100%;
             padding: 12px 14px;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
             font-size: 15px;
             background: #f9fafb;
-            transition: 0.3s;
+            transition: 0.2s;
             font-family: inherit;
         }
-        
-        .input-field:focus {
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
             outline: none;
-            border-color: #E94560;
+            border-color: #D4A84B;
             background: white;
-            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+            box-shadow: 0 0 0 4px rgba(212, 168, 75, 0.1);
         }
-        
+
+        /* ===== BOTÕES ===== */
         .btn {
             width: 100%;
             padding: 14px;
@@ -134,55 +184,59 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.2s;
             margin-bottom: 8px;
             font-family: inherit;
         }
-        
+
         .btn-primary {
-            background: linear-gradient(135deg, #E94560, #c73652);
-            color: white;
-            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.25);
+            background: linear-gradient(135deg, #D4A84B, #B8923A);
+            color: #1A1A1A;
         }
-        
+
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.35);
+            transform: scale(1.01);
+            box-shadow: 0 4px 16px rgba(212, 168, 75, 0.3);
         }
-        
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #2D2D2D, #1A1A1A);
+            color: #D4A84B;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
         .btn-outline {
             background: transparent;
-            color: #1A1A2E;
+            color: #1A1A1A;
             border: 2px solid #e5e7eb;
         }
-        
+
         .btn-outline:hover {
             background: #f3f4f6;
-            border-color: #E94560;
         }
-        
+
         .btn-success {
-            background: linear-gradient(135deg, #10B981, #059669);
+            background: #10B981;
             color: white;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
         }
-        
+
         .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            background: #059669;
         }
-        
+
         .btn-danger {
-            background: linear-gradient(135deg, #EF4444, #DC2626);
+            background: #EF4444;
             color: white;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
         }
-        
+
         .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+            background: #DC2626;
         }
-        
+
         .btn-small {
             padding: 8px 12px;
             font-size: 12px;
@@ -190,45 +244,394 @@
             border-radius: 8px;
             width: auto;
         }
-        
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        /* ===== NAVEGAÇÃO INFERIOR ===== */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            background: #1A1A1A;
             display: none;
             justify-content: space-around;
             padding: 8px 0 12px;
-            border-top: 1px solid #e5e7eb;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+            border-top: 2px solid #D4A84B;
             z-index: 100;
             max-width: 500px;
             margin: 0 auto;
         }
-        
+
         .nav-item {
             background: none;
             border: none;
             text-align: center;
             font-size: 10px;
-            color: #9CA3AF;
+            color: #6B7280;
             cursor: pointer;
             padding: 4px 12px;
-            transition: 0.3s;
+            transition: 0.2s;
             font-family: inherit;
         }
-        
+
         .nav-item.active {
-            color: #E94560;
+            color: #D4A84B;
         }
-        
+
         .nav-item .nav-icon {
             font-size: 22px;
             display: block;
             margin-bottom: 1px;
         }
-        
+
+        /* ===== FEED ===== */
+        .feed-container {
+            margin-bottom: 16px;
+        }
+
+        .feed-post {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .feed-post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            background: #1A1A1A;
+        }
+
+        .feed-post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #D4A84B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #1A1A1A;
+        }
+
+        .feed-post-user {
+            margin-left: 12px;
+            flex: 1;
+            color: white;
+        }
+
+        .feed-post-user-name {
+            font-weight: 700;
+        }
+
+        .feed-post-user-time {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .feed-post-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            background: #e5e7eb;
+        }
+
+        .feed-post-video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+
+        .feed-post-body {
+            padding: 14px;
+        }
+
+        .feed-post-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1A1A1A;
+        }
+
+        .feed-post-price {
+            font-weight: 700;
+            color: #D4A84B;
+            font-size: 18px;
+            margin: 4px 0;
+        }
+
+        .feed-post-desc {
+            color: #4B5563;
+            font-size: 14px;
+            margin: 4px 0;
+        }
+
+        .feed-post-actions {
+            display: flex;
+            gap: 16px;
+            padding: 8px 14px 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .feed-post-actions button {
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            color: #6B7280;
+            transition: 0.2s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .feed-post-actions button:hover {
+            color: #D4A84B;
+        }
+
+        .feed-post-actions button.liked {
+            color: #D4A84B;
+        }
+
+        .feed-post-actions .count {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        /* ===== WELCOME BANNER ===== */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1A1A1A, #2D2D2D);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            border-left: 4px solid #D4A84B;
+        }
+
+        .welcome-banner h2 {
+            color: #D4A84B;
+        }
+
+        .welcome-banner span {
+            color: white;
+        }
+
+        .welcome-banner.barbeiro {
+            border-left-color: #10B981;
+        }
+
+        .welcome-banner.barbeiro h2 {
+            color: #10B981;
+        }
+
+        /* ===== PLANOS ===== */
+        .plano-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-left: 4px solid #D4A84B;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .plano-card .plano-info {
+            flex: 1;
+        }
+
+        .plano-card .plano-nome {
+            font-weight: 700;
+            color: #1A1A1A;
+        }
+
+        .plano-card .plano-periodo {
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        .plano-card .plano-preco {
+            font-weight: 700;
+            color: #D4A84B;
+            font-size: 18px;
+        }
+
+        /* ===== AGENDA ===== */
+        .agenda-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .agenda-item:last-child {
+            border-bottom: none;
+        }
+
+        .agenda-item .agenda-info {
+            flex: 1;
+        }
+
+        .agenda-item .agenda-cliente {
+            font-weight: 600;
+        }
+
+        .agenda-item .agenda-data {
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        .agenda-item .agenda-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .agenda-item .agenda-status.confirmado {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .agenda-item .agenda-status.pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .agenda-item .agenda-status.cancelado {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ===== FINANCEIRO ===== */
+        .financeiro-resumo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .financeiro-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .financeiro-item span {
+            font-size: 12px;
+            color: #6B7280;
+            display: block;
+        }
+
+        .financeiro-item strong {
+            font-size: 18px;
+            color: #1A1A1A;
+        }
+
+        /* ===== FILTRO EXTRATO ===== */
+        .filtro-extrato {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .filtro-extrato .btn {
+            flex: 1;
+            min-width: 60px;
+        }
+
+        /* ===== PERFIL ===== */
+        .profile-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #dbeafe;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            position: relative;
+            border: 3px solid #D4A84B;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #D4A84B;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #1A1A1A;
+            border: 2px solid white;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fadeIn 0.25s ease;
+        }
+
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             top: 20px;
@@ -243,934 +646,1342 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             max-width: 90%;
             text-align: center;
-            animation: slideDown 0.3s ease;
             display: none;
         }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ===== QR CODE ===== */
+        #qrcodeContainer img {
+            margin: 0 auto;
         }
-        
-        /* ===== ESTILOS DO AGENDAMENTO ===== */
-        .horarios-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        
-        .btn-horario {
-            padding: 10px 20px;
-            background: #f3f4f6;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            min-width: 70px;
-            transition: 0.3s;
-            font-family: inherit;
-            flex: 1;
-        }
-        
-        .btn-horario:hover {
-            background: #e5e7eb;
-            transform: scale(1.02);
-        }
-        
-        .btn-horario.selecionado {
-            background: #E94560;
-            border-color: #E94560;
-            color: white;
-        }
-        
-        .btn-horario.indisponivel {
-            background: #f3f4f6;
-            color: #9CA3AF;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        
-        .btn-horario.indisponivel:hover {
-            transform: none;
-        }
-        
-        /* ===== LISTA DE AGENDAMENTOS ===== */
-        .agendamento-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .agendamento-item:last-child {
-            border-bottom: none;
-        }
-        
-        .agendamento-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .agendamento-status.pendente {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .agendamento-status.confirmado {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .agendamento-status.cancelado {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .agendamento-status.concluido {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        /* ===== PERFIL ===== */
-        .profile-header {
-            text-align: center;
-            padding: 30px 20px 20px;
-            background: white;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(233, 69, 96, 0.05);
-            position: relative;
-        }
-        
-        .profile-avatar {
+
+        .logo-small {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: #dbeafe;
-            margin: 0 auto 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            position: relative;
-            cursor: pointer;
-            border: 3px solid #E94560;
-            transition: 0.3s;
-            overflow: hidden;
-        }
-        
-        .profile-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(233, 69, 96, 0.2);
-        }
-        
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
             object-fit: cover;
+            border: 2px solid #D4A84B;
         }
-        
-        .camera-icon {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: #E94560;
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
+
+        .logo-pagamento {
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 14px;
-            color: white;
-            border: 2px solid white;
         }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .modal.active { display: flex; }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: fadeIn 0.25s ease;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            background: #e5e7eb;
-            color: #6B7280;
-            transition: 0.3s;
-            font-family: inherit;
-        }
-        
-        .tab.active {
-            background: #1A1A2E;
-            color: white;
-        }
-        
+
         /* ===== RESPONSIVO ===== */
         @media (max-width: 500px) {
-            .header-title { font-size: 20px; }
-            .screen { padding: 12px; }
-            .card { padding: 16px; }
-            .btn-horario { min-width: 60px; font-size: 12px; padding: 8px 12px; }
+            .header-title {
+                font-size: 18px;
+            }
+            .screen {
+                padding: 12px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .financeiro-resumo {
+                grid-template-columns: 1fr 1fr;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .filtro-extrato .btn {
+                min-width: 50px;
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+            .header-content {
+                gap: 8px;
+            }
+            .logo-container {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- ===== HEADER ===== -->
-<div class="header">
-    <div class="header-title">✂️ Barbearia-RM</div>
-    <div class="header-subtitle">Agende seu corte com estilo</div>
-</div>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23D4A84B'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" class="logo-header">
+            </div>
+            <div>
+                <div class="header-title">Barbearia RM</div>
+                <div class="header-subtitle">✂️ Estilo e Tradição</div>
+            </div>
+        </div>
+    </header>
 
-<!-- ===== LOGIN ===== -->
-<div class="screen active" id="loginScreen">
-    <div style="text-align:center;margin:20px 0 30px 0;">
-        <div style="font-size:60px;">✂️</div>
-        <h2 style="color:#1A1A2E;margin-top:5px;">Barbearia-RM</h2>
-        <p style="color:#E94560;font-weight:600;">Agende seu horário</p>
-    </div>
-    <div class="card">
-        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="loginEmail" placeholder="Digite seu e-mail"></div>
-        <div class="input-group"><div class="input-label">🔒 Senha</div><input type="password" class="input-field" id="loginSenha" placeholder="Digite sua senha"></div>
-        <button class="btn btn-primary" onclick="fazerLogin()">🔑 ENTRAR</button>
-        <button class="btn btn-outline" onclick="mostrarTela('cadastroScreen')">📝 Criar Conta</button>
-    </div>
-</div>
+    <!-- ============================================================ -->
+    <!-- TELA: LOGIN -->
+    <!-- ============================================================ -->
+    <section class="screen active" id="loginScreen">
+        <div class="login-container">
+            <div class="login-logo">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='130' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" class="logo-login">
+            </div>
+            <h2>Barbearia RM</h2>
+            <p class="subtitle">Faça seu login ou cadastre-se</p>
+            <div class="card">
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
+                    <button class="btn btn-secondary" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
+                </div>
+                <div id="loginFormCliente" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
+                </div>
+                <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
+                    <div class="input-group">
+                        <label>📧 E-mail</label>
+                        <input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com">
+                    </div>
+                    <div class="input-group">
+                        <label>🔒 Senha</label>
+                        <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
+                    </div>
+                    <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<!-- ===== CADASTRO ===== -->
-<div class="screen" id="cadastroScreen">
-    <h2 style="text-align:center;color:#1A1A2E;">CRIAR CONTA</h2>
-    <div class="card">
-        <div class="input-group"><div class="input-label">👤 Nome</div><input type="text" class="input-field" id="cadNome"></div>
-        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="cadEmail"></div>
-        <div class="input-group"><div class="input-label">📱 Celular</div><input type="tel" class="input-field" id="cadCelular" placeholder="(11)99999-9999"></div>
-        <div class="input-group"><div class="input-label">🔒 Senha</div><input type="password" class="input-field" id="cadSenha" placeholder="Mínimo 6"></div>
-        <button class="btn btn-primary" onclick="cadastrar()">✅ FINALIZAR</button>
-        <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
-    </div>
-</div>
-
-<!-- ===== HOME ===== -->
-<div class="screen" id="homeScreen">
-    <div class="card" style="text-align:center;background:linear-gradient(135deg, #1A1A2E, #16213E);color:white;border:none;">
-        <div style="font-size:40px;">✂️</div>
-        <h2 style="color:white;">Bem-vindo!</h2>
-        <p style="color:#E94560;margin-top:4px;">Agende seu horário conosco</p>
-    </div>
-    
-    <div class="tabs">
-        <button class="tab active" onclick="mudarTab('agendar',this)">📅 Agendar</button>
-        <button class="tab" onclick="mudarTab('meus',this)">📋 Meus Agendamentos</button>
-        <button class="tab" onclick="mudarTab('historico',this)">📜 Histórico</button>
-    </div>
-    
-    <div id="agendarTab"><div id="agendamentoContainer"></div></div>
-    <div id="meusTab" style="display:none;"><div id="meusAgendamentosContainer"></div></div>
-    <div id="historicoTab" style="display:none;"><div id="historicoContainer"></div></div>
-</div>
-
-<!-- ===== PERFIL ===== -->
-<div class="screen" id="perfilScreen">
-    <div class="profile-header">
-        <div class="profile-avatar" onclick="document.getElementById('perfilFoto').click()"><span id="perfilAvatarDefault">👤</span><div class="camera-icon">📷</div></div>
-        <input type="file" id="perfilFoto" accept="image/*" style="display:none" onchange="mudarFotoPerfil(event)">
-        <h2 id="perfilNome" style="color:#1A1A2E;">Seu Nome</h2>
-        <p id="perfilEmail" style="color:#6B7280;">seu@email.com</p>
-        <p id="perfilCelular" style="color:#6B7280;font-size:14px;"></p>
-    </div>
-    <div class="card">
-        <h3>✏️ EDITAR PERFIL</h3>
-        <div class="input-group"><div class="input-label">👤 Nome</div><input type="text" class="input-field" id="editNome"></div>
-        <div class="input-group"><div class="input-label">📱 Celular</div><input type="tel" class="input-field" id="editCelular"></div>
-        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="editEmail"></div>
-        <button class="btn btn-primary" onclick="salvarPerfil()">💾 SALVAR</button>
-    </div>
-    <button class="btn btn-danger" onclick="sair()">🚪 SAIR</button>
-</div>
-
-<!-- ===== BOTTOM NAV ===== -->
-<div class="bottom-nav" id="bottomNav" style="display:none;">
-    <button class="nav-item active" onclick="mostrarTela('homeScreen')"><div class="nav-icon">🏠</div>Início</button>
-    <button class="nav-item" onclick="mostrarTela('perfilScreen')"><div class="nav-icon">👤</div>Perfil</button>
-</div>
-
-<!-- ===== TOAST ===== -->
-<div class="toast" id="toast"></div>
-
-<!-- ========================================================== -->
-<!-- ===== JAVASCRIPT COMPLETO ===== -->
-<!-- ========================================================== -->
-<script>
-// ==========================================================
-// ===== CONFIGURAÇÃO DO FIREBASE =====
-// ==========================================================
-const firebaseConfig = {
-    apiKey: "AIzaSyB_HKuYMVnBn_rhKfvazjs-7SCmb9NOrDQ",
-    authDomain: "construtorlpx.firebaseapp.com",
-    projectId: "construtorlpx",
-    storageBucket: "construtorlpx.firebasestorage.app",
-    messagingSenderId: "247671839031",
-    appId: "1:247671839031:web:1a4ecfdd28c02b802fa2b2",
-    measurementId: "G-3J4XN3K2PG"
-};
-
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-db.enablePersistence()
-    .then(() => console.log('🔥 Firestore cache ativado!'))
-    .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
-
-console.log('🔥 Firebase conectado!');
-
-// ==========================================================
-// ===== VARIÁVEIS GLOBAIS =====
-// ==========================================================
-var usuarioLogado = null;
-var horariosDisponiveis = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
-
-// ==========================================================
-// ===== FUNÇÕES FIREBASE =====
-// ==========================================================
-
-// --- SALVAR USUÁRIO ---
-async function salvarUsuarioFirebase(usuario) {
-    try {
-        await db.collection('usuariosBarbearia').doc(usuario.id.toString()).set(usuario);
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao salvar usuário:', error);
-        mostrarToast('Erro ao salvar usuário!', 'erro');
-        return false;
-    }
-}
-
-// --- BUSCAR USUÁRIO POR EMAIL ---
-async function buscarUsuarioPorEmail(email) {
-    try {
-        const snapshot = await db.collection('usuariosBarbearia')
-            .where('email', '==', email.trim())
-            .get();
-        
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            return { id: parseInt(doc.id), ...doc.data() };
-        }
-        return null;
-    } catch (error) {
-        console.error('❌ Erro ao buscar usuário:', error);
-        return null;
-    }
-}
-
-// --- BUSCAR USUÁRIO POR ID ---
-async function buscarUsuarioPorId(id) {
-    try {
-        const doc = await db.collection('usuariosBarbearia').doc(id.toString()).get();
-        if (doc.exists) {
-            return { id: parseInt(doc.id), ...doc.data() };
-        }
-        return null;
-    } catch (error) {
-        console.error('❌ Erro ao buscar usuário:', error);
-        return null;
-    }
-}
-
-// --- ATUALIZAR USUÁRIO ---
-async function atualizarUsuarioFirebase(id, dados) {
-    try {
-        await db.collection('usuariosBarbearia').doc(id.toString()).update(dados);
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao atualizar usuário:', error);
-        return false;
-    }
-}
-
-// --- SALVAR AGENDAMENTO ---
-async function salvarAgendamentoFirebase(agendamento) {
-    try {
-        await db.collection('agendamentosBarbearia').doc(agendamento.id.toString()).set(agendamento);
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao salvar agendamento:', error);
-        mostrarToast('Erro ao salvar agendamento!', 'erro');
-        return false;
-    }
-}
-
-// --- BUSCAR AGENDAMENTOS DO USUÁRIO ---
-async function buscarAgendamentosUsuario(usuarioId) {
-    try {
-        const snapshot = await db.collection('agendamentosBarbearia')
-            .where('usuarioId', '==', usuarioId)
-            .orderBy('data', 'desc')
-            .orderBy('hora', 'desc')
-            .get();
-        return snapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() }));
-    } catch (error) {
-        console.error('❌ Erro ao buscar agendamentos:', error);
-        return [];
-    }
-}
-
-// --- BUSCAR TODOS AGENDAMENTOS ---
-async function buscarTodosAgendamentos() {
-    try {
-        const snapshot = await db.collection('agendamentosBarbearia')
-            .orderBy('data', 'asc')
-            .orderBy('hora', 'asc')
-            .get();
-        return snapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() }));
-    } catch (error) {
-        console.error('❌ Erro ao buscar agendamentos:', error);
-        return [];
-    }
-}
-
-// --- BUSCAR HORÁRIOS DISPONÍVEIS ---
-async function buscarHorariosDisponiveis(data) {
-    try {
-        const snapshot = await db.collection('agendamentosBarbearia')
-            .where('data', '==', data)
-            .where('status', 'in', ['pendente', 'confirmado'])
-            .get();
-        
-        const ocupados = snapshot.docs.map(doc => doc.data().hora);
-        return horariosDisponiveis.filter(h => !ocupados.includes(h));
-    } catch (error) {
-        console.error('❌ Erro ao buscar horários:', error);
-        return horariosDisponiveis;
-    }
-}
-
-// ==========================================================
-// ===== FUNÇÕES DE NAVEGAÇÃO =====
-// ==========================================================
-
-function mostrarTela(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    var nav = document.getElementById('bottomNav');
-    if (nav) nav.style.display = ['homeScreen', 'perfilScreen'].includes(id) ? 'flex' : 'none';
-    
-    if (id === 'homeScreen') {
-        carregarAgendamentos();
-    }
-    if (id === 'perfilScreen') carregarMeuPerfil();
-}
-
-function mostrarToast(mensagem, tipo) {
-    var toast = document.getElementById('toast');
-    toast.textContent = mensagem;
-    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
-    toast.style.display = 'block';
-    setTimeout(function() { toast.style.display = 'none'; }, 3000);
-}
-
-function mudarTab(tab, btn) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    document.getElementById('agendarTab').style.display = tab === 'agendar' ? 'block' : 'none';
-    document.getElementById('meusTab').style.display = tab === 'meus' ? 'block' : 'none';
-    document.getElementById('historicoTab').style.display = tab === 'historico' ? 'block' : 'none';
-    
-    if (tab === 'agendar') carregarAgendamentos();
-    if (tab === 'meus') carregarMeusAgendamentos();
-    if (tab === 'historico') carregarHistorico();
-}
-
-// ==========================================================
-// ===== LOGIN E CADASTRO =====
-// ==========================================================
-
-async function fazerLogin() {
-    var email = document.getElementById('loginEmail').value.trim();
-    var senha = document.getElementById('loginSenha').value;
-
-    if (!email || !senha) {
-        mostrarToast('Preencha todos os campos!', 'erro');
-        return;
-    }
-
-    var usuario = await buscarUsuarioPorEmail(email);
-    
-    if (usuario && usuario.senha === senha) {
-        usuarioLogado = usuario;
-        mostrarToast('Bem-vindo, ' + usuario.nome + '!', 'sucesso');
-        setTimeout(function() { mostrarTela('homeScreen'); }, 500);
-    } else {
-        mostrarToast('E-mail ou senha inválidos!', 'erro');
-    }
-}
-
-async function cadastrar() {
-    var nome = document.getElementById('cadNome').value.trim();
-    var email = document.getElementById('cadEmail').value.trim();
-    var celular = document.getElementById('cadCelular').value.trim();
-    var senha = document.getElementById('cadSenha').value;
-
-    if (!nome || !email || !celular || !senha) {
-        mostrarToast('Preencha todos os campos!', 'erro');
-        return;
-    }
-
-    if (senha.length < 6) {
-        mostrarToast('Senha mínima de 6 caracteres!', 'erro');
-        return;
-    }
-
-    if (!email.includes('@')) {
-        mostrarToast('E-mail inválido!', 'erro');
-        return;
-    }
-
-    var existe = await buscarUsuarioPorEmail(email);
-    if (existe) {
-        mostrarToast('E-mail já cadastrado!', 'erro');
-        return;
-    }
-
-    var novoUsuario = {
-        id: Date.now(),
-        nome: nome,
-        email: email,
-        celular: celular,
-        senha: senha,
-        fotoPerfil: '',
-        dataCriacao: new Date().toISOString()
-    };
-
-    var salvou = await salvarUsuarioFirebase(novoUsuario);
-    if (!salvou) {
-        mostrarToast('Erro ao salvar!', 'erro');
-        return;
-    }
-
-    usuarioLogado = novoUsuario;
-    mostrarToast('Cadastro realizado!', 'sucesso');
-    setTimeout(function() { mostrarTela('homeScreen'); }, 500);
-}
-
-// ==========================================================
-// ===== PERFIL =====
-// ==========================================================
-
-function carregarMeuPerfil() {
-    if (!usuarioLogado) return;
-    document.getElementById('perfilNome').textContent = usuarioLogado.nome;
-    document.getElementById('perfilEmail').textContent = usuarioLogado.email;
-    document.getElementById('perfilCelular').textContent = '📱 ' + (usuarioLogado.celular || 'Não informado');
-    document.getElementById('editNome').value = usuarioLogado.nome || '';
-    document.getElementById('editCelular').value = usuarioLogado.celular || '';
-    document.getElementById('editEmail').value = usuarioLogado.email || '';
-    
-    if (usuarioLogado.fotoPerfil) {
-        document.getElementById('perfilAvatarDefault').innerHTML = 
-            '<img src="' + usuarioLogado.fotoPerfil + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
-    }
-}
-
-async function salvarPerfil() {
-    if (!usuarioLogado) return;
-
-    usuarioLogado.nome = document.getElementById('editNome').value.trim();
-    usuarioLogado.celular = document.getElementById('editCelular').value.trim();
-    usuarioLogado.email = document.getElementById('editEmail').value.trim();
-
-    var atualizado = await atualizarUsuarioFirebase(usuarioLogado.id, {
-        nome: usuarioLogado.nome,
-        celular: usuarioLogado.celular,
-        email: usuarioLogado.email
-    });
-
-    if (atualizado) {
-        mostrarToast('✅ Perfil atualizado!', 'sucesso');
-        carregarMeuPerfil();
-    } else {
-        mostrarToast('Erro ao atualizar perfil!', 'erro');
-    }
-}
-
-function mudarFotoPerfil(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = async function(ev) {
-        var fotoBase64 = ev.target.result;
-        document.getElementById('perfilAvatarDefault').innerHTML = 
-            '<img src="' + fotoBase64 + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
-        
-        usuarioLogado.fotoPerfil = fotoBase64;
-        await atualizarUsuarioFirebase(usuarioLogado.id, { fotoPerfil: fotoBase64 });
-        mostrarToast('✅ Foto atualizada!', 'sucesso');
-    };
-    reader.readAsDataURL(file);
-}
-
-// ==========================================================
-// ===== SISTEMA DE AGENDAMENTO =====
-// ==========================================================
-
-function carregarAgendamentos() {
-    var container = document.getElementById('agendamentoContainer');
-    if (!container) return;
-    
-    var hoje = new Date().toISOString().split('T')[0];
-    
-    container.innerHTML = `
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="cadastroClienteScreen">
+        <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
-            <h3 style="text-align:center;color:#1A1A2E;margin-bottom:16px;">✂️ AGENDAR CORTE</h3>
             <div class="input-group">
-                <div class="input-label">👤 Seu Nome</div>
-                <input type="text" class="input-field" id="clienteNome" placeholder="Digite seu nome" value="${usuarioLogado ? usuarioLogado.nome : ''}">
+                <label>👤 Nome</label>
+                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
             </div>
             <div class="input-group">
-                <div class="input-label">📱 Telefone</div>
-                <input type="tel" class="input-field" id="clienteTelefone" placeholder="(11)99999-9999" value="${usuarioLogado ? usuarioLogado.celular : ''}">
+                <label>📧 E-mail</label>
+                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
             </div>
             <div class="input-group">
-                <div class="input-label">✂️ Serviço</div>
-                <select class="input-field" id="servicoSelect">
-                    <option value="corte_masculino">💇 Corte Masculino</option>
-                    <option value="corte_feminino">💇‍♀️ Corte Feminino</option>
-                    <option value="barba">🧔 Barba</option>
-                    <option value="combo">✨ Combo (Corte + Barba)</option>
-                    <option value="sobrancelha">👁️ Sobrancelha</option>
-                    <option value="manicure">💅 Manicure</option>
-                    <option value="hidratacao">💧 Hidratação</option>
-                    <option value="progressiva">✨ Progressiva</option>
+                <label>📱 Celular</label>
+                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999">
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
+            </div>
+            <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeClienteScreen">
+        <div class="welcome-banner">
+            <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
+            <p>Confira os cortes e agende seu horário</p>
+        </div>
+
+        <div class="feed-container" id="feedClienteContainer"></div>
+
+        <div class="card" id="agendaClienteCard">
+            <h3>📅 Meus Agendamentos</h3>
+            <div id="agendaClienteContainer">
+                <p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeBarbeiroScreen">
+        <div class="welcome-banner barbeiro">
+            <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
+            <p>Gerencie sua barbearia</p>
+        </div>
+
+        <div class="card">
+            <h3>💰 FATURAMENTO</h3>
+            <div class="financeiro-resumo">
+                <div class="financeiro-item">
+                    <span>📅 Hoje</span>
+                    <strong id="faturamentoHoje">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📆 Semana</span>
+                    <strong id="faturamentoSemana">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📊 Mês</span>
+                    <strong id="faturamentoMes">R$ 0,00</strong>
+                </div>
+                <div class="financeiro-item">
+                    <span>📈 Ano</span>
+                    <strong id="faturamentoAno">R$ 0,00</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 PLANOS</h3>
+            <div id="planosContainer"></div>
+            <button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button>
+        </div>
+
+        <div class="card">
+            <h3>📅 AGENDAMENTOS</h3>
+            <div id="agendamentosBarbeiroContainer"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
+            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: AGENDAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="agendamentoScreen">
+        <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📅 Data</label>
+                <input type="date" id="agendamentoData">
+            </div>
+            <div class="input-group">
+                <label>⏰ Horário</label>
+                <select id="agendamentoHorario">
+                    <option value="09:00">09:00</option>
+                    <option value="09:30">09:30</option>
+                    <option value="10:00">10:00</option>
+                    <option value="10:30">10:30</option>
+                    <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
+                    <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
+                    <option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option>
+                    <option value="18:00">18:00</option>
                 </select>
             </div>
             <div class="input-group">
-                <div class="input-label">📅 Data</div>
-                <input type="date" class="input-field" id="dataInput" min="${hoje}" onchange="carregarHorariosDisponiveis(this.value)">
+                <label>✂️ Tipo de Corte</label>
+                <select id="agendamentoTipo">
+                    <option value="Corte Social">Corte Social</option>
+                    <option value="Corte Degradê">Corte Degradê</option>
+                    <option value="Corte Navalhado">Corte Navalhado</option>
+                    <option value="Corte Máquina">Corte Máquina</option>
+                    <option value="Barba">Barba</option>
+                    <option value="Barba + Corte">Barba + Corte</option>
+                    <option value="Pintura">Pintura</option>
+                    <option value="Luzes">Luzes</option>
+                    <option value="Platinado">Platinado</option>
+                    <option value="Selagem">Selagem</option>
+                    <option value="Progressiva">Progressiva</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPostScreen">
+        <h2 class="screen-title">📸 NOVO POST</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Título</label>
+                <input type="text" id="postTitulo" placeholder="Título do corte">
             </div>
             <div class="input-group">
-                <div class="input-label">🕐 Horários Disponíveis</div>
-                <div id="horariosContainer" class="horarios-grid">
-                    <p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>
-                </div>
-                <input type="hidden" id="horaSelecionada">
+                <label>💰 Preço</label>
+                <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
             </div>
-            <button class="btn btn-primary" onclick="confirmarAgendamento()">📅 CONFIRMAR AGENDAMENTO</button>
+            <div class="input-group">
+                <label>📷 URL da Imagem</label>
+                <input type="text" id="postImagem" placeholder="https://...">
+            </div>
+            <div class="input-group">
+                <label>🎬 URL do Vídeo (opcional)</label>
+                <input type="text" id="postVideo" placeholder="https://youtube.com/...">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
-    `;
-}
+    </section>
 
-async function carregarHorariosDisponiveis(data) {
-    var container = document.getElementById('horariosContainer');
-    if (!container) return;
-    
-    if (!data) {
-        container.innerHTML = '<p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>';
-        return;
-    }
-    
-    var hoje = new Date().toISOString().split('T')[0];
-    var horaAtual = new Date().getHours();
-    var minutosAtuais = new Date().getMinutes();
-    
-    var disponiveis = await buscarHorariosDisponiveis(data);
-    
-    if (data === hoje) {
-        disponiveis = disponiveis.filter(function(h) {
-            var [hora, minuto] = h.split(':').map(Number);
-            return hora > horaAtual || (hora === horaAtual && minuto > minutosAtuais);
-        });
-    }
-    
-    if (disponiveis.length === 0) {
-        container.innerHTML = '<p style="color:#EF4444;width:100%;font-size:14px;">❌ Nenhum horário disponível para esta data.</p>';
-        return;
-    }
-    
-    container.innerHTML = disponiveis.map(function(hora) {
-        return `<button class="btn-horario" onclick="selecionarHorario(this, '${hora}')">${hora}</button>`;
-    }).join('');
-}
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR PLANO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="criarPlanoScreen">
+        <h2 class="screen-title">📋 CRIAR PLANO</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>📝 Nome do Plano</label>
+                <input type="text" id="planoNome" placeholder="Ex: Plano Mensal">
+            </div>
+            <div class="input-group">
+                <label>📅 Período</label>
+                <select id="planoPeriodo">
+                    <option value="semanal">Semanal</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR PLANO</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
 
-function selecionarHorario(btn, hora) {
-    document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('selecionado'));
-    btn.classList.add('selecionado');
-    document.getElementById('horaSelecionada').value = hora;
-}
+    <!-- ============================================================ -->
+    <!-- TELA: EXTRATO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="extratoScreen">
+        <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
+        <div class="card">
+            <div class="filtro-extrato">
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button>
+                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button>
+                <button class="btn btn-small btn-primary" onclick="filtrarExtrato('todos')">📋 Todos</button>
+            </div>
+            <div id="extratoContainer"></div>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+        </div>
+    </section>
 
-async function confirmarAgendamento() {
-    if (!usuarioLogado) {
-        mostrarToast('Faça login para agendar!', 'erro');
-        return;
-    }
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="pagamentoScreen">
+        <h2 class="screen-title">💳 PAGAMENTO</h2>
+        <div class="card" style="text-align:center;">
+            <div class="logo-pagamento">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='130' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" class="logo-small">
+            </div>
+            <h3 style="margin-top:10px;">Barbearia RM</h3>
+            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
+            <p><strong>Chave PIX:</strong> <span id="pixChave">barbearia.rm@email.com</span></p>
+            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
+            <hr style="margin:20px 0; border-color:#C9A84C;">
+            <div class="input-group">
+                <label>💳 Cartão de Crédito</label>
+                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="input-group" style="flex:1;">
+                    <label>📅 Validade</label>
+                    <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="input-group" style="flex:1;">
+                    <label>🔐 CVV</label>
+                    <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="processarPagamento()">💳 PAGAR</button>
+            <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
+        </div>
+    </section>
 
-    var cliente = document.getElementById('clienteNome').value.trim();
-    var telefone = document.getElementById('clienteTelefone').value.trim();
-    var data = document.getElementById('dataInput').value;
-    var hora = document.getElementById('horaSelecionada').value;
-    var servico = document.getElementById('servicoSelect').value;
+    <!-- ============================================================ -->
+    <!-- TELA: DETALHE POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="detalhePostScreen">
+        <div id="detalhePostConteudo"></div>
+    </section>
 
-    if (!cliente) {
-        mostrarToast('❌ Digite seu nome!', 'erro');
-        return;
-    }
-    
-    if (!data) {
-        mostrarToast('❌ Selecione uma data!', 'erro');
-        return;
-    }
-    
-    if (!hora) {
-        mostrarToast('❌ Selecione um horário!', 'erro');
-        return;
-    }
-    
-    if (!servico) {
-        mostrarToast('❌ Selecione um serviço!', 'erro');
-        return;
-    }
-    
-    var disponiveis = await buscarHorariosDisponiveis(data);
-    if (!disponiveis.includes(hora)) {
-        mostrarToast('❌ Horário indisponível! Escolha outro.', 'erro');
-        return;
-    }
-    
-    try {
-        var agendamento = {
-            id: Date.now(),
-            usuarioId: usuarioLogado.id,
-            cliente: cliente,
-            telefone: telefone || usuarioLogado.celular || '',
-            data: data,
-            hora: hora,
-            servico: servico,
-            status: 'pendente',
-            dataCriacao: new Date().toISOString()
-        };
+    <!-- ============================================================ -->
+    <!-- PERFIL CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilClienteScreen">
+        <div class="profile-header">
+            <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
+                <span id="perfilClienteAvatar">👤</span>
+                <div class="camera-icon">📷</div>
+            </div>
+            <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
+            <h2 id="perfilClienteNome">Cliente</h2>
+            <p id="perfilClienteEmail">cliente@email.com</p>
+        </div>
+
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editClienteNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editClienteCelular">
+            </div>
+            <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
+        </div>
+
+        <div class="card">
+            <h3>🔑 ALTERAR SENHA</h3>
+            <div class="input-group">
+                <label>🔒 Senha Atual</label>
+                <input type="password" id="senhaAtualCliente" placeholder="Digite sua senha atual">
+            </div>
+            <div class="input-group">
+                <label>🔒 Nova Senha</label>
+                <input type="password" id="novaSenhaCliente" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="input-group">
+                <label>🔒 Confirmar Nova Senha</label>
+                <input type="password" id="confirmarSenhaCliente" placeholder="Confirme a nova senha">
+            </div>
+            <button class="btn btn-primary" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="perfilBarbeiroScreen">
+        <div class="profile-header">
+            <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
+                <span id="perfilBarbeiroAvatar">✂️</span>
+                <div class="camera-icon">📷</div>
+            </div>
+            <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
+            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
+            <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
+        </div>
+
+        <div class="card">
+            <h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="editBarbeiroNome">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="editBarbeiroCelular">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="editBarbeiroEmail">
+            </div>
+            <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
+        </div>
+
+        <div class="card">
+            <h3>🔑 ALTERAR SENHA</h3>
+            <div class="input-group">
+                <label>🔒 Senha Atual</label>
+                <input type="password" id="senhaAtualBarbeiro" placeholder="Digite sua senha atual">
+            </div>
+            <div class="input-group">
+                <label>🔒 Nova Senha</label>
+                <input type="password" id="novaSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
+            </div>
+            <div class="input-group">
+                <label>🔒 Confirmar Nova Senha</label>
+                <input type="password" id="confirmarSenhaBarbeiro" placeholder="Confirme a nova senha">
+            </div>
+            <button class="btn btn-primary" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
+        </div>
+
+        <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAIS -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalComentario">
+        <div class="modal-content">
+            <h3>💬 Comentários</h3>
+            <div id="comentariosContainer"></div>
+            <div class="input-group">
+                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
+            <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TOAST -->
+    <!-- ============================================================ -->
+    <div class="toast" id="toast" style="display:none;"></div>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Cliente -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')">
+            <span class="nav-icon">✂️</span> Agendar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Barbeiro -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
+        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
+            <span class="nav-icon">🏠</span> Início
+        </button>
+        <button class="nav-item" onclick="mostrarTela('criarPostScreen')">
+            <span class="nav-icon">📸</span> Postar
+        </button>
+        <button class="nav-item" onclick="mostrarTela('extratoScreen')">
+            <span class="nav-icon">📊</span> Extrato
+        </button>
+        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')">
+            <span class="nav-icon">👤</span> Perfil
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT COMPLETO COM FIREBASE -->
+    <!-- ============================================================ -->
+    <script>
+    // ==========================================================
+    // ===== CONFIGURAÇÃO DO FIREBASE =====
+    // ==========================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyB_HKuYMVnBn_rhKfvazjs-7SCmb9NOrDQ",
+        authDomain: "construtorlpx.firebaseapp.com",
+        projectId: "construtorlpx",
+        storageBucket: "construtorlpx.firebasestorage.app",
+        messagingSenderId: "247671839031",
+        appId: "1:247671839031:web:1a4ecfdd28c02b802fa2b2",
+        measurementId: "G-3J4XN3K2PG"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    db.enablePersistence()
+        .then(() => console.log('🔥 Firestore cache ativado!'))
+        .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
+
+    console.log('🔥 Firebase conectado!');
+
+    // ==========================================================
+    // ===== VARIÁVEIS GLOBAIS =====
+    // ==========================================================
+    var clienteLogado = null;
+    var barbeiroLogado = null;
+    var postSelecionado = null;
+
+    // ==========================================================
+    // ===== FUNÇÕES DE NAVEGAÇÃO =====
+    // ==========================================================
+
+    function mostrarTela(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const el = document.getElementById(id);
+        if (el) el.classList.add('active');
         
-        var salvou = await salvarAgendamentoFirebase(agendamento);
-        if (salvou) {
-            mostrarToast('✅ Agendamento realizado com sucesso!', 'sucesso');
-            document.getElementById('dataInput').value = '';
-            document.getElementById('horaSelecionada').value = '';
-            document.getElementById('servicoSelect').value = 'corte_masculino';
-            document.getElementById('horariosContainer').innerHTML = '<p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>';
-            document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('selecionado'));
-            carregarMeusAgendamentos();
+        if (id === 'homeClienteScreen') {
+            carregarFeedCliente();
+            carregarAgendaCliente();
         }
-    } catch (error) {
-        console.error('❌ Erro ao agendar:', error);
-        mostrarToast('❌ Erro ao agendar! Tente novamente.', 'erro');
+        if (id === 'homeBarbeiroScreen') {
+            carregarAgendamentosBarbeiro();
+            carregarPlanos();
+            calcularFaturamento();
+        }
+        if (id === 'perfilClienteScreen') carregarPerfilCliente();
+        if (id === 'perfilBarbeiroScreen') carregarPerfilBarbeiro();
     }
-}
 
-// ==========================================================
-// ===== MEUS AGENDAMENTOS =====
-// ==========================================================
+    function mostrarToast(mensagem, tipo) {
+        var toast = document.getElementById('toast');
+        toast.textContent = mensagem;
+        toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3000);
+    }
 
-async function carregarMeusAgendamentos() {
-    var container = document.getElementById('meusAgendamentosContainer');
-    if (!container) return;
-    
-    if (!usuarioLogado) {
-        container.innerHTML = '<div class="card"><p style="text-align:center;color:#6B7280;">Faça login para ver seus agendamentos.</p></div>';
-        return;
+    function fecharModal(id) {
+        document.getElementById(id).classList.remove('active');
     }
-    
-    var agendamentos = await buscarAgendamentosUsuario(usuarioLogado.id);
-    var ativos = agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado');
-    
-    if (ativos.length === 0) {
-        container.innerHTML = `
-            <div class="card" style="text-align:center;padding:40px;">
-                <div style="font-size:40px;">📅</div>
-                <h3 style="color:#1A1A2E;">Nenhum agendamento ativo</h3>
-                <p style="color:#6B7280;">Agende seu horário agora mesmo!</p>
-            </div>
-        `;
-        return;
+
+    // ==========================================================
+    // ===== LOGIN CLIENTE =====
+    // ==========================================================
+
+    function mostrarLoginCliente() {
+        document.getElementById('loginFormCliente').style.display = 'block';
+        document.getElementById('loginFormBarbeiro').style.display = 'none';
     }
-    
-    container.innerHTML = ativos.map(function(a) {
-        var statusClass = a.status === 'pendente' ? 'pendente' : 'confirmado';
-        var statusText = a.status === 'pendente' ? '⏳ Pendente' : '✅ Confirmado';
-        var servicoLabels = {
-            'corte_masculino': '💇 Corte Masculino',
-            'corte_feminino': '💇‍♀️ Corte Feminino',
-            'barba': '🧔 Barba',
-            'combo': '✨ Combo (Corte + Barba)',
-            'sobrancelha': '👁️ Sobrancelha',
-            'manicure': '💅 Manicure',
-            'hidratacao': '💧 Hidratação',
-            'progressiva': '✨ Progressiva'
-        };
-        var servicoLabel = servicoLabels[a.servico] || a.servico;
-        
-        return `
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:start;">
-                    <div>
-                        <strong style="color:#1A1A2E;font-size:16px;">${servicoLabel}</strong>
-                        <div style="font-size:14px;color:#4B5563;margin-top:4px;">
-                            📅 ${a.data} • 🕐 ${a.hora}
+
+    function mostrarLoginBarbeiro() {
+        document.getElementById('loginFormCliente').style.display = 'none';
+        document.getElementById('loginFormBarbeiro').style.display = 'block';
+    }
+
+    async function loginCliente() {
+        var email = document.getElementById('loginEmailCliente').value.trim();
+        var senha = document.getElementById('loginSenhaCliente').value;
+
+        if (!email || !senha) {
+            mostrarToast('Preencha todos os campos!', 'erro');
+            return;
+        }
+
+        try {
+            const snapshot = await db.collection('clientes')
+                .where('email', '==', email)
+                .where('senha', '==', senha)
+                .get();
+
+            if (snapshot.empty) {
+                mostrarToast('E-mail ou senha inválidos!', 'erro');
+                return;
+            }
+
+            clienteLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            document.getElementById('welcomeClienteNome').textContent = clienteLogado.nome;
+            document.getElementById('bottomNavCliente').style.display = 'flex';
+            document.getElementById('bottomNavBarbeiro').style.display = 'none';
+            mostrarToast('Bem-vindo, ' + clienteLogado.nome + '!', 'sucesso');
+            mostrarTela('homeClienteScreen');
+        } catch (error) {
+            console.error('❌ Erro no login:', error);
+            mostrarToast('Erro ao fazer login!', 'erro');
+        }
+    }
+
+    async function cadastrarCliente() {
+        var nome = document.getElementById('cadNomeCliente').value.trim();
+        var email = document.getElementById('cadEmailCliente').value.trim();
+        var celular = document.getElementById('cadCelularCliente').value.trim();
+        var senha = document.getElementById('cadSenhaCliente').value;
+
+        if (!nome || !email || !celular || !senha) {
+            mostrarToast('Preencha todos os campos!', 'erro');
+            return;
+        }
+
+        if (senha.length < 6) {
+            mostrarToast('Senha mínima de 6 caracteres!', 'erro');
+            return;
+        }
+
+        if (!email.includes('@')) {
+            mostrarToast('E-mail inválido!', 'erro');
+            return;
+        }
+
+        try {
+            const snapshot = await db.collection('clientes')
+                .where('email', '==', email)
+                .get();
+
+            if (!snapshot.empty) {
+                mostrarToast('E-mail já cadastrado!', 'erro');
+                return;
+            }
+
+            var cliente = {
+                id: Date.now(),
+                nome: nome,
+                email: email,
+                celular: celular,
+                senha: senha,
+                fotoPerfil: '',
+                dataCriacao: new Date().toISOString()
+            };
+
+            await db.collection('clientes').doc(cliente.id.toString()).set(cliente);
+            clienteLogado = cliente;
+            document.getElementById('welcomeClienteNome').textContent = cliente.nome;
+            document.getElementById('bottomNavCliente').style.display = 'flex';
+            document.getElementById('bottomNavBarbeiro').style.display = 'none';
+            mostrarToast('Cadastro realizado!', 'sucesso');
+            mostrarTela('homeClienteScreen');
+        } catch (error) {
+            console.error('❌ Erro no cadastro:', error);
+            mostrarToast('Erro ao cadastrar!', 'erro');
+        }
+    }
+
+    // ==========================================================
+    // ===== LOGIN BARBEIRO =====
+    // ==========================================================
+
+    async function loginBarbeiro() {
+        var email = document.getElementById('loginEmailBarbeiro').value.trim();
+        var senha = document.getElementById('loginSenhaBarbeiro').value;
+
+        if (!email || !senha) {
+            mostrarToast('Preencha todos os campos!', 'erro');
+            return;
+        }
+
+        try {
+            const snapshot = await db.collection('barbeiros')
+                .where('email', '==', email)
+                .where('senha', '==', senha)
+                .get();
+
+            if (snapshot.empty) {
+                mostrarToast('E-mail ou senha inválidos!', 'erro');
+                return;
+            }
+
+            barbeiroLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            document.getElementById('welcomeBarbeiroNome').textContent = barbeiroLogado.nome;
+            document.getElementById('bottomNavBarbeiro').style.display = 'flex';
+            document.getElementById('bottomNavCliente').style.display = 'none';
+            mostrarToast('Bem-vindo, ' + barbeiroLogado.nome + '!', 'sucesso');
+            mostrarTela('homeBarbeiroScreen');
+        } catch (error) {
+            console.error('❌ Erro no login:', error);
+            mostrarToast('Erro ao fazer login!', 'erro');
+        }
+    }
+
+    // ==========================================================
+    // ===== FEED CLIENTE =====
+    // ==========================================================
+
+    async function carregarFeedCliente() {
+        var container = document.getElementById('feedClienteContainer');
+        if (!container) return;
+
+        try {
+            const snapshot = await db.collection('posts')
+                .orderBy('dataCriacao', 'desc')
+                .get();
+
+            var posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3>📸 Nenhum post ainda</h3><p style="color:#6B7280;">Aguarde novos cortes!</p></div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(function(post) {
+                var videoHtml = post.video ? 
+                    `<iframe class="feed-post-video" src="${post.video.replace('watch?v=', 'embed/')}" allowfullscreen></iframe>` : '';
+                
+                return `
+                    <div class="feed-post">
+                        <div class="feed-post-header">
+                            <div class="feed-post-avatar">✂️</div>
+                            <div class="feed-post-user">
+                                <div class="feed-post-user-name">Barbearia RM</div>
+                                <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
+                            </div>
                         </div>
-                        <div style="font-size:13px;color:#6B7280;margin-top:2px;">
-                            👤 ${a.cliente}
+                        ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : ''}
+                        ${videoHtml}
+                        <div class="feed-post-body">
+                            <div class="feed-post-title">${post.titulo}</div>
+                            <div class="feed-post-price">R$ ${post.preco ? post.preco.toFixed(2) : '0,00'}</div>
+                            <div class="feed-post-desc">${post.descricao || ''}</div>
+                        </div>
+                        <div class="feed-post-actions">
+                            <button onclick="likePost('${post.id}', this)">
+                                ❤️ <span class="count">${post.likes || 0}</span>
+                            </button>
+                            <button onclick="abrirComentarios('${post.id}')">
+                                💬 <span class="count">${post.comentarios ? post.comentarios.length : 0}</span>
+                            </button>
+                            <button onclick="agendarPorPost('${post.id}')">✂️ Agendar</button>
                         </div>
                     </div>
-                    <span class="agendamento-status ${statusClass}">${statusText}</span>
-                </div>
-                ${a.status === 'pendente' ? `<button class="btn btn-danger btn-small" onclick="cancelarAgendamento(${a.id})" style="margin-top:10px;width:auto;padding:6px 16px;">❌ Cancelar</button>` : ''}
-            </div>
-        `;
-    }).join('');
-}
-
-// ==========================================================
-// ===== HISTÓRICO =====
-// ==========================================================
-
-async function carregarHistorico() {
-    var container = document.getElementById('historicoContainer');
-    if (!container) return;
-    
-    if (!usuarioLogado) {
-        container.innerHTML = '<div class="card"><p style="text-align:center;color:#6B7280;">Faça login para ver seu histórico.</p></div>';
-        return;
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('❌ Erro ao carregar feed:', error);
+            mostrarToast('Erro ao carregar feed!', 'erro');
+        }
     }
-    
-    var agendamentos = await buscarAgendamentosUsuario(usuarioLogado.id);
-    var historico = agendamentos.filter(a => a.status === 'cancelado' || a.status === 'concluido');
-    
-    if (historico.length === 0) {
-        container.innerHTML = `
-            <div class="card" style="text-align:center;padding:40px;">
-                <div style="font-size:40px;">📜</div>
-                <h3 style="color:#1A1A2E;">Nenhum histórico</h3>
-                <p style="color:#6B7280;">Seus agendamentos concluídos aparecerão aqui.</p>
-            </div>
-        `;
-        return;
+
+    // ==========================================================
+    // ===== AGENDAMENTO CLIENTE =====
+    // ==========================================================
+
+    async function agendarCorte() {
+        if (!clienteLogado) {
+            mostrarToast('Faça login primeiro!', 'erro');
+            return;
+        }
+
+        var data = document.getElementById('agendamentoData').value;
+        var horario = document.getElementById('agendamentoHorario').value;
+        var tipo = document.getElementById('agendamentoTipo').value;
+
+        if (!data) {
+            mostrarToast('Selecione uma data!', 'erro');
+            return;
+        }
+
+        try {
+            var agendamento = {
+                id: Date.now(),
+                clienteId: clienteLogado.id,
+                clienteNome: clienteLogado.nome,
+                clienteCelular: clienteLogado.celular,
+                data: data,
+                horario: horario,
+                tipo: tipo,
+                status: 'pendente',
+                dataCriacao: new Date().toISOString()
+            };
+
+            await db.collection('agendamentos').doc(agendamento.id.toString()).set(agendamento);
+            mostrarToast('✅ Agendamento realizado!', 'sucesso');
+            carregarAgendaCliente();
+            document.getElementById('agendamentoData').value = '';
+        } catch (error) {
+            console.error('❌ Erro ao agendar:', error);
+            mostrarToast('Erro ao agendar!', 'erro');
+        }
     }
-    
-    container.innerHTML = historico.map(function(a) {
-        var statusClass = a.status === 'cancelado' ? 'cancelado' : 'concluido';
-        var statusText = a.status === 'cancelado' ? '❌ Cancelado' : '✅ Concluído';
-        var servicoLabels = {
-            'corte_masculino': '💇 Corte Masculino',
-            'corte_feminino': '💇‍♀️ Corte Feminino',
-            'barba': '🧔 Barba',
-            'combo': '✨ Combo (Corte + Barba)',
-            'sobrancelha': '👁️ Sobrancelha',
-            'manicure': '💅 Manicure',
-            'hidratacao': '💧 Hidratação',
-            'progressiva': '✨ Progressiva'
-        };
-        var servicoLabel = servicoLabels[a.servico] || a.servico;
-        
-        return `
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:start;">
-                    <div>
-                        <strong style="color:#1A1A2E;font-size:16px;">${servicoLabel}</strong>
-                        <div style="font-size:14px;color:#4B5563;margin-top:4px;">
-                            📅 ${a.data} • 🕐 ${a.hora}
+
+    async function carregarAgendaCliente() {
+        if (!clienteLogado) return;
+
+        var container = document.getElementById('agendaClienteContainer');
+        if (!container) return;
+
+        try {
+            const snapshot = await db.collection('agendamentos')
+                .where('clienteId', '==', clienteLogado.id)
+                .orderBy('data', 'desc')
+                .get();
+
+            var agendamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (agendamentos.length === 0) {
+                container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>';
+                return;
+            }
+
+            container.innerHTML = agendamentos.map(function(a) {
+                var statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
+                var statusText = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+                return `
+                    <div class="agenda-item">
+                        <div class="agenda-info">
+                            <div class="agenda-cliente">${a.tipo || 'Corte'}</div>
+                            <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
                         </div>
-                        <div style="font-size:13px;color:#6B7280;margin-top:2px;">
-                            👤 ${a.cliente}
+                        <span class="agenda-status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('❌ Erro ao carregar agenda:', error);
+        }
+    }
+
+    // ==========================================================
+    // ===== POSTS (BARBEIRO) =====
+    // ==========================================================
+
+    async function criarPost() {
+        if (!barbeiroLogado) {
+            mostrarToast('Faça login como barbeiro!', 'erro');
+            return;
+        }
+
+        var titulo = document.getElementById('postTitulo').value.trim();
+        var preco = parseFloat(document.getElementById('postPreco').value);
+        var imagem = document.getElementById('postImagem').value.trim();
+        var video = document.getElementById('postVideo').value.trim();
+        var descricao = document.getElementById('postDescricao').value.trim();
+
+        if (!titulo) {
+            mostrarToast('Digite um título!', 'erro');
+            return;
+        }
+
+        if (!preco || preco <= 0) {
+            mostrarToast('Digite um preço válido!', 'erro');
+            return;
+        }
+
+        try {
+            var post = {
+                id: Date.now(),
+                barbeiroId: barbeiroLogado.id,
+                titulo: titulo,
+                preco: preco,
+                imagem: imagem || '',
+                video: video || '',
+                descricao: descricao || '',
+                likes: 0,
+                comentarios: [],
+                dataCriacao: new Date().toISOString()
+            };
+
+            await db.collection('posts').doc(post.id.toString()).set(post);
+            mostrarToast('✅ Post publicado!', 'sucesso');
+            document.getElementById('postTitulo').value = '';
+            document.getElementById('postPreco').value = '';
+            document.getElementById('postImagem').value = '';
+            document.getElementById('postVideo').value = '';
+            document.getElementById('postDescricao').value = '';
+            mostrarTela('homeBarbeiroScreen');
+        } catch (error) {
+            console.error('❌ Erro ao criar post:', error);
+            mostrarToast('Erro ao publicar!', 'erro');
+        }
+    }
+
+    // ==========================================================
+    // ===== PLANOS (BARBEIRO) =====
+    // ==========================================================
+
+    async function criarPlano() {
+        if (!barbeiroLogado) {
+            mostrarToast('Faça login como barbeiro!', 'erro');
+            return;
+        }
+
+        var nome = document.getElementById('planoNome').value.trim();
+        var periodo = document.getElementById('planoPeriodo').value;
+        var preco = parseFloat(document.getElementById('planoPreco').value);
+        var descricao = document.getElementById('planoDescricao').value.trim();
+
+        if (!nome || !preco || preco <= 0) {
+            mostrarToast('Preencha todos os campos!', 'erro');
+            return;
+        }
+
+        try {
+            var plano = {
+                id: Date.now(),
+                barbeiroId: barbeiroLogado.id,
+                nome: nome,
+                periodo: periodo,
+                preco: preco,
+                descricao: descricao || '',
+                dataCriacao: new Date().toISOString()
+            };
+
+            await db.collection('planos').doc(plano.id.toString()).set(plano);
+            mostrarToast('✅ Plano criado!', 'sucesso');
+            document.getElementById('planoNome').value = '';
+            document.getElementById('planoPreco').value = '';
+            document.getElementById('planoDescricao').value = '';
+            carregarPlanos();
+            mostrarTela('homeBarbeiroScreen');
+        } catch (error) {
+            console.error('❌ Erro ao criar plano:', error);
+            mostrarToast('Erro ao criar plano!', 'erro');
+        }
+    }
+
+    async function carregarPlanos() {
+        var container = document.getElementById('planosContainer');
+        if (!container) return;
+
+        try {
+            const snapshot = await db.collection('planos')
+                .orderBy('dataCriacao', 'desc')
+                .get();
+
+            var planos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (planos.length === 0) {
+                container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum plano criado</p>';
+                return;
+            }
+
+            container.innerHTML = planos.map(function(p) {
+                return `
+                    <div class="plano-card">
+                        <div class="plano-info">
+                            <div class="plano-nome">${p.nome}</div>
+                            <div class="plano-periodo">📅 ${p.periodo}</div>
+                            <div style="font-size:12px; color:#6B7280;">${p.descricao || ''}</div>
+                        </div>
+                        <div class="plano-preco">R$ ${p.preco.toFixed(2)}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('❌ Erro ao carregar planos:', error);
+        }
+    }
+
+    // ==========================================================
+    // ===== AGENDAMENTOS BARBEIRO =====
+    // ==========================================================
+
+    async function carregarAgendamentosBarbeiro() {
+        var container = document.getElementById('agendamentosBarbeiroContainer');
+        if (!container) return;
+
+        try {
+            const snapshot = await db.collection('agendamentos')
+                .orderBy('data', 'asc')
+                .get();
+
+            var agendamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (agendamentos.length === 0) {
+                container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>';
+                return;
+            }
+
+            container.innerHTML = agendamentos.map(function(a) {
+                var statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
+                var statusText = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+                return `
+                    <div class="agenda-item">
+                        <div class="agenda-info">
+                            <div class="agenda-cliente">${a.clienteNome}</div>
+                            <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario} • ${a.tipo || 'Corte'}</div>
+                        </div>
+                        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                            <span class="agenda-status ${statusClass}">${statusText}</span>
+                            ${a.status === 'pendente' ? `<button class="btn btn-small btn-success" onclick="confirmarAgendamentoBarbeiro('${a.id}')" style="padding:2px 8px; font-size:10px;">✅</button>` : ''}
+                            ${a.status === 'pendente' || a.status === 'confirmado' ? `<button class="btn btn-small btn-danger" onclick="cancelarAgendamentoBarbeiro('${a.id}')" style="padding:2px 8px; font-size:10px;">❌</button>` : ''}
                         </div>
                     </div>
-                    <span class="agendamento-status ${statusClass}">${statusText}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('❌ Erro ao carregar agendamentos:', error);
+        }
+    }
 
-// ==========================================================
-// ===== CANCELAR AGENDAMENTO =====
-// ==========================================================
+    async function confirmarAgendamentoBarbeiro(id) {
+        try {
+            await db.collection('agendamentos').doc(id).update({ status: 'confirmado' });
+            mostrarToast('✅ Agendamento confirmado!', 'sucesso');
+            carregarAgendamentosBarbeiro();
+        } catch (error) {
+            console.error('❌ Erro ao confirmar:', error);
+            mostrarToast('Erro ao confirmar!', 'erro');
+        }
+    }
 
-async function cancelarAgendamento(agendamentoId) {
-    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
-    
-    try {
-        await db.collection('agendamentosBarbearia').doc(agendamentoId.toString()).update({
-            status: 'cancelado'
+    async function cancelarAgendamentoBarbeiro(id) {
+        if (!confirm('Cancelar este agendamento?')) return;
+        try {
+            await db.collection('agendamentos').doc(id).update({ status: 'cancelado' });
+            mostrarToast('✅ Agendamento cancelado!', 'sucesso');
+            carregarAgendamentosBarbeiro();
+        } catch (error) {
+            console.error('❌ Erro ao cancelar:', error);
+            mostrarToast('Erro ao cancelar!', 'erro');
+        }
+    }
+
+    // ==========================================================
+    // ===== FATURAMENTO =====
+    // ==========================================================
+
+    async function calcularFaturamento() {
+        try {
+            const snapshot = await db.collection('agendamentos')
+                .where('status', '==', 'confirmado')
+                .get();
+
+            var agendamentos = snapshot.docs.map(doc => doc.data());
+            var hoje = new Date().toISOString().split('T')[0];
+            var semana = new Date();
+            semana.setDate(semana.getDate() - 7);
+            var mes = new Date();
+            mes.setMonth(mes.getMonth() - 1);
+            var ano = new Date();
+            ano.setFullYear(ano.getFullYear() - 1);
+
+            var valorHoje = 0, valorSemana = 0, valorMes = 0, valorAno = 0;
+
+            agendamentos.forEach(function(a) {
+                var valor = 35; // Valor fixo do corte
+                if (a.data === hoje) valorHoje += valor;
+                if (a.data >= semana.toISOString().split('T')[0]) valorSemana += valor;
+                if (a.data >= mes.toISOString().split('T')[0]) valorMes += valor;
+                if (a.data >= ano.toISOString().split('T')[0]) valorAno += valor;
+            });
+
+            document.getElementById('faturamentoHoje').textContent = 'R$ ' + valorHoje.toFixed(2);
+            document.getElementById('faturamentoSemana').textContent = 'R$ ' + valorSemana.toFixed(2);
+            document.getElementById('faturamentoMes').textContent = 'R$ ' + valorMes.toFixed(2);
+            document.getElementById('faturamentoAno').textContent = 'R$ ' + valorAno.toFixed(2);
+        } catch (error) {
+            console.error('❌ Erro ao calcular faturamento:', error);
+        }
+    }
+
+    // ==========================================================
+    // ===== FUNÇÕES AUXILIARES =====
+    // ==========================================================
+
+    function agendarPorPost(postId) {
+        mostrarTela('agendamentoScreen');
+        mostrarToast('✂️ Agende seu horário!', 'sucesso');
+    }
+
+    function likePost(postId, btn) {
+        btn.classList.toggle('liked');
+        var count = btn.querySelector('.count');
+        var current = parseInt(count.textContent);
+        count.textContent = btn.classList.contains('liked') ? current + 1 : current - 1;
+    }
+
+    function abrirComentarios(postId) {
+        postSelecionado = postId;
+        document.getElementById('modalComentario').classList.add('active');
+    }
+
+    function adicionarComentario() {
+        var comentario = document.getElementById('novoComentario').value.trim();
+        if (!comentario) {
+            mostrarToast('Digite um comentário!', 'erro');
+            return;
+        }
+        mostrarToast('✅ Comentário adicionado!', 'sucesso');
+        document.getElementById('novoComentario').value = '';
+        fecharModal('modalComentario');
+    }
+
+    function filtrarExtrato(tipo) {
+        mostrarToast('📊 Filtrando por ' + tipo, 'sucesso');
+    }
+
+    function copiarPix() {
+        var chave = document.getElementById('pixChave').textContent;
+        navigator.clipboard.writeText(chave).then(function() {
+            mostrarToast('✅ Chave PIX copiada!', 'sucesso');
         });
-        mostrarToast('✅ Agendamento cancelado!', 'sucesso');
-        carregarMeusAgendamentos();
-        carregarHistorico();
-    } catch (error) {
-        console.error('❌ Erro ao cancelar:', error);
-        mostrarToast('Erro ao cancelar!', 'erro');
     }
-}
 
-// ==========================================================
-// ===== SAIR =====
-// ==========================================================
+    function processarPagamento() {
+        mostrarToast('💳 Pagamento processado!', 'sucesso');
+        setTimeout(function() { mostrarTela('homeClienteScreen'); }, 1500);
+    }
 
-function sair() {
-    usuarioLogado = null;
-    mostrarTela('loginScreen');
-    mostrarToast('👋 Até logo!', 'sucesso');
-}
+    function fecharPagamento() {
+        mostrarTela('homeClienteScreen');
+    }
 
-// ==========================================================
-// ===== INICIALIZAÇÃO =====
-// ==========================================================
+    // ==========================================================
+    // ===== PERFIL CLIENTE =====
+    // ==========================================================
 
-console.log('✅ Barbearia-RM com Firebase!');
-console.log('🔥 Projeto: construtorlpx');
-console.log('📁 Coleções: usuariosBarbearia, agendamentosBarbearia');
+    function carregarPerfilCliente() {
+        if (!clienteLogado) return;
+        document.getElementById('perfilClienteNome').textContent = clienteLogado.nome;
+        document.getElementById('perfilClienteEmail').textContent = clienteLogado.email;
+        document.getElementById('editClienteNome').value = clienteLogado.nome || '';
+        document.getElementById('editClienteCelular').value = clienteLogado.celular || '';
+        if (clienteLogado.fotoPerfil) {
+            document.getElementById('perfilClienteAvatar').innerHTML = 
+                '<img src="' + clienteLogado.fotoPerfil + '" style="width:100%;height:100%;object-fit:cover;">';
+        }
+    }
 
-// Verificar se usuário já está logado
-if (usuarioLogado) {
-    mostrarTela('homeScreen');
-}
-</script>
+    async function salvarPerfilCliente() {
+        if (!clienteLogado) return;
+        clienteLogado.nome = document.getElementById('editClienteNome').value.trim();
+        clienteLogado.celular = document.getElementById('editClienteCelular').value.trim();
+        try {
+            await db.collection('clientes').doc(clienteLogado.id.toString()).update({
+                nome: clienteLogado.nome,
+                celular: clienteLogado.celular
+            });
+            mostrarToast('✅ Perfil atualizado!', 'sucesso');
+            carregarPerfilCliente();
+        } catch (error) {
+            console.error('❌ Erro ao salvar perfil:', error);
+            mostrarToast('Erro ao salvar!', 'erro');
+        }
+    }
+
+    function uploadFotoCliente(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = async function(ev) {
+            var foto = ev.target.result;
+            document.getElementById('perfilClienteAvatar').innerHTML = 
+                '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;">';
+            clienteLogado.fotoPerfil = foto;
+            await db.collection('clientes').doc(clienteLogado.id.toString()).update({ fotoPerfil: foto });
+            mostrarToast('✅ Foto atualizada!', 'sucesso');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function trocarSenhaCliente() {
+        if (!clienteLogado) return;
+        var atual = document.getElementById('senhaAtualCliente').value;
+        var nova = document.getElementById('novaSenhaCliente').value;
+        var confirmar = document.getElementById('confirmarSenhaCliente').value;
+
+        if (atual !== clienteLogado.senha) {
+            mostrarToast('Senha atual incorreta!', 'erro');
+            return;
+        }
+        if (nova.length < 6) {
+            mostrarToast('Nova senha mínima de 6 caracteres!', 'erro');
+            return;
+        }
+        if (nova !== confirmar) {
+            mostrarToast('Senhas não coincidem!', 'erro');
+            return;
+        }
+
+        clienteLogado.senha = nova;
+        await db.collection('clientes').doc(clienteLogado.id.toString()).update({ senha: nova });
+        mostrarToast('✅ Senha alterada!', 'sucesso');
+        document.getElementById('senhaAtualCliente').value = '';
+        document.getElementById('novaSenhaCliente').value = '';
+        document.getElementById('confirmarSenhaCliente').value = '';
+    }
+
+    function sairCliente() {
+        clienteLogado = null;
+        document.getElementById('bottomNavCliente').style.display = 'none';
+        mostrarTela('loginScreen');
+        mostrarToast('👋 Até logo!', 'sucesso');
+    }
+
+    // ==========================================================
+    // ===== PERFIL BARBEIRO =====
+    // ==========================================================
+
+    function carregarPerfilBarbeiro() {
+        if (!barbeiroLogado) return;
+        document.getElementById('perfilBarbeiroNome').textContent = barbeiroLogado.nome;
+        document.getElementById('perfilBarbeiroEmail').textContent = barbeiroLogado.email;
+        document.getElementById('editBarbeiroNome').value = barbeiroLogado.nome || '';
+        document.getElementById('editBarbeiroCelular').value = barbeiroLogado.celular || '';
+        document.getElementById('editBarbeiroEmail').value = barbeiroLogado.email || '';
+        if (barbeiroLogado.fotoPerfil) {
+            document.getElementById('perfilBarbeiroAvatar').innerHTML = 
+                '<img src="' + barbeiroLogado.fotoPerfil + '" style="width:100%;height:100%;object-fit:cover;">';
+        }
+    }
+
+    async function salvarPerfilBarbeiro() {
+        if (!barbeiroLogado) return;
+        barbeiroLogado.nome = document.getElementById('editBarbeiroNome').value.trim();
+        barbeiroLogado.celular = document.getElementById('editBarbeiroCelular').value.trim();
+        barbeiroLogado.email = document.getElementById('editBarbeiroEmail').value.trim();
+        try {
+            await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({
+                nome: barbeiroLogado.nome,
+                celular: barbeiroLogado.celular,
+                email: barbeiroLogado.email
+            });
+            mostrarToast('✅ Perfil atualizado!', 'sucesso');
+            carregarPerfilBarbeiro();
+        } catch (error) {
+            console.error('❌ Erro ao salvar perfil:', error);
+            mostrarToast('Erro ao salvar!', 'erro');
+        }
+    }
+
+    function uploadFotoBarbeiro(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = async function(ev) {
+            var foto = ev.target.result;
+            document.getElementById('perfilBarbeiroAvatar').innerHTML = 
+                '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;">';
+            barbeiroLogado.fotoPerfil = foto;
+            await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({ fotoPerfil: foto });
+            mostrarToast('✅ Foto atualizada!', 'sucesso');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function trocarSenhaBarbeiro() {
+        if (!barbeiroLogado) return;
+        var atual = document.getElementById('senhaAtualBarbeiro').value;
+        var nova = document.getElementById('novaSenhaBarbeiro').value;
+        var confirmar = document.getElementById('confirmarSenhaBarbeiro').value;
+
+        if (atual !== barbeiroLogado.senha) {
+            mostrarToast('Senha atual incorreta!', 'erro');
+            return;
+        }
+        if (nova.length < 6) {
+            mostrarToast('Nova senha mínima de 6 caracteres!', 'erro');
+            return;
+        }
+        if (nova !== confirmar) {
+            mostrarToast('Senhas não coincidem!', 'erro');
+            return;
+        }
+
+        barbeiroLogado.senha = nova;
+        await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({ senha: nova });
+        mostrarToast('✅ Senha alterada!', 'sucesso');
+        document.getElementById('senhaAtualBarbeiro').value = '';
+        document.getElementById('novaSenhaBarbeiro').value = '';
+        document.getElementById('confirmarSenhaBarbeiro').value = '';
+    }
+
+    function sairBarbeiro() {
+        barbeiroLogado = null;
+        document.getElementById('bottomNavBarbeiro').style.display = 'none';
+        mostrarTela('loginScreen');
+        mostrarToast('👋 Até logo!', 'sucesso');
+    }
+
+    // ==========================================================
+    // ===== INICIALIZAÇÃO =====
+    // ==========================================================
+
+    console.log('✅ Barbearia RM com Firebase!');
+    console.log('🔥 Projeto: construtorlpx');
+    console.log('📁 Coleções: clientes, barbeiros, posts, agendamentos, planos');
+    </script>
 
 </body>
 </html>
