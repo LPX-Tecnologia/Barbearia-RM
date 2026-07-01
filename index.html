@@ -20,22 +20,27 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-<!-- ===== HEADER - LOGO + SLOGAN ===== -->
-<header class="header">
-    <div class="header-logo">
-        <div class="logo-container">
-        <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header">        </div>
-        <div class="slogan">Atitude, Estilo e Confiança</div>
-    </div>
-</header>
+
+    <!-- ============================================================ -->
+    <!-- HEADER - LOGO + SLOGAN -->
+    <!-- ============================================================ -->
+    <header class="header">
+        <div class="header-logo">
+            <div class="logo-container">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='140' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" class="logo-header">
+            </div>
+            <div class="slogan">Atitude, Estilo e Confiança</div>
+        </div>
+    </header>
+
     <!-- ============================================================ -->
     <!-- TELA: LOGIN -->
     <!-- ============================================================ -->
     <section class="screen active" id="loginScreen">
         <div class="login-container">
             <div class="login-logo">
-            <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header">            </div>
-           
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='140' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM">
+            </div>
             <p class="subtitle">Faça seu login ou cadastre-se</p>
             <div class="card">
                 <div class="btn-group">
@@ -309,7 +314,7 @@
         <h2 class="screen-title">💳 PAGAMENTO</h2>
         <div class="card" style="text-align:center;">
             <div class="logo-pagamento">
-                <img src="https://www.iloveimg.com/download/z55lcvq1n2c35fgm04qrrwb8jtmc7vj0wh1Aryq7jrhbqk4v677m79kc9x0b0Ax4wdlrl1wv1Ax3pxj8pnpA72p200wk570jgpfh8s2fvrtn4p9bym4bqj8zrbjstb0mp96lw8th1g17jfAlq2p80zk8cxnqdhx6w5cxlrcjt67wyc7cyrrq/6" alt="Barbearia RM" class="logo-small">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='140' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" class="logo-small">
             </div>
             <h3 style="margin-top:10px; color:#FFFFFF;">Barbearia RM</h3>
             <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
@@ -348,7 +353,7 @@
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
-                <img src="https://www.iloveimg.com/download/z55lcvq1n2c35fgm04qrrwb8jtmc7vj0wh1Aryq7jrhbqk4v677m79kc9x0b0Ax4wdlrl1wv1Ax3pxj8pnpA72p200wk570jgpfh8s2fvrtn4p9bym4bqj8zrbjstb0mp96lw8th1g17jfAlq2p80zk8cxnqdhx6w5cxlrcjt67wyc7cyrrq/6" alt="Barbearia RM" id="perfilClienteAvatar" style="width:100%;height:100%;object-fit:cover;">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='140' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
                 <div class="camera-icon">📷</div>
             </div>
             <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
@@ -395,7 +400,7 @@
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
-            <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header">             
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23D4A84B'/%3E%3Ctext x='100' y='140' font-size='100' text-anchor='middle' fill='%231A1A1A' font-family='Arial'%3E✂️%3C/text%3E%3C/svg%3E" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
                 <div class="camera-icon">📷</div>
             </div>
             <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
@@ -494,7 +499,7 @@
     </nav>
 
     <!-- ============================================================ -->
-    <!-- JAVASCRIPT COMPLETO (mesmo de antes) -->
+    <!-- JAVASCRIPT -->
     <!-- ============================================================ -->
     <script src="script.js"></script>
 </body>
