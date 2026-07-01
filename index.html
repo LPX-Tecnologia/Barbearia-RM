@@ -3,763 +3,1172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0D0D0D">
-    <title>Barbearia RM</title>
-    
-    <!-- ===== CSS ===== -->
-    <link rel="stylesheet" href="style.css">
-    
-    <!-- ===== FONTS E ÍCONES ===== -->
+    <meta name="theme-color" content="#1A1A2E">
+    <title>Barbearia LPX</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ===== GOOGLE MAPS API ===== -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnSISQpOEO0jcPYkzFySU8BFYtNNhYwSM&libraries=places"></script>
-    
-    <!-- ===== FIREBASE SDK ===== -->
+    <!-- ===== FIREBASE SDKs ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <!-- ===== QRCODE.JS ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        /* ===== RESET E BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f5;
+            color: #1F2937;
+            padding-bottom: 80px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%);
+            padding: 20px 16px 16px;
+            text-align: center;
+            border-bottom: 4px solid #E94560;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '✂️';
+            position: absolute;
+            font-size: 120px;
+            right: -20px;
+            top: -30px;
+            opacity: 0.05;
+            transform: rotate(-15deg);
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-subtitle {
+            font-size: 13px;
+            color: #E94560;
+            font-weight: 500;
+            margin-top: 2px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* ===== TELAS ===== */
+        .screen {
+            display: none;
+            padding: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .screen.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: 0.3s;
+            border: 1px solid rgba(233, 69, 96, 0.05);
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-color: rgba(233, 69, 96, 0.15);
+        }
+        
+        .input-group {
+            margin-bottom: 14px;
+        }
+        
+        .input-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4B5563;
+            margin-bottom: 4px;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #f9fafb;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #E94560;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #E94560, #c73652);
+            color: white;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.25);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.35);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #1A1A2E;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-outline:hover {
+            background: #f3f4f6;
+            border-color: #E94560;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            margin-bottom: 0;
+            border-radius: 8px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: none;
+            justify-content: space-around;
+            padding: 8px 0 12px;
+            border-top: 1px solid #e5e7eb;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+            z-index: 100;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .nav-item {
+            background: none;
+            border: none;
+            text-align: center;
+            font-size: 10px;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 4px 12px;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        
+        .nav-item.active {
+            color: #E94560;
+        }
+        
+        .nav-item .nav-icon {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 1px;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 300;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 90%;
+            text-align: center;
+            animation: slideDown 0.3s ease;
+            display: none;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        /* ===== ESTILOS DO AGENDAMENTO ===== */
+        .horarios-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .btn-horario {
+            padding: 10px 20px;
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 70px;
+            transition: 0.3s;
+            font-family: inherit;
+            flex: 1;
+        }
+        
+        .btn-horario:hover {
+            background: #e5e7eb;
+            transform: scale(1.02);
+        }
+        
+        .btn-horario.selecionado {
+            background: #E94560;
+            border-color: #E94560;
+            color: white;
+        }
+        
+        .btn-horario.indisponivel {
+            background: #f3f4f6;
+            color: #9CA3AF;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .btn-horario.indisponivel:hover {
+            transform: none;
+        }
+        
+        /* ===== LISTA DE AGENDAMENTOS ===== */
+        .agendamento-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .agendamento-item:last-child {
+            border-bottom: none;
+        }
+        
+        .agendamento-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .agendamento-status.pendente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .agendamento-status.confirmado {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .agendamento-status.cancelado {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .agendamento-status.concluido {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* ===== PERFIL ===== */
+        .profile-header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(233, 69, 96, 0.05);
+            position: relative;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #dbeafe;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            position: relative;
+            cursor: pointer;
+            border: 3px solid #E94560;
+            transition: 0.3s;
+            overflow: hidden;
+        }
+        
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.2);
+        }
+        
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .camera-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #E94560;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: fadeIn 0.25s ease;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            background: #e5e7eb;
+            color: #6B7280;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        
+        .tab.active {
+            background: #1A1A2E;
+            color: white;
+        }
+        
+        /* ===== RESPONSIVO ===== */
+        @media (max-width: 500px) {
+            .header-title { font-size: 20px; }
+            .screen { padding: 12px; }
+            .card { padding: 16px; }
+            .btn-horario { min-width: 60px; font-size: 12px; padding: 8px 12px; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ============================================================ -->
-    <!-- HEADER -->
-    <!-- ============================================================ -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo-container">
-                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-header">
-            </div>
-            <div class="header-subtitle">✂️ Estilo e Tradição</div>
-        </div>
-    </header>
+<!-- ===== HEADER ===== -->
+<div class="header">
+    <div class="header-title">✂️ Barbearia LPX</div>
+    <div class="header-subtitle">Agende seu corte com estilo</div>
+</div>
 
-    <!-- ============================================================ -->
-    <!-- TELA: LOGIN -->
-    <!-- ============================================================ -->
-    <section class="screen active" id="loginScreen">
-        <div class="login-container">
-            <div class="login-logo">
-                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-login">
-            </div>
-            <h2>Barbearia RM</h2>
-            <p class="subtitle">✂️ Estilo e Tradição</p>
-            <div class="card">
-                <div class="btn-group">
-                    <button class="btn btn-primary neon" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
-                    <button class="btn btn-secondary neon" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
-                </div>
-                <div id="loginFormCliente" style="display:none; margin-top:16px;">
-                    <div class="input-group">
-                        <label>📧 E-mail</label>
-                        <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
-                    </div>
-                    <button class="btn btn-primary neon" onclick="loginCliente()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
-                </div>
-                <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
-                    <div class="input-group">
-                        <label>📧 E-mail</label>
-                        <input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
-                    </div>
-                    <button class="btn btn-secondary neon" onclick="loginBarbeiro()">🔑 ENTRAR</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: CADASTRO CLIENTE -->
-    <!-- ============================================================ -->
-    <section class="screen" id="cadastroClienteScreen">
-        <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
-        <div class="card">
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
-            </div>
-            <button class="btn btn-primary neon" onclick="cadastrarCliente()">✅ FINALIZAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: HOME CLIENTE -->
-    <!-- ============================================================ -->
-    <section class="screen" id="homeClienteScreen">
-        <div class="ad-banner">
-            <span class="ad-icon">📢</span>
-            <div class="ad-text">
-                <strong>Promoção Especial!</strong> Corte + Barba por apenas R$ 60,00
-            </div>
-            <span class="ad-close" onclick="this.parentElement.style.display='none'">✕</span>
-        </div>
-
-        <div class="welcome-banner">
-            <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
-            <p>Confira os cortes e agende seu horário</p>
-        </div>
-
-        <div class="location-card" onclick="abrirLocalizacao()">
-            <i class="fas fa-map-marker-alt"></i>
-            <span id="enderecoCliente">📍 Rua das Barbearias, 123 - Centro</span>
-            <i class="fas fa-chevron-right"></i>
-        </div>
-
-        <div class="feed-container" id="feedClienteContainer"></div>
-
-        <div class="card" id="agendaClienteCard">
-            <h3>📅 Meus Agendamentos</h3>
-            <div id="agendaClienteContainer">
-                <p style="color:#6A6A6A; text-align:center;">Nenhum agendamento</p>
-            </div>
-        </div>
-
-        <button class="btn btn-primary neon" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
-
-        <div class="ad-banner" style="margin-top:16px;">
-            <span class="ad-icon">💈</span>
-            <div class="ad-text">
-                <strong>Plano Mensal</strong> 1 corte + barba grátis por R$ 150,00
-            </div>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: HOME BARBEIRO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="homeBarbeiroScreen">
-        <div class="welcome-banner barbeiro">
-            <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
-            <p>Gerencie sua barbearia</p>
-        </div>
-
-        <div class="card">
-            <h3>💰 FATURAMENTO</h3>
-            <div class="financeiro-resumo">
-                <div class="financeiro-item">
-                    <span>📅 Hoje</span>
-                    <strong id="faturamentoHoje">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📆 Semana</span>
-                    <strong id="faturamentoSemana">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📊 Mês</span>
-                    <strong id="faturamentoMes">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📈 Ano</span>
-                    <strong id="faturamentoAno">R$ 0,00</strong>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>📋 PLANOS</h3>
-            <div id="planosContainer"></div>
-            <button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button>
-        </div>
-
-        <!-- ===== CLIENTES DO DIA (COM MAPA) ===== -->
-        <div class="card">
-            <h3>📍 CLIENTES DE HOJE</h3>
-            <div id="mapaClientesHoje" style="width:100%; height:250px; border-radius:12px; background:#1A1A1A; border:1px solid #2A2A2A; margin-bottom:10px;"></div>
-            <div id="listaClientesHoje" style="max-height:200px; overflow-y:auto;">
-                <p style="color:#6A6A6A; text-align:center;">Carregando clientes do dia...</p>
-            </div>
-            <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="carregarClientesDoDia()">🔄 ATUALIZAR</button>
-        </div>
-
-        <!-- ===== AGENDAMENTOS ===== -->
-        <div class="card">
-            <h3>📅 AGENDAMENTOS</h3>
-            <div id="agendamentosBarbeiroContainer"></div>
-        </div>
-
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-primary neon" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
-            <button class="btn btn-secondary neon" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
-        </div>
-        
-        <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('estatisticasScreen'); atualizarEstatisticas();">📊 ESTATÍSTICAS</button>
-        <button class="btn btn-primary neon" style="margin-top:10px;" onclick="mostrarTela('infoClientesScreen'); atualizarInfoClientes();">📊 INFORMAÇÕES DOS CLIENTES</button>
-        <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="abrirEditarPix()">💳 EDITAR CHAVE PIX</button>
-        <button class="btn btn-secondary neon" style="margin-top:10px;" onclick="abrirEditarLocalizacao()">📍 EDITAR LOCALIZAÇÃO</button>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: AGENDAMENTO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="agendamentoScreen">
-        <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
-        <div class="card">
-            <input type="hidden" id="agendamentoId" value="">
-            <div class="input-group">
-                <label>📅 Data</label>
-                <input type="date" id="agendamentoData">
-            </div>
-            <div class="input-group">
-                <label>⏰ Horário</label>
-                <select id="agendamentoHorario">
-                    <option value="09:00">09:00</option>
-                    <option value="09:30">09:30</option>
-                    <option value="10:00">10:00</option>
-                    <option value="10:30">10:30</option>
-                    <option value="11:00">11:00</option>
-                    <option value="11:30">11:30</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="13:30">13:30</option>
-                    <option value="14:00">14:00</option>
-                    <option value="14:30">14:30</option>
-                    <option value="15:00">15:00</option>
-                    <option value="15:30">15:30</option>
-                    <option value="16:00">16:00</option>
-                    <option value="16:30">16:30</option>
-                    <option value="17:00">17:00</option>
-                    <option value="17:30">17:30</option>
-                    <option value="18:00">18:00</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>✂️ Tipo de Corte</label>
-                <select id="agendamentoTipo">
-                    <option value="Corte Social">Corte Social</option>
-                    <option value="Corte Degradê">Corte Degradê</option>
-                    <option value="Corte Navalhado">Corte Navalhado</option>
-                    <option value="Corte Máquina">Corte Máquina</option>
-                    <option value="Barba">Barba</option>
-                    <option value="Barba + Corte">Barba + Corte</option>
-                    <option value="Pintura">Pintura</option>
-                    <option value="Luzes">Luzes</option>
-                    <option value="Platinado">Platinado</option>
-                    <option value="Selagem">Selagem</option>
-                    <option value="Progressiva">Progressiva</option>
-                </select>
-            </div>
-            <button class="btn btn-primary neon" onclick="agendarCorte()">✅ AGENDAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST -->
-    <!-- ============================================================ -->
-    <section class="screen" id="criarPostScreen">
-        <h2 class="screen-title">📸 NOVO POST</h2>
-        <div class="card">
-            <div class="input-group">
-                <label>📝 Título</label>
-                <input type="text" id="postTitulo" placeholder="Título do corte">
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            <div class="input-group">
-                <label>📷 URL da Imagem</label>
-                <input type="text" id="postImagem" placeholder="https://...">
-            </div>
-            <div class="input-group">
-                <label>🎬 URL do Vídeo (opcional)</label>
-                <input type="text" id="postVideo" placeholder="https://youtube.com/...">
-            </div>
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
-            </div>
-            <button class="btn btn-primary neon" onclick="criarPost()">📤 PUBLICAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: EDITAR POST -->
-    <!-- ============================================================ -->
-    <section class="screen" id="editarPostScreen">
-        <h2 class="screen-title">✏️ EDITAR POST</h2>
-        <div class="card">
-            <input type="hidden" id="editarPostId">
-            <div class="input-group">
-                <label>📝 Título</label>
-                <input type="text" id="editarPostTitulo" placeholder="Título do corte">
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="editarPostPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            <div class="input-group">
-                <label>📷 URL da Imagem</label>
-                <input type="text" id="editarPostImagem" placeholder="https://...">
-            </div>
-            <div class="input-group">
-                <label>🎬 URL do Vídeo (opcional)</label>
-                <input type="text" id="editarPostVideo" placeholder="https://youtube.com/...">
-            </div>
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="editarPostDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarEdicaoPost()">💾 SALVAR ALTERAÇÕES</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Cancelar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR PLANO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="criarPlanoScreen">
-        <h2 class="screen-title">📋 CRIAR PLANO</h2>
-        <div class="card">
-            <div class="input-group">
-                <label>📝 Nome do Plano</label>
-                <input type="text" id="planoNome" placeholder="Ex: Plano Mensal">
-            </div>
-            <div class="input-group">
-                <label>📅 Período</label>
-                <select id="planoPeriodo">
-                    <option value="semanal">Semanal</option>
-                    <option value="quinzenal">Quinzenal</option>
-                    <option value="mensal">Mensal</option>
-                    <option value="trimestral">Trimestral</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="anual">Anual</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
-            </div>
-            <button class="btn btn-primary neon" onclick="criarPlano()">💾 SALVAR PLANO</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: EDITAR PLANO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="editarPlanoScreen">
-        <h2 class="screen-title">✏️ EDITAR PLANO</h2>
-        <div class="card">
-            <input type="hidden" id="editarPlanoId">
-            <div class="input-group">
-                <label>📝 Nome do Plano</label>
-                <input type="text" id="editarPlanoNome" placeholder="Ex: Plano Mensal">
-            </div>
-            <div class="input-group">
-                <label>📅 Período</label>
-                <select id="editarPlanoPeriodo">
-                    <option value="semanal">Semanal</option>
-                    <option value="quinzenal">Quinzenal</option>
-                    <option value="mensal">Mensal</option>
-                    <option value="trimestral">Trimestral</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="anual">Anual</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="editarPlanoPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="editarPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Cancelar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: EXTRATO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="extratoScreen">
-        <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
-        <div class="card">
-            <div class="filtro-extrato">
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button>
-                <button class="btn btn-small btn-primary neon" onclick="filtrarExtrato('todos')">📋 Todos</button>
-            </div>
-            <div id="extratoContainer"></div>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: ESTATÍSTICAS -->
-    <!-- ============================================================ -->
-    <section class="screen" id="estatisticasScreen">
-        <h2 class="screen-title">📊 ESTATÍSTICAS</h2>
-        <div class="card">
-            <div style="text-align:center; padding:20px;">
-                <div style="font-size:60px;">👥</div>
-                <h3 style="color:#C9A84C; font-size:24px;" id="totalClientes">0</h3>
-                <p style="color:#8A7A5A;">Clientes Cadastrados</p>
-            </div>
-            <div style="text-align:center; padding:20px; border-top:1px solid #2A2A2A;">
-                <div style="font-size:60px;">🟢</div>
-                <h3 style="color:#10B981; font-size:24px;" id="clientesOnline">0</h3>
-                <p style="color:#8A7A5A;">Clientes Online Agora</p>
-            </div>
-            <div style="text-align:center; padding:20px; border-top:1px solid #2A2A2A;">
-                <div style="font-size:60px;">✂️</div>
-                <h3 style="color:#C9A84C; font-size:24px;" id="totalAgendamentos">0</h3>
-                <p style="color:#8A7A5A;">Agendamentos Hoje</p>
-            </div>
-            <button class="btn btn-secondary neon" onclick="atualizarEstatisticas()">🔄 ATUALIZAR</button>
-        </div>
-        <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: INFORMAÇÕES DOS CLIENTES -->
-    <!-- ============================================================ -->
-    <section class="screen" id="infoClientesScreen">
-        <h2 class="screen-title">📊 INFORMAÇÕES DOS CLIENTES</h2>
-        
-        <div class="card">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
-                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
-                    <div style="font-size:28px;">👥</div>
-                    <div style="font-size:24px; font-weight:700; color:#C9A84C;" id="infoTotalClientes">0</div>
-                    <div style="font-size:12px; color:#8A7A5A;">Total</div>
-                </div>
-                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
-                    <div style="font-size:28px;">🟢</div>
-                    <div style="font-size:24px; font-weight:700; color:#10B981;" id="infoOnlineClientes">0</div>
-                    <div style="font-size:12px; color:#8A7A5A;">Online</div>
-                </div>
-                <div style="text-align:center; padding:12px; background:rgba(13,13,13,0.5); border-radius:12px;">
-                    <div style="font-size:28px;">📍</div>
-                    <div style="font-size:24px; font-weight:700; color:#C9A84C;" id="infoComLocalizacao">0</div>
-                    <div style="font-size:12px; color:#8A7A5A;">Com Localização</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>👤 LISTA DE CLIENTES</h3>
-            <div id="infoListaClientes">
-                <p style="color:#6A6A6A; text-align:center;">Carregando...</p>
-            </div>
-            <button class="btn btn-secondary neon" onclick="atualizarInfoClientes()" style="margin-top:10px;">
-                🔄 ATUALIZAR
-            </button>
-        </div>
-
-        <div class="card">
-            <h3>📍 LOCALIZAÇÃO DA BARBEARIA</h3>
-            <div style="display:flex; align-items:center; gap:12px; padding:12px 0; flex-wrap:wrap;">
-                <i class="fas fa-map-marker-alt" style="color:#C9A84C; font-size:24px;"></i>
-                <div style="flex:1;">
-                    <div style="font-weight:600; color:#F5F0E8;" id="infoEndereco">Barbearia RM</div>
-                    <div style="font-size:13px; color:#8A7A5A;" id="infoEnderecoCompleto">Rua das Barbearias, 123 - Centro, São Paulo - SP</div>
-                </div>
-                <button onclick="abrirLocalizacao()" style="background:#C9A84C; border:none; border-radius:8px; padding:8px 16px; color:#0D0D0D; font-weight:700; cursor:pointer;">
-                    🗺️ Ver Mapa
-                </button>
-            </div>
-            <div id="mapaContainer" style="width:100%; height:200px; border-radius:12px; overflow:hidden; background:#1A1A1A; display:flex; align-items:center; justify-content:center; border:1px solid #2A2A2A; flex-direction:column;">
-                <i class="fas fa-map" style="font-size:40px; color:#4A4A4A; margin-bottom:10px;"></i>
-                <p style="color:#6A6A6A; text-align:center; font-size:14px;">
-                    Clique em "Ver Mapa" para abrir a localização
-                </p>
-            </div>
-        </div>
-
-        <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: EDITAR CHAVE PIX -->
-    <!-- ============================================================ -->
-    <section class="screen" id="editarPixScreen">
-        <h2 class="screen-title">💳 EDITAR CHAVE PIX</h2>
-        <div class="card">
-            <div class="input-group">
-                <label>📧 Chave PIX (e-mail)</label>
-                <input type="email" id="editPixChave" placeholder="barbearia@email.com">
-            </div>
-            <div class="input-group">
-                <label>🏢 Nome do Recebedor</label>
-                <input type="text" id="editPixNome" placeholder="Nome da barbearia">
-            </div>
-            <div class="input-group">
-                <label>📍 Cidade</label>
-                <input type="text" id="editPixCidade" placeholder="São Paulo">
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarConfigPix()">💾 SALVAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: EDITAR LOCALIZAÇÃO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="editarLocalizacaoScreen">
-        <h2 class="screen-title">📍 EDITAR LOCALIZAÇÃO</h2>
-        <div class="card">
-            <div class="input-group">
-                <label>📍 Endereço</label>
-                <input type="text" id="editEndereco" placeholder="Rua, número, bairro, cidade">
-            </div>
-            <div class="input-group">
-                <label>🌐 Latitude</label>
-                <input type="text" id="editLatitude" placeholder="-23.5505">
-            </div>
-            <div class="input-group">
-                <label>🌐 Longitude</label>
-                <input type="text" id="editLongitude" placeholder="-46.6333">
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarLocalizacao()">💾 SALVAR LOCALIZAÇÃO</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: PAGAMENTO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="pagamentoScreen">
-        <h2 class="screen-title">💳 PAGAMENTO</h2>
-        <div class="card" style="text-align:center;">
-            <div class="logo-pagamento">
-                <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Barbearia RM" class="logo-small">
-            </div>
-            <h3 style="margin-top:10px; color:#C9A84C;">Barbearia RM</h3>
-            <p style="color:#8A7A5A;">Valor: <strong id="pixValor" style="color:#C9A84C;">R$ 0,00</strong></p>
-            
-            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block; cursor:pointer;"></div>
-            <p id="qrCodeStatus" style="color:#6A6A6A; font-size:12px;">Clique no QR Code para simular leitura</p>
-            
-            <p><strong style="color:#C9A84C;">Chave PIX:</strong> <span id="pixChave" style="color:#F5F0E8;">barbearia.rm@email.com</span></p>
-            <p style="font-size:12px; color:#6A6A6A;">Recebedor: <span id="pixNome">Barbearia RM</span></p>
-            <button class="btn btn-outline" onclick="copiarPix()">📋 COPIAR CHAVE PIX</button>
-            <p id="pixStatus" style="color:#6A6A6A; font-size:12px; margin-top:5px;">Clique em "Copiar" para confirmar</p>
-            
-            <hr style="margin:20px 0; border-color:#2A2A2A;">
-            
-            <p style="color:#8A7A5A; font-size:13px; margin-bottom:10px;">💳 Ou pague com cartão</p>
-            <div class="input-group">
-                <label>💳 Número do Cartão</label>
-                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
-            </div>
-            <div style="display:flex; gap:10px;">
-                <div class="input-group" style="flex:1;">
-                    <label>📅 Validade</label>
-                    <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5">
-                </div>
-                <div class="input-group" style="flex:1;">
-                    <label>🔐 CVV</label>
-                    <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
-                </div>
-            </div>
-            
-            <button class="btn btn-primary neon" onclick="processarPagamento()" disabled style="opacity:0.5; cursor:not-allowed;">
-                💳 AGUARDANDO CONFIRMAÇÃO...
-            </button>
-            <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- TELA: DETALHE POST -->
-    <!-- ============================================================ -->
-    <section class="screen" id="detalhePostScreen">
-        <div id="detalhePostConteudo"></div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- PERFIL CLIENTE -->
-    <!-- ============================================================ -->
-    <section class="screen" id="perfilClienteScreen">
-        <div class="profile-header">
-            <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
-                <span id="perfilClienteAvatar">
-                    <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
-                </span>
-                <div class="camera-icon">📷</div>
-            </div>
-            <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
-            <h2 id="perfilClienteNome">Cliente</h2>
-            <p id="perfilClienteEmail">cliente@email.com</p>
-        </div>
-
-        <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editClienteNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editClienteCelular">
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarPerfilCliente()">💾 SALVAR</button>
-        </div>
-
-        <div class="card">
-            <h3>🔑 ALTERAR SENHA</h3>
-            <div class="input-group">
-                <label>🔒 Senha Atual</label>
-                <input type="password" id="senhaAtualCliente" placeholder="Digite sua senha atual">
-            </div>
-            <div class="input-group">
-                <label>🔒 Nova Senha</label>
-                <input type="password" id="novaSenhaCliente" placeholder="Mínimo 6 caracteres">
-            </div>
-            <div class="input-group">
-                <label>🔒 Confirmar Nova Senha</label>
-                <input type="password" id="confirmarSenhaCliente" placeholder="Confirme a nova senha">
-            </div>
-            <button class="btn btn-primary neon" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
-        </div>
-
-        <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- PERFIL BARBEIRO -->
-    <!-- ============================================================ -->
-    <section class="screen" id="perfilBarbeiroScreen">
-        <div class="profile-header">
-            <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
-                <span id="perfilBarbeiroAvatar">
-                    <img src="https://i.ibb.co/TqKjX8xx/logobarbearia-rm.jpg" alt="Logo" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid #C9A84C;">
-                </span>
-                <div class="camera-icon">📷</div>
-            </div>
-            <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
-            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
-            <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
-        </div>
-
-        <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editBarbeiroNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editBarbeiroCelular">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="editBarbeiroEmail">
-            </div>
-            <button class="btn btn-primary neon" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
-        </div>
-
-        <div class="card">
-            <h3>🔑 ALTERAR SENHA</h3>
-            <div class="input-group">
-                <label>🔒 Senha Atual</label>
-                <input type="password" id="senhaAtualBarbeiro" placeholder="Digite sua senha atual">
-            </div>
-            <div class="input-group">
-                <label>🔒 Nova Senha</label>
-                <input type="password" id="novaSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
-            </div>
-            <div class="input-group">
-                <label>🔒 Confirmar Nova Senha</label>
-                <input type="password" id="confirmarSenhaBarbeiro" placeholder="Confirme a nova senha">
-            </div>
-            <button class="btn btn-primary neon" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
-        </div>
-
-        <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- MODAIS -->
-    <!-- ============================================================ -->
-    <div class="modal" id="modalComentario">
-        <div class="modal-content">
-            <h3>💬 Comentários</h3>
-            <div id="comentariosContainer"></div>
-            <div class="input-group">
-                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
-            </div>
-            <button class="btn btn-primary neon" onclick="adicionarComentario()">📤 COMENTAR</button>
-            <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
-        </div>
+<!-- ===== LOGIN ===== -->
+<div class="screen active" id="loginScreen">
+    <div style="text-align:center;margin:20px 0 30px 0;">
+        <div style="font-size:60px;">✂️</div>
+        <h2 style="color:#1A1A2E;margin-top:5px;">Barbearia LPX</h2>
+        <p style="color:#E94560;font-weight:600;">Agende seu horário</p>
     </div>
+    <div class="card">
+        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="loginEmail" placeholder="Digite seu e-mail"></div>
+        <div class="input-group"><div class="input-label">🔒 Senha</div><input type="password" class="input-field" id="loginSenha" placeholder="Digite sua senha"></div>
+        <button class="btn btn-primary" onclick="fazerLogin()">🔑 ENTRAR</button>
+        <button class="btn btn-outline" onclick="mostrarTela('cadastroScreen')">📝 Criar Conta</button>
+    </div>
+</div>
 
-    <!-- ============================================================ -->
-    <!-- TOAST -->
-    <!-- ============================================================ -->
-    <div class="toast" id="toast" style="display:none;"></div>
+<!-- ===== CADASTRO ===== -->
+<div class="screen" id="cadastroScreen">
+    <h2 style="text-align:center;color:#1A1A2E;">CRIAR CONTA</h2>
+    <div class="card">
+        <div class="input-group"><div class="input-label">👤 Nome</div><input type="text" class="input-field" id="cadNome"></div>
+        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="cadEmail"></div>
+        <div class="input-group"><div class="input-label">📱 Celular</div><input type="tel" class="input-field" id="cadCelular" placeholder="(11)99999-9999"></div>
+        <div class="input-group"><div class="input-label">🔒 Senha</div><input type="password" class="input-field" id="cadSenha" placeholder="Mínimo 6"></div>
+        <button class="btn btn-primary" onclick="cadastrar()">✅ FINALIZAR</button>
+        <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+    </div>
+</div>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Cliente -->
-    <!-- ============================================================ -->
-    <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')">
-            <span class="nav-icon">✂️</span> Agendar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
-    </nav>
+<!-- ===== HOME ===== -->
+<div class="screen" id="homeScreen">
+    <div class="card" style="text-align:center;background:linear-gradient(135deg, #1A1A2E, #16213E);color:white;border:none;">
+        <div style="font-size:40px;">✂️</div>
+        <h2 style="color:white;">Bem-vindo!</h2>
+        <p style="color:#E94560;margin-top:4px;">Agende seu horário conosco</p>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="mudarTab('agendar',this)">📅 Agendar</button>
+        <button class="tab" onclick="mudarTab('meus',this)">📋 Meus Agendamentos</button>
+        <button class="tab" onclick="mudarTab('historico',this)">📜 Histórico</button>
+    </div>
+    
+    <div id="agendarTab"><div id="agendamentoContainer"></div></div>
+    <div id="meusTab" style="display:none;"><div id="meusAgendamentosContainer"></div></div>
+    <div id="historicoTab" style="display:none;"><div id="historicoContainer"></div></div>
+</div>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Barbeiro -->
-    <!-- ============================================================ -->
-    <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('criarPostScreen')">
-            <span class="nav-icon">📸</span> Postar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('extratoScreen')">
-            <span class="nav-icon">📊</span> Extrato
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
-    </nav>
+<!-- ===== PERFIL ===== -->
+<div class="screen" id="perfilScreen">
+    <div class="profile-header">
+        <div class="profile-avatar" onclick="document.getElementById('perfilFoto').click()"><span id="perfilAvatarDefault">👤</span><div class="camera-icon">📷</div></div>
+        <input type="file" id="perfilFoto" accept="image/*" style="display:none" onchange="mudarFotoPerfil(event)">
+        <h2 id="perfilNome" style="color:#1A1A2E;">Seu Nome</h2>
+        <p id="perfilEmail" style="color:#6B7280;">seu@email.com</p>
+        <p id="perfilCelular" style="color:#6B7280;font-size:14px;"></p>
+    </div>
+    <div class="card">
+        <h3>✏️ EDITAR PERFIL</h3>
+        <div class="input-group"><div class="input-label">👤 Nome</div><input type="text" class="input-field" id="editNome"></div>
+        <div class="input-group"><div class="input-label">📱 Celular</div><input type="tel" class="input-field" id="editCelular"></div>
+        <div class="input-group"><div class="input-label">📧 E-mail</div><input type="email" class="input-field" id="editEmail"></div>
+        <button class="btn btn-primary" onclick="salvarPerfil()">💾 SALVAR</button>
+    </div>
+    <button class="btn btn-danger" onclick="sair()">🚪 SAIR</button>
+</div>
 
-    <!-- ============================================================ -->
-    <!-- SCRIPTS -->
-    <!-- ============================================================ -->
-    <script src="script.js"></script>
+<!-- ===== BOTTOM NAV ===== -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+    <button class="nav-item active" onclick="mostrarTela('homeScreen')"><div class="nav-icon">🏠</div>Início</button>
+    <button class="nav-item" onclick="mostrarTela('perfilScreen')"><div class="nav-icon">👤</div>Perfil</button>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========================================================== -->
+<!-- ===== JAVASCRIPT COMPLETO ===== -->
+<!-- ========================================================== -->
+<script>
+// ==========================================================
+// ===== CONFIGURAÇÃO DO FIREBASE =====
+// ==========================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyB_HKuYMVnBn_rhKfvazjs-7SCmb9NOrDQ",
+    authDomain: "construtorlpx.firebaseapp.com",
+    projectId: "construtorlpx",
+    storageBucket: "construtorlpx.firebasestorage.app",
+    messagingSenderId: "247671839031",
+    appId: "1:247671839031:web:1a4ecfdd28c02b802fa2b2",
+    measurementId: "G-3J4XN3K2PG"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+db.enablePersistence()
+    .then(() => console.log('🔥 Firestore cache ativado!'))
+    .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
+
+console.log('🔥 Firebase conectado!');
+
+// ==========================================================
+// ===== VARIÁVEIS GLOBAIS =====
+// ==========================================================
+var usuarioLogado = null;
+var horariosDisponiveis = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00'];
+
+// ==========================================================
+// ===== FUNÇÕES FIREBASE =====
+// ==========================================================
+
+// --- SALVAR USUÁRIO ---
+async function salvarUsuarioFirebase(usuario) {
+    try {
+        await db.collection('usuariosBarbearia').doc(usuario.id.toString()).set(usuario);
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao salvar usuário:', error);
+        mostrarToast('Erro ao salvar usuário!', 'erro');
+        return false;
+    }
+}
+
+// --- BUSCAR USUÁRIO POR EMAIL ---
+async function buscarUsuarioPorEmail(email) {
+    try {
+        const snapshot = await db.collection('usuariosBarbearia')
+            .where('email', '==', email.trim())
+            .get();
+        
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            return { id: parseInt(doc.id), ...doc.data() };
+        }
+        return null;
+    } catch (error) {
+        console.error('❌ Erro ao buscar usuário:', error);
+        return null;
+    }
+}
+
+// --- BUSCAR USUÁRIO POR ID ---
+async function buscarUsuarioPorId(id) {
+    try {
+        const doc = await db.collection('usuariosBarbearia').doc(id.toString()).get();
+        if (doc.exists) {
+            return { id: parseInt(doc.id), ...doc.data() };
+        }
+        return null;
+    } catch (error) {
+        console.error('❌ Erro ao buscar usuário:', error);
+        return null;
+    }
+}
+
+// --- ATUALIZAR USUÁRIO ---
+async function atualizarUsuarioFirebase(id, dados) {
+    try {
+        await db.collection('usuariosBarbearia').doc(id.toString()).update(dados);
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao atualizar usuário:', error);
+        return false;
+    }
+}
+
+// --- SALVAR AGENDAMENTO ---
+async function salvarAgendamentoFirebase(agendamento) {
+    try {
+        await db.collection('agendamentosBarbearia').doc(agendamento.id.toString()).set(agendamento);
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao salvar agendamento:', error);
+        mostrarToast('Erro ao salvar agendamento!', 'erro');
+        return false;
+    }
+}
+
+// --- BUSCAR AGENDAMENTOS DO USUÁRIO ---
+async function buscarAgendamentosUsuario(usuarioId) {
+    try {
+        const snapshot = await db.collection('agendamentosBarbearia')
+            .where('usuarioId', '==', usuarioId)
+            .orderBy('data', 'desc')
+            .orderBy('hora', 'desc')
+            .get();
+        return snapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() }));
+    } catch (error) {
+        console.error('❌ Erro ao buscar agendamentos:', error);
+        return [];
+    }
+}
+
+// --- BUSCAR TODOS AGENDAMENTOS (BARBEIRO) ---
+async function buscarTodosAgendamentos() {
+    try {
+        const snapshot = await db.collection('agendamentosBarbearia')
+            .orderBy('data', 'asc')
+            .orderBy('hora', 'asc')
+            .get();
+        return snapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() }));
+    } catch (error) {
+        console.error('❌ Erro ao buscar agendamentos:', error);
+        return [];
+    }
+}
+
+// --- BUSCAR HORÁRIOS DISPONÍVEIS ---
+async function buscarHorariosDisponiveis(data) {
+    try {
+        const snapshot = await db.collection('agendamentosBarbearia')
+            .where('data', '==', data)
+            .where('status', 'in', ['pendente', 'confirmado'])
+            .get();
+        
+        const ocupados = snapshot.docs.map(doc => doc.data().hora);
+        return horariosDisponiveis.filter(h => !ocupados.includes(h));
+    } catch (error) {
+        console.error('❌ Erro ao buscar horários:', error);
+        return horariosDisponiveis;
+    }
+}
+
+// ==========================================================
+// ===== FUNÇÕES DE NAVEGAÇÃO =====
+// ==========================================================
+
+function mostrarTela(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    var nav = document.getElementById('bottomNav');
+    if (nav) nav.style.display = ['homeScreen', 'perfilScreen'].includes(id) ? 'flex' : 'none';
+    
+    if (id === 'homeScreen') {
+        carregarAgendamentos();
+    }
+    if (id === 'perfilScreen') carregarMeuPerfil();
+}
+
+function mostrarToast(mensagem, tipo) {
+    var toast = document.getElementById('toast');
+    toast.textContent = mensagem;
+    toast.style.background = tipo === 'erro' ? '#EF4444' : tipo === 'sucesso' ? '#10B981' : '#1F2937';
+    toast.style.display = 'block';
+    setTimeout(function() { toast.style.display = 'none'; }, 3000);
+}
+
+function mudarTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('agendarTab').style.display = tab === 'agendar' ? 'block' : 'none';
+    document.getElementById('meusTab').style.display = tab === 'meus' ? 'block' : 'none';
+    document.getElementById('historicoTab').style.display = tab === 'historico' ? 'block' : 'none';
+    
+    if (tab === 'agendar') carregarAgendamentos();
+    if (tab === 'meus') carregarMeusAgendamentos();
+    if (tab === 'historico') carregarHistorico();
+}
+
+// ==========================================================
+// ===== LOGIN E CADASTRO =====
+// ==========================================================
+
+async function fazerLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var senha = document.getElementById('loginSenha').value;
+
+    if (!email || !senha) {
+        mostrarToast('Preencha todos os campos!', 'erro');
+        return;
+    }
+
+    var usuario = await buscarUsuarioPorEmail(email);
+    
+    if (usuario && usuario.senha === senha) {
+        usuarioLogado = usuario;
+        mostrarToast('Bem-vindo, ' + usuario.nome + '!', 'sucesso');
+        setTimeout(function() { mostrarTela('homeScreen'); }, 500);
+    } else {
+        mostrarToast('E-mail ou senha inválidos!', 'erro');
+    }
+}
+
+async function cadastrar() {
+    var nome = document.getElementById('cadNome').value.trim();
+    var email = document.getElementById('cadEmail').value.trim();
+    var celular = document.getElementById('cadCelular').value.trim();
+    var senha = document.getElementById('cadSenha').value;
+
+    if (!nome || !email || !celular || !senha) {
+        mostrarToast('Preencha todos os campos!', 'erro');
+        return;
+    }
+
+    if (senha.length < 6) {
+        mostrarToast('Senha mínima de 6 caracteres!', 'erro');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        mostrarToast('E-mail inválido!', 'erro');
+        return;
+    }
+
+    var existe = await buscarUsuarioPorEmail(email);
+    if (existe) {
+        mostrarToast('E-mail já cadastrado!', 'erro');
+        return;
+    }
+
+    var novoUsuario = {
+        id: Date.now(),
+        nome: nome,
+        email: email,
+        celular: celular,
+        senha: senha,
+        fotoPerfil: '',
+        dataCriacao: new Date().toISOString()
+    };
+
+    var salvou = await salvarUsuarioFirebase(novoUsuario);
+    if (!salvou) {
+        mostrarToast('Erro ao salvar!', 'erro');
+        return;
+    }
+
+    usuarioLogado = novoUsuario;
+    mostrarToast('Cadastro realizado!', 'sucesso');
+    setTimeout(function() { mostrarTela('homeScreen'); }, 500);
+}
+
+// ==========================================================
+// ===== PERFIL =====
+// ==========================================================
+
+function carregarMeuPerfil() {
+    if (!usuarioLogado) return;
+    document.getElementById('perfilNome').textContent = usuarioLogado.nome;
+    document.getElementById('perfilEmail').textContent = usuarioLogado.email;
+    document.getElementById('perfilCelular').textContent = '📱 ' + (usuarioLogado.celular || 'Não informado');
+    document.getElementById('editNome').value = usuarioLogado.nome || '';
+    document.getElementById('editCelular').value = usuarioLogado.celular || '';
+    document.getElementById('editEmail').value = usuarioLogado.email || '';
+    
+    if (usuarioLogado.fotoPerfil) {
+        document.getElementById('perfilAvatarDefault').innerHTML = 
+            '<img src="' + usuarioLogado.fotoPerfil + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+    }
+}
+
+async function salvarPerfil() {
+    if (!usuarioLogado) return;
+
+    usuarioLogado.nome = document.getElementById('editNome').value.trim();
+    usuarioLogado.celular = document.getElementById('editCelular').value.trim();
+    usuarioLogado.email = document.getElementById('editEmail').value.trim();
+
+    var atualizado = await atualizarUsuarioFirebase(usuarioLogado.id, {
+        nome: usuarioLogado.nome,
+        celular: usuarioLogado.celular,
+        email: usuarioLogado.email
+    });
+
+    if (atualizado) {
+        mostrarToast('✅ Perfil atualizado!', 'sucesso');
+        carregarMeuPerfil();
+    } else {
+        mostrarToast('Erro ao atualizar perfil!', 'erro');
+    }
+}
+
+function mudarFotoPerfil(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+        var fotoBase64 = ev.target.result;
+        document.getElementById('perfilAvatarDefault').innerHTML = 
+            '<img src="' + fotoBase64 + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+        
+        usuarioLogado.fotoPerfil = fotoBase64;
+        await atualizarUsuarioFirebase(usuarioLogado.id, { fotoPerfil: fotoBase64 });
+        mostrarToast('✅ Foto atualizada!', 'sucesso');
+    };
+    reader.readAsDataURL(file);
+}
+
+// ==========================================================
+// ===== SISTEMA DE AGENDAMENTO =====
+// ==========================================================
+
+function carregarAgendamentos() {
+    var container = document.getElementById('agendamentoContainer');
+    if (!container) return;
+    
+    var hoje = new Date().toISOString().split('T')[0];
+    
+    container.innerHTML = `
+        <div class="card">
+            <h3 style="text-align:center;color:#1A1A2E;margin-bottom:16px;">✂️ AGENDAR CORTE</h3>
+            <div class="input-group">
+                <div class="input-label">👤 Seu Nome</div>
+                <input type="text" class="input-field" id="clienteNome" placeholder="Digite seu nome" value="${usuarioLogado ? usuarioLogado.nome : ''}">
+            </div>
+            <div class="input-group">
+                <div class="input-label">📱 Telefone</div>
+                <input type="tel" class="input-field" id="clienteTelefone" placeholder="(11)99999-9999" value="${usuarioLogado ? usuarioLogado.celular : ''}">
+            </div>
+            <div class="input-group">
+                <div class="input-label">✂️ Serviço</div>
+                <select class="input-field" id="servicoSelect">
+                    <option value="corte_masculino">💇 Corte Masculino</option>
+                    <option value="corte_feminino">💇‍♀️ Corte Feminino</option>
+                    <option value="barba">🧔 Barba</option>
+                    <option value="combo">✨ Combo (Corte + Barba)</option>
+                    <option value="sobrancelha">👁️ Sobrancelha</option>
+                    <option value="manicure">💅 Manicure</option>
+                    <option value="hidratacao">💧 Hidratação</option>
+                    <option value="progressiva">✨ Progressiva</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <div class="input-label">📅 Data</div>
+                <input type="date" class="input-field" id="dataInput" min="${hoje}" onchange="carregarHorariosDisponiveis(this.value)">
+            </div>
+            <div class="input-group">
+                <div class="input-label">🕐 Horários Disponíveis</div>
+                <div id="horariosContainer" class="horarios-grid">
+                    <p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>
+                </div>
+                <input type="hidden" id="horaSelecionada">
+            </div>
+            <button class="btn btn-primary" onclick="confirmarAgendamento()">📅 CONFIRMAR AGENDAMENTO</button>
+        </div>
+    `;
+}
+
+async function carregarHorariosDisponiveis(data) {
+    var container = document.getElementById('horariosContainer');
+    if (!container) return;
+    
+    if (!data) {
+        container.innerHTML = '<p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>';
+        return;
+    }
+    
+    // Verificar se a data é hoje e ajustar horários
+    var hoje = new Date().toISOString().split('T')[0];
+    var horaAtual = new Date().getHours();
+    var minutosAtuais = new Date().getMinutes();
+    
+    var disponiveis = await buscarHorariosDisponiveis(data);
+    
+    // Se for hoje, filtrar horários já passados
+    if (data === hoje) {
+        disponiveis = disponiveis.filter(function(h) {
+            var [hora, minuto] = h.split(':').map(Number);
+            return hora > horaAtual || (hora === horaAtual && minuto > minutosAtuais);
+        });
+    }
+    
+    if (disponiveis.length === 0) {
+        container.innerHTML = '<p style="color:#EF4444;width:100%;font-size:14px;">❌ Nenhum horário disponível para esta data.</p>';
+        return;
+    }
+    
+    container.innerHTML = disponiveis.map(function(hora) {
+        return `<button class="btn-horario" onclick="selecionarHorario(this, '${hora}')">${hora}</button>`;
+    }).join('');
+}
+
+function selecionarHorario(btn, hora) {
+    document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('selecionado'));
+    btn.classList.add('selecionado');
+    document.getElementById('horaSelecionada').value = hora;
+}
+
+async function confirmarAgendamento() {
+    if (!usuarioLogado) {
+        mostrarToast('Faça login para agendar!', 'erro');
+        return;
+    }
+
+    var cliente = document.getElementById('clienteNome').value.trim();
+    var telefone = document.getElementById('clienteTelefone').value.trim();
+    var data = document.getElementById('dataInput').value;
+    var hora = document.getElementById('horaSelecionada').value;
+    var servico = document.getElementById('servicoSelect').value;
+
+    if (!cliente) {
+        mostrarToast('❌ Digite seu nome!', 'erro');
+        return;
+    }
+    
+    if (!data) {
+        mostrarToast('❌ Selecione uma data!', 'erro');
+        return;
+    }
+    
+    if (!hora) {
+        mostrarToast('❌ Selecione um horário!', 'erro');
+        return;
+    }
+    
+    if (!servico) {
+        mostrarToast('❌ Selecione um serviço!', 'erro');
+        return;
+    }
+    
+    // Verificar disponibilidade novamente
+    var disponiveis = await buscarHorariosDisponiveis(data);
+    if (!disponiveis.includes(hora)) {
+        mostrarToast('❌ Horário indisponível! Escolha outro.', 'erro');
+        return;
+    }
+    
+    try {
+        var agendamento = {
+            id: Date.now(),
+            usuarioId: usuarioLogado.id,
+            cliente: cliente,
+            telefone: telefone || usuarioLogado.celular || '',
+            data: data,
+            hora: hora,
+            servico: servico,
+            status: 'pendente',
+            dataCriacao: new Date().toISOString()
+        };
+        
+        var salvou = await salvarAgendamentoFirebase(agendamento);
+        if (salvou) {
+            mostrarToast('✅ Agendamento realizado com sucesso!', 'sucesso');
+            // Limpar campos
+            document.getElementById('dataInput').value = '';
+            document.getElementById('horaSelecionada').value = '';
+            document.getElementById('servicoSelect').value = 'corte_masculino';
+            document.getElementById('horariosContainer').innerHTML = '<p style="color:#6B7280;width:100%;font-size:14px;">Selecione uma data para ver os horários.</p>';
+            document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('selecionado'));
+            carregarMeusAgendamentos();
+        }
+    } catch (error) {
+        console.error('❌ Erro ao agendar:', error);
+        mostrarToast('❌ Erro ao agendar! Tente novamente.', 'erro');
+    }
+}
+
+// ==========================================================
+// ===== MEUS AGENDAMENTOS =====
+// ==========================================================
+
+async function carregarMeusAgendamentos() {
+    var container = document.getElementById('meusAgendamentosContainer');
+    if (!container) return;
+    
+    if (!usuarioLogado) {
+        container.innerHTML = '<div class="card"><p style="text-align:center;color:#6B7280;">Faça login para ver seus agendamentos.</p></div>';
+        return;
+    }
+    
+    var agendamentos = await buscarAgendamentosUsuario(usuarioLogado.id);
+    var ativos = agendamentos.filter(a => a.status === 'pendente' || a.status === 'confirmado');
+    
+    if (ativos.length === 0) {
+        container.innerHTML = `
+            <div class="card" style="text-align:center;padding:40px;">
+                <div style="font-size:40px;">📅</div>
+                <h3 style="color:#1A1A2E;">Nenhum agendamento ativo</h3>
+                <p style="color:#6B7280;">Agende seu horário agora mesmo!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = ativos.map(function(a) {
+        var statusClass = a.status === 'pendente' ? 'pendente' : 'confirmado';
+        var statusText = a.status === 'pendente' ? '⏳ Pendente' : '✅ Confirmado';
+        var servicoLabels = {
+            'corte_masculino': '💇 Corte Masculino',
+            'corte_feminino': '💇‍♀️ Corte Feminino',
+            'barba': '🧔 Barba',
+            'combo': '✨ Combo (Corte + Barba)',
+            'sobrancelha': '👁️ Sobrancelha',
+            'manicure': '💅 Manicure',
+            'hidratacao': '💧 Hidratação',
+            'progressiva': '✨ Progressiva'
+        };
+        var servicoLabel = servicoLabels[a.servico] || a.servico;
+        
+        return `
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                    <div>
+                        <strong style="color:#1A1A2E;font-size:16px;">${servicoLabel}</strong>
+                        <div style="font-size:14px;color:#4B5563;margin-top:4px;">
+                            📅 ${a.data} • 🕐 ${a.hora}
+                        </div>
+                        <div style="font-size:13px;color:#6B7280;margin-top:2px;">
+                            👤 ${a.cliente}
+                        </div>
+                    </div>
+                    <span class="agendamento-status ${statusClass}">${statusText}</span>
+                </div>
+                ${a.status === 'pendente' ? `<button class="btn btn-danger btn-small" onclick="cancelarAgendamento(${a.id})" style="margin-top:10px;width:auto;padding:6px 16px;">❌ Cancelar</button>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// ==========================================================
+// ===== HISTÓRICO =====
+// ==========================================================
+
+async function carregarHistorico() {
+    var container = document.getElementById('historicoContainer');
+    if (!container) return;
+    
+    if (!usuarioLogado) {
+        container.innerHTML = '<div class="card"><p style="text-align:center;color:#6B7280;">Faça login para ver seu histórico.</p></div>';
+        return;
+    }
+    
+    var agendamentos = await buscarAgendamentosUsuario(usuarioLogado.id);
+    var historico = agendamentos.filter(a => a.status === 'cancelado' || a.status === 'concluido');
+    
+    if (historico.length === 0) {
+        container.innerHTML = `
+            <div class="card" style="text-align:center;padding:40px;">
+                <div style="font-size:40px;">📜</div>
+                <h3 style="color:#1A1A2E;">Nenhum histórico</h3>
+                <p style="color:#6B7280;">Seus agendamentos concluídos aparecerão aqui.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = historico.map(function(a) {
+        var statusClass = a.status === 'cancelado' ? 'cancelado' : 'concluido';
+        var statusText = a.status === 'cancelado' ? '❌ Cancelado' : '✅ Concluído';
+        var servicoLabels = {
+            'corte_masculino': '💇 Corte Masculino',
+            'corte_feminino': '💇‍♀️ Corte Feminino',
+            'barba': '🧔 Barba',
+            'combo': '✨ Combo (Corte + Barba)',
+            'sobrancelha': '👁️ Sobrancelha',
+            'manicure': '💅 Manicure',
+            'hidratacao': '💧 Hidratação',
+            'progressiva': '✨ Progressiva'
+        };
+        var servicoLabel = servicoLabels[a.servico] || a.servico;
+        
+        return `
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                    <div>
+                        <strong style="color:#1A1A2E;font-size:16px;">${servicoLabel}</strong>
+                        <div style="font-size:14px;color:#4B5563;margin-top:4px;">
+                            📅 ${a.data} • 🕐 ${a.hora}
+                        </div>
+                        <div style="font-size:13px;color:#6B7280;margin-top:2px;">
+                            👤 ${a.cliente}
+                        </div>
+                    </div>
+                    <span class="agendamento-status ${statusClass}">${statusText}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ==========================================================
+// ===== CANCELAR AGENDAMENTO =====
+// ==========================================================
+
+async function cancelarAgendamento(agendamentoId) {
+    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
+    
+    try {
+        await db.collection('agendamentosBarbearia').doc(agendamentoId.toString()).update({
+            status: 'cancelado'
+        });
+        mostrarToast('✅ Agendamento cancelado!', 'sucesso');
+        carregarMeusAgendamentos();
+        carregarHistorico();
+    } catch (error) {
+        console.error('❌ Erro ao cancelar:', error);
+        mostrarToast('Erro ao cancelar!', 'erro');
+    }
+}
+
+// ==========================================================
+// ===== SAIR =====
+// ==========================================================
+
+function sair() {
+    usuarioLogado = null;
+    mostrarTela('loginScreen');
+    mostrarToast('👋 Até logo!', 'sucesso');
+}
+
+// ==========================================================
+// ===== INICIALIZAÇÃO =====
+// ==========================================================
+
+console.log('✅ Barbearia LPX com Firebase!');
+console.log('🔥 Projeto: construtorlpx');
+console.log('📁 Coleções: usuariosBarbearia, agendamentosBarbearia');
+</script>
 
 </body>
 </html>
