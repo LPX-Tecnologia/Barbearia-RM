@@ -15,9 +15,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-db.enablePersistence()
-    .then(() => console.log('🔥 Firestore cache ativado!'))
-    .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
+// ATENÇÃO: COMENTE ESTA LINHA PARA TESTAR
+// db.enablePersistence()
+//     .then(() => console.log('🔥 Firestore cache ativado!'))
+//     .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
 
 console.log('🔥 Firebase conectado!');
 
@@ -77,7 +78,7 @@ function mostrarLoginBarbeiro() {
 }
 
 // ==========================================================
-// ===== CADASTRO CLIENTE (FUNCIONANDO) =====
+// ===== CADASTRO CLIENTE (CORRIGIDO) =====
 // ==========================================================
 
 async function cadastrarCliente() {
@@ -86,7 +87,6 @@ async function cadastrarCliente() {
     var celular = document.getElementById('cadCelularCliente').value.trim();
     var senha = document.getElementById('cadSenhaCliente').value;
 
-    // VALIDAÇÕES
     if (!nome || !email || !celular || !senha) {
         mostrarToast('❌ Preencha todos os campos!', 'error');
         return;
@@ -113,7 +113,6 @@ async function cadastrarCliente() {
             return;
         }
 
-        // Criar cliente
         var cliente = {
             id: Date.now(),
             nome: nome,
@@ -124,7 +123,6 @@ async function cadastrarCliente() {
             dataCriacao: new Date().toISOString()
         };
 
-        // Salvar no Firebase
         await db.collection('clientes').doc(cliente.id.toString()).set(cliente);
         
         clienteLogado = cliente;
@@ -136,14 +134,14 @@ async function cadastrarCliente() {
         mostrarTela('homeClienteScreen');
         
     } catch (error) {
-        console.error('❌ Erro no cadastro:', error);
-        console.error('❌ Código do erro:', error.code);
-        console.error('❌ Mensagem:', error.message);
+        console.error('❌ Erro detalhado:', error);
         
         if (error.code === 'permission-denied') {
-            mostrarToast('❌ Erro de permissão! Verifique as regras do Firestore.', 'error');
+            mostrarToast('❌ Erro de permissão! Publique as regras do Firestore.', 'error');
+        } else if (error.code === 'not-found') {
+            mostrarToast('❌ Coleção não encontrada! Crie a coleção "clientes".', 'error');
         } else {
-            mostrarToast('❌ Erro ao cadastrar: ' + error.message, 'error');
+            mostrarToast('❌ Erro: ' + error.message, 'error');
         }
     }
 }
