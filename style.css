@@ -10,19 +10,61 @@
     --dark-gradient: linear-gradient(135deg, #1A1A1A, #2D2D2D);
 }
 
-/* ===== HEADER COM A LOGO ===== */
+/* ===== HEADER ===== */
 .header {
-    background: var(--dark-gradient);
-    padding: 16px;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1A1A1A 50%, #0a0a0a 100%);
+    padding: 20px 16px 16px;
     text-align: center;
-    border-bottom: 4px solid var(--primary);
+    border-bottom: 3px solid var(--primary);
+    box-shadow: var(--neon-shadow);
+    position: relative;
+    z-index: 10;
 }
 
-.header-content {
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-neon), transparent);
+    animation: neonPulse 2s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* ===== LOGO CENTRALIZADA ===== */
+.header-logo {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+}
+
+.logo-container {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--primary);
+    box-shadow: var(--neon-shadow);
+    flex-shrink: 0;
+    animation: logoGlow 3s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(212, 168, 75, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(212, 168, 75, 0.6), 0 0 80px rgba(212, 168, 75, 0.2); }
+}
+
+.logo-header {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .logo-container {
