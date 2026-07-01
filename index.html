@@ -21,9 +21,7 @@
 </head>
 <body>
 
-    <!-- ============================================================ -->
-    <!-- HEADER - LOGO + SLOGAN -->
-    <!-- ============================================================ -->
+    <!-- ===== HEADER - LOGO + SLOGAN ===== -->
     <header class="header">
         <div class="header-logo">
             <div class="logo-container">
@@ -33,9 +31,7 @@
         </div>
     </header>
 
-    <!-- ============================================================ -->
-    <!-- TELA: LOGIN -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: LOGIN ===== -->
     <section class="screen active" id="loginScreen">
         <div class="login-container">
             <div class="login-logo">
@@ -74,9 +70,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CADASTRO CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: CADASTRO CLIENTE ===== -->
     <section class="screen" id="cadastroClienteScreen">
         <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
@@ -101,9 +95,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: HOME CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: HOME CLIENTE ===== -->
     <section class="screen" id="homeClienteScreen">
         <div class="welcome-banner">
             <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
@@ -122,9 +114,7 @@
         <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: HOME BARBEIRO -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: HOME BARBEIRO ===== -->
     <section class="screen" id="homeBarbeiroScreen">
         <div class="welcome-banner barbeiro">
             <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
@@ -170,9 +160,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: AGENDAMENTO -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: AGENDAMENTO ===== -->
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
@@ -224,9 +212,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: CRIAR POST ===== -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
         <div class="card">
@@ -255,9 +241,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR PLANO -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: CRIAR PLANO ===== -->
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
         <div class="card">
@@ -289,9 +273,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: EXTRATO -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: EXTRATO ===== -->
     <section class="screen" id="extratoScreen">
         <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
         <div class="card">
@@ -307,9 +289,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: PAGAMENTO -->
-    <!-- ============================================================ -->
+    <!-- ===== TELA: PAGAMENTO ===== -->
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
         <div class="card" style="text-align:center;">
@@ -340,16 +320,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: DETALHE POST -->
-    <!-- ============================================================ -->
-    <section class="screen" id="detalhePostScreen">
-        <div id="detalhePostConteudo"></div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- PERFIL CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- ===== PERFIL CLIENTE ===== -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
@@ -394,9 +365,7 @@
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- PERFIL BARBEIRO -->
-    <!-- ============================================================ -->
+    <!-- ===== PERFIL BARBEIRO ===== -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
@@ -445,9 +414,7 @@
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- MODAIS -->
-    <!-- ============================================================ -->
+    <!-- ===== MODAL COMENTÁRIOS ===== -->
     <div class="modal" id="modalComentario">
         <div class="modal-content">
             <h3>💬 Comentários</h3>
@@ -460,14 +427,10 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- TOAST -->
-    <!-- ============================================================ -->
+    <!-- ===== TOAST ===== -->
     <div class="toast" id="toast" style="display:none;"></div>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Cliente -->
-    <!-- ============================================================ -->
+    <!-- ===== BOTTOM NAV - Cliente ===== -->
     <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
             <span class="nav-icon">🏠</span> Início
@@ -480,9 +443,7 @@
         </button>
     </nav>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Barbeiro -->
-    <!-- ============================================================ -->
+    <!-- ===== BOTTOM NAV - Barbeiro ===== -->
     <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
             <span class="nav-icon">🏠</span> Início
@@ -498,9 +459,7 @@
         </button>
     </nav>
 
-    <!-- ============================================================ -->
-    <!-- JAVASCRIPT -->
-    <!-- ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script src="script.js"></script>
 </body>
 </html>
