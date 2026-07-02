@@ -21,7 +21,9 @@
 </head>
 <body>
 
-    <!-- ===== HEADER - LOGO + SLOGAN ===== -->
+    <!-- ============================================================ -->
+    <!-- HEADER - LOGO + SLOGAN -->
+    <!-- ============================================================ -->
     <header class="header">
         <div class="header-logo">
             <div class="logo-container">
@@ -31,7 +33,9 @@
         </div>
     </header>
 
-    <!-- ===== TELA: LOGIN ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: LOGIN -->
+    <!-- ============================================================ -->
     <section class="screen active" id="loginScreen">
         <div class="login-container">
             <div class="login-logo">
@@ -43,6 +47,8 @@
                     <button class="btn btn-primary" onclick="mostrarLoginCliente()">👤 Sou Cliente</button>
                     <button class="btn btn-secondary" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
                 </div>
+                
+                <!-- ===== LOGIN CLIENTE ===== -->
                 <div id="loginFormCliente" style="display:none; margin-top:16px;">
                     <div class="input-group">
                         <label>📧 E-mail</label>
@@ -55,6 +61,8 @@
                     <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
                     <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
                 </div>
+                
+                <!-- ===== LOGIN BARBEIRO ===== -->
                 <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
                     <div class="input-group">
                         <label>📧 E-mail</label>
@@ -65,12 +73,15 @@
                         <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
                     </div>
                     <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" onclick="mostrarCadastroBarbeiro()">📝 Criar Conta Barbeiro</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== TELA: CADASTRO CLIENTE ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO CLIENTE -->
+    <!-- ============================================================ -->
     <section class="screen" id="cadastroClienteScreen">
         <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
@@ -95,7 +106,36 @@
         </div>
     </section>
 
-    <!-- ===== TELA: HOME CLIENTE ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="cadastroBarbeiroScreen">
+        <h2 class="screen-title">✂️ CADASTRO BARBEIRO</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>👤 Nome</label>
+                <input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo">
+            </div>
+            <div class="input-group">
+                <label>📧 E-mail</label>
+                <input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com">
+            </div>
+            <div class="input-group">
+                <label>📱 Celular</label>
+                <input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999">
+            </div>
+            <div class="input-group">
+                <label>🔒 Senha</label>
+                <input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
+            </div>
+            <button class="btn btn-primary" onclick="cadastrarBarbeiro()">✅ FINALIZAR</button>
+            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME CLIENTE -->
+    <!-- ============================================================ -->
     <section class="screen" id="homeClienteScreen">
         <div class="welcome-banner">
             <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
@@ -114,7 +154,9 @@
         <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
     </section>
 
-    <!-- ===== TELA: HOME BARBEIRO ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: HOME BARBEIRO -->
+    <!-- ============================================================ -->
     <section class="screen" id="homeBarbeiroScreen">
         <div class="welcome-banner barbeiro">
             <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
@@ -160,7 +202,9 @@
         </div>
     </section>
 
-    <!-- ===== TELA: AGENDAMENTO ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: AGENDAMENTO -->
+    <!-- ============================================================ -->
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
@@ -212,7 +256,9 @@
         </div>
     </section>
 
-    <!-- ===== TELA: CRIAR POST ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR POST -->
+    <!-- ============================================================ -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
         <div class="card">
@@ -241,7 +287,9 @@
         </div>
     </section>
 
-    <!-- ===== TELA: CRIAR PLANO ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: CRIAR PLANO -->
+    <!-- ============================================================ -->
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
         <div class="card">
@@ -273,7 +321,9 @@
         </div>
     </section>
 
-    <!-- ===== TELA: EXTRATO ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: EXTRATO -->
+    <!-- ============================================================ -->
     <section class="screen" id="extratoScreen">
         <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
         <div class="card">
@@ -289,7 +339,9 @@
         </div>
     </section>
 
-    <!-- ===== TELA: PAGAMENTO ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: PAGAMENTO -->
+    <!-- ============================================================ -->
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
         <div class="card" style="text-align:center;">
@@ -320,7 +372,16 @@
         </div>
     </section>
 
-    <!-- ===== PERFIL CLIENTE ===== -->
+    <!-- ============================================================ -->
+    <!-- TELA: DETALHE POST -->
+    <!-- ============================================================ -->
+    <section class="screen" id="detalhePostScreen">
+        <div id="detalhePostConteudo"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PERFIL CLIENTE -->
+    <!-- ============================================================ -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
@@ -365,7 +426,9 @@
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
     </section>
 
-    <!-- ===== PERFIL BARBEIRO ===== -->
+    <!-- ============================================================ -->
+    <!-- PERFIL BARBEIRO -->
+    <!-- ============================================================ -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
             <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
@@ -414,7 +477,9 @@
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
 
-    <!-- ===== MODAL COMENTÁRIOS ===== -->
+    <!-- ============================================================ -->
+    <!-- MODAIS -->
+    <!-- ============================================================ -->
     <div class="modal" id="modalComentario">
         <div class="modal-content">
             <h3>💬 Comentários</h3>
@@ -427,10 +492,14 @@
         </div>
     </div>
 
-    <!-- ===== TOAST ===== -->
+    <!-- ============================================================ -->
+    <!-- TOAST -->
+    <!-- ============================================================ -->
     <div class="toast" id="toast" style="display:none;"></div>
 
-    <!-- ===== BOTTOM NAV - Cliente ===== -->
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Cliente -->
+    <!-- ============================================================ -->
     <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
             <span class="nav-icon">🏠</span> Início
@@ -443,7 +512,9 @@
         </button>
     </nav>
 
-    <!-- ===== BOTTOM NAV - Barbeiro ===== -->
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAV - Barbeiro -->
+    <!-- ============================================================ -->
     <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
             <span class="nav-icon">🏠</span> Início
@@ -459,7 +530,9 @@
         </button>
     </nav>
 
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ============================================================ -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================================================ -->
     <script src="script.js"></script>
 </body>
 </html>
