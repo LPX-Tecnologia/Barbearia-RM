@@ -650,6 +650,8 @@ async function agendarCorte() {
     var horario = document.getElementById('agendamentoHorario').value;
     var tipo = document.getElementById('agendamentoTipo').value;
 
+    console.log('📝 Tentando agendar:', { data, horario, tipo });
+
     if (!data) {
         mostrarToast('Selecione uma data!', 'error');
         return;
@@ -665,7 +667,8 @@ async function agendarCorte() {
             id: Date.now(),
             clienteId: clienteLogado.id,
             clienteNome: clienteLogado.nome,
-            clienteCelular: clienteLogado.celular,
+            clienteEmail: clienteLogado.email,
+            clienteCelular: clienteLogado.celular || '',
             data: data,
             horario: horario,
             tipo: tipo,
@@ -673,17 +676,29 @@ async function agendarCorte() {
             dataCriacao: new Date().toISOString()
         };
 
+        console.log('💾 Salvando agendamento:', agendamento);
+
         await db.collection('agendamentos').doc(agendamento.id.toString()).set(agendamento);
+        
+        console.log('✅ Agendamento salvo com sucesso!');
         mostrarToast('✅ Agendamento realizado!', 'success');
-        carregarAgendaCliente();
+        
+        // Limpar campos
         document.getElementById('agendamentoData').value = '';
         document.getElementById('agendamentoHorario').value = '09:00';
+        
+        // Recarregar a lista
+        setTimeout(function() {
+            carregarAgendaCliente();
+        }, 500);
+        
     } catch (error) {
         console.error('❌ Erro ao agendar:', error);
+        console.error('❌ Código:', error.code);
+        console.error('❌ Mensagem:', error.message);
         mostrarToast('❌ Erro ao agendar: ' + error.message, 'error');
     }
 }
-
 async function carregarAgendaCliente() {
     if (!clienteLogado) {
         console.log('❌ Cliente não logado');
