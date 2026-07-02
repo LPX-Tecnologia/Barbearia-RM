@@ -30,6 +30,10 @@ var clienteLogado = null;
 var barbeiroLogado = null;
 var postSelecionado = null;
 
+// Variáveis para upload
+var imagemBase64 = '';
+var videoBase64 = '';
+
 // ==========================================================
 // ===== FUNÇÕES DE NAVEGAÇÃO =====
 // ==========================================================
@@ -76,6 +80,12 @@ function mostrarLoginCliente() {
 function mostrarLoginBarbeiro() {
     document.getElementById('loginFormCliente').style.display = 'none';
     document.getElementById('loginFormBarbeiro').style.display = 'block';
+}
+
+function mostrarCadastroBarbeiro() {
+    document.getElementById('loginFormCliente').style.display = 'none';
+    document.getElementById('loginFormBarbeiro').style.display = 'none';
+    mostrarTela('cadastroBarbeiroScreen');
 }
 
 // ==========================================================
@@ -145,14 +155,8 @@ async function cadastrarCliente() {
 }
 
 // ==========================================================
-// ===== CADASTRO BARBEIRO (NOVO) =====
+// ===== CADASTRO BARBEIRO =====
 // ==========================================================
-
-function mostrarCadastroBarbeiro() {
-    document.getElementById('loginFormCliente').style.display = 'none';
-    document.getElementById('loginFormBarbeiro').style.display = 'none';
-    mostrarTela('cadastroBarbeiroScreen');
-}
 
 async function cadastrarBarbeiro() {
     var nome = document.getElementById('cadNomeBarbeiro').value.trim();
@@ -289,6 +293,113 @@ async function loginBarbeiro() {
 }
 
 // ==========================================================
+// ===== UPLOAD DE IMAGEM E VÍDEO =====
+// ==========================================================
+
+// ===== PREVIEW DA IMAGEM =====
+function previewImagem(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        mostrarToast('❌ Imagem muito grande! Máximo 5MB.', 'error');
+        return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+        mostrarToast('❌ Arquivo não é uma imagem!', 'error');
+        return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        imagemBase64 = e.target.result;
+        document.getElementById('postImagem').value = imagemBase64;
+        document.getElementById('imagemPreviewImg').src = imagemBase64;
+        document.getElementById('imagemPreview').style.display = 'block';
+        document.getElementById('imagemUploadArea').style.display = 'none';
+        mostrarToast('✅ Imagem selecionada!', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerImagem() {
+    imagemBase64 = '';
+    document.getElementById('postImagem').value = '';
+    document.getElementById('imagemPreview').style.display = 'none';
+    document.getElementById('imagemUploadArea').style.display = 'block';
+    document.getElementById('postImagemInput').value = '';
+    mostrarToast('🖼️ Imagem removida', 'info');
+}
+
+// ===== PREVIEW DO VÍDEO =====
+function previewVideo(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+        mostrarToast('❌ Vídeo muito grande! Máximo 20MB.', 'error');
+        return;
+    }
+
+    if (!file.type.startsWith('video/')) {
+        mostrarToast('❌ Arquivo não é um vídeo!', 'error');
+        return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        videoBase64 = e.target.result;
+        document.getElementById('postVideo').value = videoBase64;
+        document.getElementById('videoPreviewVideo').src = videoBase64;
+        document.getElementById('videoPreview').style.display = 'block';
+        document.getElementById('videoUploadArea').style.display = 'none';
+        mostrarToast('✅ Vídeo selecionado!', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerVideo() {
+    videoBase64 = '';
+    document.getElementById('postVideo').value = '';
+    document.getElementById('videoPreview').style.display = 'none';
+    document.getElementById('videoUploadArea').style.display = 'block';
+    document.getElementById('postVideoInput').value = '';
+    mostrarToast('🎬 Vídeo removido', 'info');
+}
+
+// ===== DRAG AND DROP =====
+function setupDragAndDrop() {
+    var areas = document.querySelectorAll('.file-upload-area');
+    
+    areas.forEach(function(area) {
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        area.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+        
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            var files = e.dataTransfer.files;
+            if (files.length > 0) {
+                var input = this.querySelector('input[type="file"]');
+                if (input) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            }
+        });
+    });
+}
+
+// ==========================================================
 // ===== FEED CLIENTE =====
 // ==========================================================
 
@@ -304,9 +415,7 @@ async function carregarFeedCliente() {
         var posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         if (posts.length === 0) {
-            // Se não houver posts, cria os posts padrão
             await criarPostsPadrao();
-            // Recarrega o feed
             const newSnapshot = await db.collection('posts')
                 .orderBy('dataCriacao', 'desc')
                 .get();
@@ -320,9 +429,8 @@ async function carregarFeedCliente() {
 
         container.innerHTML = posts.map(function(post) {
             var videoHtml = post.video ? 
-                `<iframe class="feed-post-video" src="${post.video.replace('watch?v=', 'embed/')}" allowfullscreen></iframe>` : '';
+                `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>` : '';
             
-            // Mapeamento de ícones por tipo de serviço
             var servicoIcones = {
                 'Corte Social': '💇',
                 'Corte Degradê': '✂️',
@@ -348,7 +456,7 @@ async function carregarFeedCliente() {
                         </div>
                     </div>
                     ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : 
-                      `<div class="feed-card-image" style="background:linear-gradient(135deg, #1A1A1A, #2D2D2D); font-size:60px; display:flex; align-items:center; justify-content:center; height:160px;">${icone}</div>`}
+                      `<div class="feed-card-image">${icone}</div>`}
                     ${videoHtml}
                     <div class="feed-post-body">
                         <div class="feed-post-title">${post.titulo}</div>
@@ -379,7 +487,6 @@ async function carregarFeedCliente() {
 
 async function criarPostsPadrao() {
     try {
-        // Verificar se já existem posts
         const snapshot = await db.collection('posts').get();
         if (!snapshot.empty) return;
 
@@ -627,8 +734,8 @@ async function criarPost() {
 
     var titulo = document.getElementById('postTitulo').value.trim();
     var preco = parseFloat(document.getElementById('postPreco').value);
-    var imagem = document.getElementById('postImagem').value.trim();
-    var video = document.getElementById('postVideo').value.trim();
+    var imagem = document.getElementById('postImagem').value;
+    var video = document.getElementById('postVideo').value;
     var descricao = document.getElementById('postDescricao').value.trim();
 
     if (!titulo) {
@@ -656,16 +763,18 @@ async function criarPost() {
         };
 
         await db.collection('posts').doc(post.id.toString()).set(post);
-        mostrarToast('✅ Post publicado!', 'success');
+        mostrarToast('✅ Post publicado com sucesso!', 'success');
+        
         document.getElementById('postTitulo').value = '';
         document.getElementById('postPreco').value = '';
-        document.getElementById('postImagem').value = '';
-        document.getElementById('postVideo').value = '';
         document.getElementById('postDescricao').value = '';
+        removerImagem();
+        removerVideo();
+        
         mostrarTela('homeBarbeiroScreen');
     } catch (error) {
         console.error('❌ Erro ao criar post:', error);
-        mostrarToast('Erro ao publicar!', 'error');
+        mostrarToast('Erro ao publicar: ' + error.message, 'error');
     }
 }
 
@@ -1076,6 +1185,11 @@ console.log('✅ Barbearia RM com Firebase!');
 console.log('🔥 Projeto: barbearia-rm');
 console.log('📁 Coleções: clientes, barbeiros, posts, agendamentos, planos');
 console.log('🎨 Tema Neon - Barbearia RM');
+
+// Configurar drag and drop
+setTimeout(function() {
+    setupDragAndDrop();
+}, 500);
 
 // Criar posts padrão se não existirem
 setTimeout(function() {
