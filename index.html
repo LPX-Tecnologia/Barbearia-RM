@@ -348,6 +348,148 @@
     </section>
 
     <!-- ============================================================ -->
+<!-- TELA: EDITAR PLANO -->
+<!-- ============================================================ -->
+<section class="screen" id="editarPlanoScreen">
+    <h2 class="screen-title">✏️ EDITAR PLANO</h2>
+    <div class="card">
+        <input type="hidden" id="editPlanoId">
+        <div class="input-group">
+            <label>📝 Nome do Plano</label>
+            <input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal">
+        </div>
+        <div class="input-group">
+            <label>📅 Período</label>
+            <select id="editPlanoPeriodo">
+                <option value="semanal">Semanal</option>
+                <option value="quinzenal">Quinzenal</option>
+                <option value="mensal">Mensal</option>
+                <option value="trimestral">Trimestral</option>
+                <option value="semestral">Semestral</option>
+                <option value="anual">Anual</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>💰 Preço</label>
+            <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
+        </div>
+        <div class="input-group">
+            <label>📝 Descrição</label>
+            <textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
+        <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR PLANO</button>
+        <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+    </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TELA: HORÁRIOS DE TRABALHO (BARBEIRO) -->
+<!-- ============================================================ -->
+<section class="screen" id="horariosTrabalhoScreen">
+    <h2 class="screen-title">⏰ HORÁRIOS DE TRABALHO</h2>
+    <div class="card">
+        <h3>📅 Dias de Trabalho</h3>
+        <div id="diasTrabalhoContainer">
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaSegunda" checked> Segunda-feira
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaTerca" checked> Terça-feira
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaQuarta" checked> Quarta-feira
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaQuinta" checked> Quinta-feira
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaSexta" checked> Sexta-feira
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaSabado" checked> Sábado
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="diaDomingo"> Domingo
+            </label>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>🕐 Horário de Atendimento</h3>
+        <div class="input-group">
+            <label>⏰ Horário de Início</label>
+            <input type="time" id="horarioInicio" value="09:00">
+        </div>
+        <div class="input-group">
+            <label>⏰ Horário de Fim</label>
+            <input type="time" id="horarioFim" value="18:00">
+        </div>
+        <div class="input-group">
+            <label>⏱️ Intervalo entre cortes (minutos)</label>
+            <select id="intervaloCortes">
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60">60 minutos</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>🏖️ Dias de Folga Específicos</h3>
+        <div class="input-group">
+            <label>📅 Adicionar dia de folga</label>
+            <input type="date" id="folgaData">
+            <button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar Folga</button>
+        </div>
+        <div id="folgasContainer"></div>
+    </div>
+    
+    <button class="btn btn-primary" onclick="salvarHorarios()">💾 SALVAR CONFIGURAÇÕES</button>
+    <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+</section>
+
+<!-- ============================================================ -->
+<!-- TELA: GALERIA DE CORTES -->
+<!-- ============================================================ -->
+<section class="screen" id="galeriaCortesScreen">
+    <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
+    <div class="filtro-cortes">
+        <select id="filtroCategoria" onchange="filtrarGaleria()">
+            <option value="todos">Todos os Cortes</option>
+            <option value="Corte Social">Corte Social</option>
+            <option value="Corte Degradê">Corte Degradê</option>
+            <option value="Corte Navalhado">Corte Navalhado</option>
+            <option value="Corte Máquina">Corte Máquina</option>
+            <option value="Barba">Barba</option>
+            <option value="Barba + Corte">Barba + Corte</option>
+            <option value="Pintura">Pintura</option>
+            <option value="Luzes">Luzes</option>
+            <option value="Platinado">Platinado</option>
+            <option value="Selagem">Selagem</option>
+            <option value="Progressiva">Progressiva</option>
+        </select>
+    </div>
+    <div id="galeriaContainer" class="galeria-grid"></div>
+    <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+</section>
+
+<!-- ============================================================ -->
+<!-- TELA: REELS (ENQUANTO ESPERA) -->
+<!-- ============================================================ -->
+<section class="screen" id="reelsScreen">
+    <h2 class="screen-title">🎬 REELS</h2>
+    <div class="reels-container" id="reelsContainer">
+        <!-- Os reels serão carregados aqui -->
+    </div>
+    <div class="reels-controls">
+        <button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️ Anterior</button>
+        <button class="btn btn-small btn-primary" onclick="reelProximo()">Próximo ➡️</button>
+    </div>
+    <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+</section>
+
+    <!-- ============================================================ -->
     <!-- TELA: EXTRATO -->
     <!-- ============================================================ -->
     <section class="screen" id="extratoScreen">
