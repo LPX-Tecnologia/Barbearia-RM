@@ -685,43 +685,79 @@ async function agendarCorte() {
 }
 
 async function carregarAgendaCliente() {
-    if (!clienteLogado) return;
+    if (!clienteLogado) {
+        console.log('❌ Cliente não logado');
+        return;
+    }
 
     var container = document.getElementById('agendaClienteContainer');
-    if (!container) return;
+    if (!container) {
+        console.log('❌ Container não encontrado');
+        return;
+    }
+
+    console.log('🔍 Buscando agendamentos para o cliente:', clienteLogado.id);
+    console.log('📧 Email do cliente:', clienteLogado.email);
 
     try {
-        const snapshot = await db.collection('agendamentos')
+        // BUSCAR POR CLIENTE ID
+        var snapshot = await db.collection('agendamentos')
             .where('clienteId', '==', clienteLogado.id)
-            .orderBy('data', 'desc')
             .get();
 
-        var agendamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('📅 Agendamentos encontrados (por ID):', snapshot.size);
+
+        // SE NÃO ENCONTRAR POR ID, TENTAR POR EMAIL
+        if (snapshot.empty) {
+            console.log('🔍 Tentando buscar por email...');
+            snapshot = await db.collection('agendamentos')
+                .where('clienteEmail', '==', clienteLogado.email)
+                .get();
+            console.log('📅 Agendamentos encontrados (por email):', snapshot.size);
+        }
+
+        var agendamentos = snapshot.docs.map(doc => ({ 
+            id: doc.id, 
+            ...doc.data() 
+        }));
 
         if (agendamentos.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>';
+            container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento encontrado</p>';
             return;
         }
 
+        // ORDENAR POR DATA (MAIS RECENTE PRIMEIRO)
+        agendamentos.sort(function(a, b) {
+            return new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario);
+        });
+
         container.innerHTML = agendamentos.map(function(a) {
-            var statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
-            var statusText = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+            var statusClass = a.status === 'confirmado' ? 'confirmado' : 
+                            a.status === 'cancelado' ? 'cancelado' : 'pendente';
+            var statusText = a.status === 'confirmado' ? '✅ Confirmado' : 
+                           a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+            
             return `
                 <div class="agenda-item">
                     <div class="agenda-info">
                         <div class="agenda-cliente">${a.tipo || 'Corte'}</div>
                         <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
+                        ${a.clienteNome ? `<div style="font-size:12px; color:#6B7280;">👤 ${a.clienteNome}</div>` : ''}
                     </div>
                     <span class="agenda-status ${statusClass}">${statusText}</span>
                 </div>
             `;
         }).join('');
+
+        console.log('✅ Agendamentos carregados com sucesso!');
+
     } catch (error) {
-        console.error('❌ Erro ao carregar agenda:', error);
-        container.innerHTML = '<p style="color:#EF4444; text-align:center;">❌ Erro ao carregar agendamentos</p>';
+        console.error('❌ Erro detalhado ao carregar agenda:', error);
+        console.error('❌ Código do erro:', error.code);
+        console.error('❌ Mensagem:', error.message);
+        container.innerHTML = '<p style="color:#EF4444; text-align:center;">❌ Erro ao carregar agendamentos: ' + error.message + '</p>';
     }
 }
-
 // ==========================================================
 // ===== POSTS (BARBEIRO) =====
 // ==========================================================
