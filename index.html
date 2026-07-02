@@ -257,7 +257,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST -->
+    <!-- TELA: CRIAR POST (COM UPLOAD DE IMAGEM/VIDEO) -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
@@ -270,18 +270,44 @@
                 <label>💰 Preço</label>
                 <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
             </div>
+            
+            <!-- ===== UPLOAD DE IMAGEM ===== -->
             <div class="input-group">
-                <label>📷 URL da Imagem</label>
-                <input type="text" id="postImagem" placeholder="https://...">
+                <label>📷 Imagem</label>
+                <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()">
+                    <div class="file-upload-icon">🖼️</div>
+                    <p>Clique para selecionar uma imagem</p>
+                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
+                    <input type="file" id="postImagemInput" accept="image/*" style="display:none" onchange="previewImagem(event)">
+                </div>
+                <div id="imagemPreview" style="display:none; margin-top:10px;">
+                    <img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;">
+                    <button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
+                </div>
+                <input type="hidden" id="postImagem" value="">
             </div>
+            
+            <!-- ===== UPLOAD DE VÍDEO ===== -->
             <div class="input-group">
-                <label>🎬 URL do Vídeo (opcional)</label>
-                <input type="text" id="postVideo" placeholder="https://youtube.com/...">
+                <label>🎬 Vídeo (opcional)</label>
+                <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()">
+                    <div class="file-upload-icon">🎥</div>
+                    <p>Clique para selecionar um vídeo</p>
+                    <span style="font-size:12px; color:#6B7280;">MP4, MOV, AVI até 20MB</span>
+                    <input type="file" id="postVideoInput" accept="video/*" style="display:none" onchange="previewVideo(event)">
+                </div>
+                <div id="videoPreview" style="display:none; margin-top:10px;">
+                    <video id="videoPreviewVideo" controls style="width:100%; max-height:200px; border-radius:12px;"></video>
+                    <button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
+                </div>
+                <input type="hidden" id="postVideo" value="">
             </div>
+            
             <div class="input-group">
                 <label>📝 Descrição</label>
                 <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
             </div>
+            
             <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
