@@ -285,6 +285,38 @@ body::after {
     color: #FFFFFF;
 }
 
+/* ===== FILE UPLOAD ===== */
+.file-upload-area {
+    border: 2px dashed rgba(212, 168, 75, 0.3);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+    background: rgba(255,255,255,0.03);
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(212, 168, 75, 0.05);
+}
+
+.file-upload-area .file-upload-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.file-upload-area p {
+    color: #B0B0B0;
+    font-size: 14px;
+}
+
+.file-upload-area.dragover {
+    border-color: var(--primary);
+    background: rgba(212, 168, 75, 0.1);
+    box-shadow: var(--neon-shadow);
+}
+
 /* ===== BOTÕES ===== */
 .btn {
     width: 100%;
@@ -500,6 +532,15 @@ body::after {
     width: 100%;
     aspect-ratio: 16/9;
     background: #000;
+}
+
+.feed-card-image {
+    background: linear-gradient(135deg, #1A1A1A, #2D2D2D);
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
 }
 
 .feed-post-body {
@@ -932,5 +973,11 @@ body::after {
     .slogan {
         font-size: 11px;
         letter-spacing: 2px;
+    }
+    .file-upload-area {
+        padding: 20px 16px;
+    }
+    .file-upload-area .file-upload-icon {
+        font-size: 30px;
     }
 }
