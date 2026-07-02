@@ -6,15 +6,14 @@
     <meta name="theme-color" content="#1A0A0A">
     <title>Barbearia RM</title>
     
-    <!-- ===== CSS EXTERNO ===== -->
+    <!-- ===== CSS ===== -->
     <link rel="stylesheet" href="style.css">
     
     <!-- ===== FONTES ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
-    <!-- ===== FIREBASE SDKs ===== -->
+    <!-- ===== FIREBASE ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -22,7 +21,7 @@
 <body>
 
     <!-- ============================================================ -->
-    <!-- HEADER - LOGO + SLOGAN -->
+    <!-- HEADER -->
     <!-- ============================================================ -->
     <header class="header">
         <div class="header-logo">
@@ -48,7 +47,7 @@
                     <button class="btn btn-secondary" onclick="mostrarLoginBarbeiro()">✂️ Sou Barbeiro</button>
                 </div>
                 
-                <!-- ===== LOGIN CLIENTE ===== -->
+                <!-- LOGIN CLIENTE -->
                 <div id="loginFormCliente" style="display:none; margin-top:16px;">
                     <div class="input-group">
                         <label>📧 E-mail</label>
@@ -62,7 +61,7 @@
                     <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
                 </div>
                 
-                <!-- ===== LOGIN BARBEIRO ===== -->
+                <!-- LOGIN BARBEIRO -->
                 <div id="loginFormBarbeiro" style="display:none; margin-top:16px;">
                     <div class="input-group">
                         <label>📧 E-mail</label>
@@ -73,7 +72,7 @@
                         <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
                     </div>
                     <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarCadastroBarbeiro()">📝 Criar Conta Barbeiro</button>
+                    <button class="btn btn-outline" onclick="mostrarTela('cadastroBarbeiroScreen')">📝 Criar Conta Barbeiro</button>
                 </div>
             </div>
         </div>
@@ -102,7 +101,7 @@
                 <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
             </div>
             <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+            <button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button>
         </div>
     </section>
 
@@ -129,7 +128,7 @@
                 <input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
             </div>
             <button class="btn btn-primary" onclick="cadastrarBarbeiro()">✅ FINALIZAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+            <button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button>
         </div>
     </section>
 
@@ -152,6 +151,11 @@
         </div>
 
         <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
+        
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('galeriaCortesScreen')">💇 GALERIA</button>
+            <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('reelsScreen')">🎬 REELS</button>
+        </div>
     </section>
 
     <!-- ============================================================ -->
@@ -200,6 +204,10 @@
             <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
             <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
         </div>
+        
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('horariosTrabalhoScreen')">⏰ HORÁRIOS</button>
+        </div>
     </section>
 
     <!-- ============================================================ -->
@@ -215,24 +223,15 @@
             <div class="input-group">
                 <label>⏰ Horário</label>
                 <select id="agendamentoHorario">
-                    <option value="09:00">09:00</option>
-                    <option value="09:30">09:30</option>
-                    <option value="10:00">10:00</option>
-                    <option value="10:30">10:30</option>
-                    <option value="11:00">11:00</option>
-                    <option value="11:30">11:30</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="13:30">13:30</option>
-                    <option value="14:00">14:00</option>
-                    <option value="14:30">14:30</option>
-                    <option value="15:00">15:00</option>
-                    <option value="15:30">15:30</option>
-                    <option value="16:00">16:00</option>
-                    <option value="16:30">16:30</option>
-                    <option value="17:00">17:00</option>
-                    <option value="17:30">17:30</option>
-                    <option value="18:00">18:00</option>
+                    <option value="09:00">09:00</option><option value="09:30">09:30</option>
+                    <option value="10:00">10:00</option><option value="10:30">10:30</option>
+                    <option value="11:00">11:00</option><option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option><option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option><option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option><option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option><option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option><option value="17:00">17:00</option>
+                    <option value="17:30">17:30</option><option value="18:00">18:00</option>
                 </select>
             </div>
             <div class="input-group">
@@ -257,7 +256,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST (COM UPLOAD DE IMAGEM/VIDEO) -->
+    <!-- TELA: CRIAR POST -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
@@ -271,7 +270,6 @@
                 <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
             </div>
             
-            <!-- ===== UPLOAD DE IMAGEM ===== -->
             <div class="input-group">
                 <label>📷 Imagem</label>
                 <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()">
@@ -284,10 +282,8 @@
                     <img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;">
                     <button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
                 </div>
-                <input type="hidden" id="postImagem" value="">
             </div>
             
-            <!-- ===== UPLOAD DE VÍDEO ===== -->
             <div class="input-group">
                 <label>🎬 Vídeo (opcional)</label>
                 <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()">
@@ -300,7 +296,6 @@
                     <video id="videoPreviewVideo" controls style="width:100%; max-height:200px; border-radius:12px;"></video>
                     <button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
                 </div>
-                <input type="hidden" id="postVideo" value="">
             </div>
             
             <div class="input-group">
@@ -348,146 +343,130 @@
     </section>
 
     <!-- ============================================================ -->
-<!-- TELA: EDITAR PLANO -->
-<!-- ============================================================ -->
-<section class="screen" id="editarPlanoScreen">
-    <h2 class="screen-title">✏️ EDITAR PLANO</h2>
-    <div class="card">
-        <input type="hidden" id="editPlanoId">
-        <div class="input-group">
-            <label>📝 Nome do Plano</label>
-            <input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal">
+    <!-- TELA: EDITAR PLANO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="editarPlanoScreen">
+        <h2 class="screen-title">✏️ EDITAR PLANO</h2>
+        <div class="card">
+            <input type="hidden" id="editPlanoId">
+            <div class="input-group">
+                <label>📝 Nome do Plano</label>
+                <input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal">
+            </div>
+            <div class="input-group">
+                <label>📅 Período</label>
+                <select id="editPlanoPeriodo">
+                    <option value="semanal">Semanal</option>
+                    <option value="quinzenal">Quinzenal</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>💰 Preço</label>
+                <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
+            </div>
+            <div class="input-group">
+                <label>📝 Descrição</label>
+                <textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
+            <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR PLANO</button>
+            <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
-        <div class="input-group">
-            <label>📅 Período</label>
-            <select id="editPlanoPeriodo">
-                <option value="semanal">Semanal</option>
-                <option value="quinzenal">Quinzenal</option>
-                <option value="mensal">Mensal</option>
-                <option value="trimestral">Trimestral</option>
-                <option value="semestral">Semestral</option>
-                <option value="anual">Anual</option>
-            </select>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HORÁRIOS DE TRABALHO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="horariosTrabalhoScreen">
+        <h2 class="screen-title">⏰ HORÁRIOS DE TRABALHO</h2>
+        <div class="card">
+            <h3>📅 Dias de Trabalho</h3>
+            <div id="diasTrabalhoContainer">
+                <label class="checkbox-label"><input type="checkbox" id="diaSegunda" checked> Segunda-feira</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaTerca" checked> Terça-feira</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaQuarta" checked> Quarta-feira</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaQuinta" checked> Quinta-feira</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaSexta" checked> Sexta-feira</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaSabado" checked> Sábado</label>
+                <label class="checkbox-label"><input type="checkbox" id="diaDomingo"> Domingo</label>
+            </div>
         </div>
-        <div class="input-group">
-            <label>💰 Preço</label>
-            <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
+        
+        <div class="card">
+            <h3>🕐 Horário de Atendimento</h3>
+            <div class="input-group">
+                <label>⏰ Início</label>
+                <input type="time" id="horarioInicio" value="09:00">
+            </div>
+            <div class="input-group">
+                <label>⏰ Fim</label>
+                <input type="time" id="horarioFim" value="18:00">
+            </div>
+            <div class="input-group">
+                <label>⏱️ Intervalo (minutos)</label>
+                <select id="intervaloCortes">
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60">60 minutos</option>
+                </select>
+            </div>
         </div>
-        <div class="input-group">
-            <label>📝 Descrição</label>
-            <textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
+        
+        <div class="card">
+            <h3>🏖️ Dias de Folga</h3>
+            <div class="input-group">
+                <label>📅 Adicionar folga</label>
+                <input type="date" id="folgaData">
+                <button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar</button>
+            </div>
+            <div id="folgasContainer"></div>
         </div>
-        <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
-        <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR PLANO</button>
+        
+        <button class="btn btn-primary" onclick="salvarHorarios()">💾 SALVAR</button>
         <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-    </div>
-</section>
+    </section>
 
-<!-- ============================================================ -->
-<!-- TELA: HORÁRIOS DE TRABALHO (BARBEIRO) -->
-<!-- ============================================================ -->
-<section class="screen" id="horariosTrabalhoScreen">
-    <h2 class="screen-title">⏰ HORÁRIOS DE TRABALHO</h2>
-    <div class="card">
-        <h3>📅 Dias de Trabalho</h3>
-        <div id="diasTrabalhoContainer">
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaSegunda" checked> Segunda-feira
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaTerca" checked> Terça-feira
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaQuarta" checked> Quarta-feira
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaQuinta" checked> Quinta-feira
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaSexta" checked> Sexta-feira
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaSabado" checked> Sábado
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" id="diaDomingo"> Domingo
-            </label>
-        </div>
-    </div>
-    
-    <div class="card">
-        <h3>🕐 Horário de Atendimento</h3>
-        <div class="input-group">
-            <label>⏰ Horário de Início</label>
-            <input type="time" id="horarioInicio" value="09:00">
-        </div>
-        <div class="input-group">
-            <label>⏰ Horário de Fim</label>
-            <input type="time" id="horarioFim" value="18:00">
-        </div>
-        <div class="input-group">
-            <label>⏱️ Intervalo entre cortes (minutos)</label>
-            <select id="intervaloCortes">
-                <option value="30">30 minutos</option>
-                <option value="45">45 minutos</option>
-                <option value="60">60 minutos</option>
+    <!-- ============================================================ -->
+    <!-- TELA: GALERIA DE CORTES -->
+    <!-- ============================================================ -->
+    <section class="screen" id="galeriaCortesScreen">
+        <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
+        <div class="filtro-cortes">
+            <select id="filtroCategoria" onchange="filtrarGaleria()">
+                <option value="todos">Todos os Cortes</option>
+                <option value="Corte Social">Corte Social</option>
+                <option value="Corte Degradê">Corte Degradê</option>
+                <option value="Corte Navalhado">Corte Navalhado</option>
+                <option value="Corte Máquina">Corte Máquina</option>
+                <option value="Barba">Barba</option>
+                <option value="Barba + Corte">Barba + Corte</option>
+                <option value="Pintura">Pintura</option>
+                <option value="Luzes">Luzes</option>
+                <option value="Platinado">Platinado</option>
+                <option value="Selagem">Selagem</option>
+                <option value="Progressiva">Progressiva</option>
             </select>
         </div>
-    </div>
-    
-    <div class="card">
-        <h3>🏖️ Dias de Folga Específicos</h3>
-        <div class="input-group">
-            <label>📅 Adicionar dia de folga</label>
-            <input type="date" id="folgaData">
-            <button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar Folga</button>
+        <div id="galeriaContainer" class="galeria-grid"></div>
+        <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: REELS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="reelsScreen">
+        <h2 class="screen-title">🎬 REELS</h2>
+        <div class="reels-container" id="reelsContainer"></div>
+        <div class="reels-controls">
+            <button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️ Anterior</button>
+            <button class="btn btn-small btn-primary" onclick="reelProximo()">Próximo ➡️</button>
         </div>
-        <div id="folgasContainer"></div>
-    </div>
-    
-    <button class="btn btn-primary" onclick="salvarHorarios()">💾 SALVAR CONFIGURAÇÕES</button>
-    <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
-</section>
-
-<!-- ============================================================ -->
-<!-- TELA: GALERIA DE CORTES -->
-<!-- ============================================================ -->
-<section class="screen" id="galeriaCortesScreen">
-    <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
-    <div class="filtro-cortes">
-        <select id="filtroCategoria" onchange="filtrarGaleria()">
-            <option value="todos">Todos os Cortes</option>
-            <option value="Corte Social">Corte Social</option>
-            <option value="Corte Degradê">Corte Degradê</option>
-            <option value="Corte Navalhado">Corte Navalhado</option>
-            <option value="Corte Máquina">Corte Máquina</option>
-            <option value="Barba">Barba</option>
-            <option value="Barba + Corte">Barba + Corte</option>
-            <option value="Pintura">Pintura</option>
-            <option value="Luzes">Luzes</option>
-            <option value="Platinado">Platinado</option>
-            <option value="Selagem">Selagem</option>
-            <option value="Progressiva">Progressiva</option>
-        </select>
-    </div>
-    <div id="galeriaContainer" class="galeria-grid"></div>
-    <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
-</section>
-
-<!-- ============================================================ -->
-<!-- TELA: REELS (ENQUANTO ESPERA) -->
-<!-- ============================================================ -->
-<section class="screen" id="reelsScreen">
-    <h2 class="screen-title">🎬 REELS</h2>
-    <div class="reels-container" id="reelsContainer">
-        <!-- Os reels serão carregados aqui -->
-    </div>
-    <div class="reels-controls">
-        <button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️ Anterior</button>
-        <button class="btn btn-small btn-primary" onclick="reelProximo()">Próximo ➡️</button>
-    </div>
-    <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
-</section>
+        <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+    </section>
 
     <!-- ============================================================ -->
     <!-- TELA: EXTRATO -->
@@ -517,25 +496,8 @@
                 <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-small">
             </div>
             <h3 style="margin-top:10px; color:#FFFFFF;">Barbearia RM</h3>
-            <div id="qrcodeContainer" style="margin: 20px auto; background:white; padding:10px; border-radius:12px; display:inline-block;"></div>
             <p><strong style="color:#FFFFFF;">Chave PIX:</strong> <span id="pixChave" style="color:var(--primary);">barbearia.rm@email.com</span></p>
-            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar Chave PIX</button>
-            <hr style="margin:20px 0; border-color:rgba(212,168,75,0.2);">
-            <div class="input-group">
-                <label>💳 Cartão de Crédito</label>
-                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19">
-            </div>
-            <div style="display:flex; gap:10px;">
-                <div class="input-group" style="flex:1;">
-                    <label>📅 Validade</label>
-                    <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5">
-                </div>
-                <div class="input-group" style="flex:1;">
-                    <label>🔐 CVV</label>
-                    <input type="text" id="cartaoCVV" placeholder="123" maxlength="4">
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="processarPagamento()">💳 PAGAR</button>
+            <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar PIX</button>
             <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
         </div>
     </section>
@@ -552,7 +514,7 @@
     <!-- ============================================================ -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
-            <div class="profile-avatar" onclick="document.getElementById('fotoClienteInput').click()">
+            <div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()">
                 <img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
                 <div class="camera-icon">📷</div>
             </div>
@@ -560,37 +522,12 @@
             <h2 id="perfilClienteNome">Cliente</h2>
             <p id="perfilClienteEmail">cliente@email.com</p>
         </div>
-
         <div class="card">
             <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editClienteNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editClienteCelular">
-            </div>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div>
             <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
         </div>
-
-        <div class="card">
-            <h3>🔑 ALTERAR SENHA</h3>
-            <div class="input-group">
-                <label>🔒 Senha Atual</label>
-                <input type="password" id="senhaAtualCliente" placeholder="Digite sua senha atual">
-            </div>
-            <div class="input-group">
-                <label>🔒 Nova Senha</label>
-                <input type="password" id="novaSenhaCliente" placeholder="Mínimo 6 caracteres">
-            </div>
-            <div class="input-group">
-                <label>🔒 Confirmar Nova Senha</label>
-                <input type="password" id="confirmarSenhaCliente" placeholder="Confirme a nova senha">
-            </div>
-            <button class="btn btn-primary" onclick="trocarSenhaCliente()">🔑 TROCAR SENHA</button>
-        </div>
-
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
     </section>
 
@@ -599,7 +536,7 @@
     <!-- ============================================================ -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
-            <div class="profile-avatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
+            <div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
                 <img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
                 <div class="camera-icon">📷</div>
             </div>
@@ -607,58 +544,15 @@
             <h2 id="perfilBarbeiroNome">Barbeiro</h2>
             <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
         </div>
-
         <div class="card">
             <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editBarbeiroNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editBarbeiroCelular">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="editBarbeiroEmail">
-            </div>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div>
             <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
         </div>
-
-        <div class="card">
-            <h3>🔑 ALTERAR SENHA</h3>
-            <div class="input-group">
-                <label>🔒 Senha Atual</label>
-                <input type="password" id="senhaAtualBarbeiro" placeholder="Digite sua senha atual">
-            </div>
-            <div class="input-group">
-                <label>🔒 Nova Senha</label>
-                <input type="password" id="novaSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
-            </div>
-            <div class="input-group">
-                <label>🔒 Confirmar Nova Senha</label>
-                <input type="password" id="confirmarSenhaBarbeiro" placeholder="Confirme a nova senha">
-            </div>
-            <button class="btn btn-primary" onclick="trocarSenhaBarbeiro()">🔑 TROCAR SENHA</button>
-        </div>
-
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
-
-    <!-- ============================================================ -->
-    <!-- MODAIS -->
-    <!-- ============================================================ -->
-    <div class="modal" id="modalComentario">
-        <div class="modal-content">
-            <h3>💬 Comentários</h3>
-            <div id="comentariosContainer"></div>
-            <div class="input-group">
-                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
-            <button class="btn btn-outline" onclick="fecharModal('modalComentario')">Fechar</button>
-        </div>
-    </div>
 
     <!-- ============================================================ -->
     <!-- TOAST -->
@@ -666,36 +560,23 @@
     <div class="toast" id="toast" style="display:none;"></div>
 
     <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Cliente -->
+    <!-- BOTTOM NAV - CLIENTE -->
     <!-- ============================================================ -->
     <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')">
-            <span class="nav-icon">✂️</span> Agendar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
+        <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')"><span class="nav-icon">🏠</span> Início</button>
+        <button class="nav-item" onclick="mostrarTela('agendamentoScreen')"><span class="nav-icon">✂️</span> Agendar</button>
+        <button class="nav-item" onclick="mostrarTela('galeriaCortesScreen')"><span class="nav-icon">💇</span> Galeria</button>
+        <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
     <!-- ============================================================ -->
-    <!-- BOTTOM NAV - Barbeiro -->
+    <!-- BOTTOM NAV - BARBEIRO -->
     <!-- ============================================================ -->
     <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('criarPostScreen')">
-            <span class="nav-icon">📸</span> Postar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('extratoScreen')">
-            <span class="nav-icon">📊</span> Extrato
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
+        <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')"><span class="nav-icon">🏠</span> Início</button>
+        <button class="nav-item" onclick="mostrarTela('criarPostScreen')"><span class="nav-icon">📸</span> Postar</button>
+        <button class="nav-item" onclick="mostrarTela('extratoScreen')"><span class="nav-icon">📊</span> Extrato</button>
+        <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
     <!-- ============================================================ -->
