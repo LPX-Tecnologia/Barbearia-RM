@@ -1,878 +1,76 @@
 // ==========================================================
-// ===== CONFIGURAÇÃO DO FIREBASE (PROJETO BARBEARIA-RM) =====
+// ===== EDIÇÃO DE PLANOS =====
 // ==========================================================
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
-    authDomain: "barbearia-rm.firebaseapp.com",
-    projectId: "barbearia-rm",
-    storageBucket: "barbearia-rm.firebasestorage.app",
-    messagingSenderId: "512819922057",
-    appId: "1:512819922057:web:6a913791cb6435e4f63258",
-    measurementId: "G-TKVLVLPBJH"
-};
-
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// Comentar para teste
-// db.enablePersistence()
-//     .then(() => console.log('🔥 Firestore cache ativado!'))
-//     .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
-
-console.log('🔥 Firebase conectado ao projeto: barbearia-rm');
-
-// ==========================================================
-// ===== VARIÁVEIS GLOBAIS =====
-// ==========================================================
-var clienteLogado = null;
-var barbeiroLogado = null;
-var postSelecionado = null;
-
-// Variáveis para upload
-var imagemBase64 = '';
-var videoBase64 = '';
-
-// ==========================================================
-// ===== FUNÇÕES DE NAVEGAÇÃO =====
-// ==========================================================
-
-function mostrarTela(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
+function editarPlano(planoId) {
+    if (!barbeiroLogado) return;
     
-    if (id === 'homeClienteScreen') {
-        carregarFeedCliente();
-        carregarAgendaCliente();
-    }
-    if (id === 'homeBarbeiroScreen') {
-        carregarAgendamentosBarbeiro();
-        carregarPlanos();
-        calcularFaturamento();
-    }
-    if (id === 'perfilClienteScreen') carregarPerfilCliente();
-    if (id === 'perfilBarbeiroScreen') carregarPerfilBarbeiro();
+    db.collection('planos').doc(planoId).get()
+        .then(function(doc) {
+            if (doc.exists) {
+                var plano = doc.data();
+                document.getElementById('editPlanoId').value = planoId;
+                document.getElementById('editPlanoNome').value = plano.nome;
+                document.getElementById('editPlanoPeriodo').value = plano.periodo;
+                document.getElementById('editPlanoPreco').value = plano.preco;
+                document.getElementById('editPlanoDescricao').value = plano.descricao || '';
+                mostrarTela('editarPlanoScreen');
+            }
+        })
+        .catch(function(error) {
+            console.error('❌ Erro ao carregar plano:', error);
+            mostrarToast('Erro ao carregar plano!', 'error');
+        });
 }
 
-function mostrarToast(mensagem, tipo) {
-    var toast = document.getElementById('toast');
-    toast.textContent = mensagem;
-    toast.className = 'toast ' + (tipo || 'info');
-    toast.style.display = 'block';
-    setTimeout(function() { toast.style.display = 'none'; }, 3000);
-}
-
-function fecharModal(id) {
-    document.getElementById(id).classList.remove('active');
-}
-
-// ==========================================================
-// ===== LOGIN E CADASTRO =====
-// ==========================================================
-
-function mostrarLoginCliente() {
-    document.getElementById('loginFormCliente').style.display = 'block';
-    document.getElementById('loginFormBarbeiro').style.display = 'none';
-}
-
-function mostrarLoginBarbeiro() {
-    document.getElementById('loginFormCliente').style.display = 'none';
-    document.getElementById('loginFormBarbeiro').style.display = 'block';
-}
-
-function mostrarCadastroBarbeiro() {
-    document.getElementById('loginFormCliente').style.display = 'none';
-    document.getElementById('loginFormBarbeiro').style.display = 'none';
-    mostrarTela('cadastroBarbeiroScreen');
-}
-
-// ==========================================================
-// ===== CADASTRO CLIENTE =====
-// ==========================================================
-
-async function cadastrarCliente() {
-    var nome = document.getElementById('cadNomeCliente').value.trim();
-    var email = document.getElementById('cadEmailCliente').value.trim();
-    var celular = document.getElementById('cadCelularCliente').value.trim();
-    var senha = document.getElementById('cadSenhaCliente').value;
-
-    if (!nome || !email || !celular || !senha) {
-        mostrarToast('❌ Preencha todos os campos!', 'error');
-        return;
-    }
-
-    if (senha.length < 6) {
-        mostrarToast('❌ Senha mínima de 6 caracteres!', 'error');
-        return;
-    }
-
-    if (!email.includes('@')) {
-        mostrarToast('❌ E-mail inválido!', 'error');
-        return;
-    }
-
-    try {
-        const snapshot = await db.collection('clientes')
-            .where('email', '==', email)
-            .get();
-
-        if (!snapshot.empty) {
-            mostrarToast('❌ E-mail já cadastrado!', 'error');
-            return;
-        }
-
-        var cliente = {
-            id: Date.now(),
-            nome: nome,
-            email: email,
-            celular: celular,
-            senha: senha,
-            fotoPerfil: '',
-            dataCriacao: new Date().toISOString()
-        };
-
-        await db.collection('clientes').doc(cliente.id.toString()).set(cliente);
-        
-        clienteLogado = cliente;
-        document.getElementById('welcomeClienteNome').textContent = cliente.nome;
-        document.getElementById('bottomNavCliente').style.display = 'flex';
-        document.getElementById('bottomNavBarbeiro').style.display = 'none';
-        
-        mostrarToast('✅ Cadastro de cliente realizado com sucesso!', 'success');
-        mostrarTela('homeClienteScreen');
-        
-    } catch (error) {
-        console.error('❌ Erro detalhado:', error);
-        
-        if (error.code === 'permission-denied') {
-            mostrarToast('❌ Erro de permissão! Publique as regras do Firestore.', 'error');
-        } else {
-            mostrarToast('❌ Erro: ' + error.message, 'error');
-        }
-    }
-}
-
-// ==========================================================
-// ===== CADASTRO BARBEIRO =====
-// ==========================================================
-
-async function cadastrarBarbeiro() {
-    var nome = document.getElementById('cadNomeBarbeiro').value.trim();
-    var email = document.getElementById('cadEmailBarbeiro').value.trim();
-    var celular = document.getElementById('cadCelularBarbeiro').value.trim();
-    var senha = document.getElementById('cadSenhaBarbeiro').value;
-
-    if (!nome || !email || !celular || !senha) {
-        mostrarToast('❌ Preencha todos os campos!', 'error');
-        return;
-    }
-
-    if (senha.length < 6) {
-        mostrarToast('❌ Senha mínima de 6 caracteres!', 'error');
-        return;
-    }
-
-    if (!email.includes('@')) {
-        mostrarToast('❌ E-mail inválido!', 'error');
-        return;
-    }
-
-    try {
-        const snapshot = await db.collection('barbeiros')
-            .where('email', '==', email)
-            .get();
-
-        if (!snapshot.empty) {
-            mostrarToast('❌ E-mail já cadastrado como barbeiro!', 'error');
-            return;
-        }
-
-        var barbeiro = {
-            id: Date.now(),
-            nome: nome,
-            email: email,
-            celular: celular,
-            senha: senha,
-            fotoPerfil: '',
-            dataCriacao: new Date().toISOString()
-        };
-
-        await db.collection('barbeiros').doc(barbeiro.id.toString()).set(barbeiro);
-        
-        barbeiroLogado = barbeiro;
-        document.getElementById('welcomeBarbeiroNome').textContent = barbeiro.nome;
-        document.getElementById('bottomNavBarbeiro').style.display = 'flex';
-        document.getElementById('bottomNavCliente').style.display = 'none';
-        
-        mostrarToast('✅ Cadastro de barbeiro realizado com sucesso!', 'success');
-        mostrarTela('homeBarbeiroScreen');
-        
-    } catch (error) {
-        console.error('❌ Erro detalhado:', error);
-        
-        if (error.code === 'permission-denied') {
-            mostrarToast('❌ Erro de permissão! Publique as regras do Firestore.', 'error');
-        } else {
-            mostrarToast('❌ Erro: ' + error.message, 'error');
-        }
-    }
-}
-
-// ==========================================================
-// ===== LOGIN CLIENTE =====
-// ==========================================================
-
-async function loginCliente() {
-    var email = document.getElementById('loginEmailCliente').value.trim();
-    var senha = document.getElementById('loginSenhaCliente').value;
-
-    if (!email || !senha) {
-        mostrarToast('Preencha todos os campos!', 'error');
-        return;
-    }
-
-    try {
-        const snapshot = await db.collection('clientes')
-            .where('email', '==', email)
-            .where('senha', '==', senha)
-            .get();
-
-        if (snapshot.empty) {
-            mostrarToast('E-mail ou senha inválidos!', 'error');
-            return;
-        }
-
-        clienteLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-        document.getElementById('welcomeClienteNome').textContent = clienteLogado.nome;
-        document.getElementById('bottomNavCliente').style.display = 'flex';
-        document.getElementById('bottomNavBarbeiro').style.display = 'none';
-        mostrarToast('Bem-vindo, ' + clienteLogado.nome + '!', 'success');
-        mostrarTela('homeClienteScreen');
-    } catch (error) {
-        console.error('❌ Erro no login:', error);
-        mostrarToast('Erro ao fazer login!', 'error');
-    }
-}
-
-// ==========================================================
-// ===== LOGIN BARBEIRO =====
-// ==========================================================
-
-async function loginBarbeiro() {
-    var email = document.getElementById('loginEmailBarbeiro').value.trim();
-    var senha = document.getElementById('loginSenhaBarbeiro').value;
-
-    if (!email || !senha) {
-        mostrarToast('Preencha todos os campos!', 'error');
-        return;
-    }
-
-    try {
-        const snapshot = await db.collection('barbeiros')
-            .where('email', '==', email)
-            .where('senha', '==', senha)
-            .get();
-
-        if (snapshot.empty) {
-            mostrarToast('E-mail ou senha inválidos!', 'error');
-            return;
-        }
-
-        barbeiroLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-        document.getElementById('welcomeBarbeiroNome').textContent = barbeiroLogado.nome;
-        document.getElementById('bottomNavBarbeiro').style.display = 'flex';
-        document.getElementById('bottomNavCliente').style.display = 'none';
-        mostrarToast('Bem-vindo, ' + barbeiroLogado.nome + '!', 'success');
-        mostrarTela('homeBarbeiroScreen');
-    } catch (error) {
-        console.error('❌ Erro no login:', error);
-        mostrarToast('Erro ao fazer login!', 'error');
-    }
-}
-
-// ==========================================================
-// ===== UPLOAD DE IMAGEM E VÍDEO =====
-// ==========================================================
-
-// ===== PREVIEW DA IMAGEM =====
-function previewImagem(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-        mostrarToast('❌ Imagem muito grande! Máximo 5MB.', 'error');
-        return;
-    }
-
-    if (!file.type.startsWith('image/')) {
-        mostrarToast('❌ Arquivo não é uma imagem!', 'error');
-        return;
-    }
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        imagemBase64 = e.target.result;
-        document.getElementById('postImagem').value = imagemBase64;
-        document.getElementById('imagemPreviewImg').src = imagemBase64;
-        document.getElementById('imagemPreview').style.display = 'block';
-        document.getElementById('imagemUploadArea').style.display = 'none';
-        mostrarToast('✅ Imagem selecionada!', 'success');
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerImagem() {
-    imagemBase64 = '';
-    document.getElementById('postImagem').value = '';
-    document.getElementById('imagemPreview').style.display = 'none';
-    document.getElementById('imagemUploadArea').style.display = 'block';
-    document.getElementById('postImagemInput').value = '';
-    mostrarToast('🖼️ Imagem removida', 'info');
-}
-
-// ===== PREVIEW DO VÍDEO =====
-function previewVideo(event) {
-    var file = event.target.files[0];
-    if (!file) return;
-
-    if (file.size > 20 * 1024 * 1024) {
-        mostrarToast('❌ Vídeo muito grande! Máximo 20MB.', 'error');
-        return;
-    }
-
-    if (!file.type.startsWith('video/')) {
-        mostrarToast('❌ Arquivo não é um vídeo!', 'error');
-        return;
-    }
-
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        videoBase64 = e.target.result;
-        document.getElementById('postVideo').value = videoBase64;
-        document.getElementById('videoPreviewVideo').src = videoBase64;
-        document.getElementById('videoPreview').style.display = 'block';
-        document.getElementById('videoUploadArea').style.display = 'none';
-        mostrarToast('✅ Vídeo selecionado!', 'success');
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerVideo() {
-    videoBase64 = '';
-    document.getElementById('postVideo').value = '';
-    document.getElementById('videoPreview').style.display = 'none';
-    document.getElementById('videoUploadArea').style.display = 'block';
-    document.getElementById('postVideoInput').value = '';
-    mostrarToast('🎬 Vídeo removido', 'info');
-}
-
-// ===== DRAG AND DROP =====
-function setupDragAndDrop() {
-    var areas = document.querySelectorAll('.file-upload-area');
+async function salvarEdicaoPlano() {
+    if (!barbeiroLogado) return;
     
-    areas.forEach(function(area) {
-        area.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('dragover');
-        });
-        
-        area.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.classList.remove('dragover');
-        });
-        
-        area.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('dragover');
-            
-            var files = e.dataTransfer.files;
-            if (files.length > 0) {
-                var input = this.querySelector('input[type="file"]');
-                if (input) {
-                    input.files = files;
-                    input.dispatchEvent(new Event('change'));
-                }
-            }
-        });
-    });
-}
-
-// ==========================================================
-// ===== FEED CLIENTE =====
-// ==========================================================
-
-async function carregarFeedCliente() {
-    var container = document.getElementById('feedClienteContainer');
-    if (!container) return;
-
-    try {
-        const snapshot = await db.collection('posts')
-            .orderBy('dataCriacao', 'desc')
-            .get();
-
-        var posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        if (posts.length === 0) {
-            await criarPostsPadrao();
-            const newSnapshot = await db.collection('posts')
-                .orderBy('dataCriacao', 'desc')
-                .get();
-            posts = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        }
-
-        if (posts.length === 0) {
-            container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3><p style="color:#6B7280;">Aguarde novos cortes!</p></div>';
-            return;
-        }
-
-        container.innerHTML = posts.map(function(post) {
-            var videoHtml = post.video ? 
-                `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>` : '';
-            
-            var servicoIcones = {
-                'Corte Social': '💇',
-                'Corte Degradê': '✂️',
-                'Corte Navalhado': '🔪',
-                'Corte Máquina': '⚡',
-                'Barba': '🧔',
-                'Barba + Corte': '✨',
-                'Pintura': '🎨',
-                'Luzes': '💡',
-                'Platinado': '⭐',
-                'Selagem': '💧',
-                'Progressiva': '🌟'
-            };
-            var icone = servicoIcones[post.titulo] || '✂️';
-            
-            return `
-                <div class="feed-post">
-                    <div class="feed-post-header">
-                        <div class="feed-post-avatar">✂️</div>
-                        <div class="feed-post-user">
-                            <div class="feed-post-user-name">Barbearia RM</div>
-                            <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
-                        </div>
-                    </div>
-                    ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : 
-                      `<div class="feed-card-image">${icone}</div>`}
-                    ${videoHtml}
-                    <div class="feed-post-body">
-                        <div class="feed-post-title">${post.titulo}</div>
-                        <div class="feed-post-price">R$ ${post.preco ? post.preco.toFixed(2) : '0,00'}</div>
-                        <div class="feed-post-desc">${post.descricao || ''}</div>
-                    </div>
-                    <div class="feed-post-actions">
-                        <button onclick="likePost('${post.id}', this)">
-                            ❤️ <span class="count">${post.likes || 0}</span>
-                        </button>
-                        <button onclick="abrirComentarios('${post.id}')">
-                            💬 <span class="count">${post.comentarios ? post.comentarios.length : 0}</span>
-                        </button>
-                        <button onclick="agendarPorPost('${post.id}')">✂️ Agendar</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('❌ Erro ao carregar feed:', error);
-        mostrarToast('Erro ao carregar feed!', 'error');
-    }
-}
-
-// ==========================================================
-// ===== CRIAR POSTS PADRÃO =====
-// ==========================================================
-
-async function criarPostsPadrao() {
-    try {
-        const snapshot = await db.collection('posts').get();
-        if (!snapshot.empty) return;
-
-        console.log('📝 Criando posts padrão...');
-
-        var posts = [
-            {
-                id: 1,
-                barbeiroId: 1,
-                titulo: 'Corte Social',
-                preco: 35.00,
-                imagem: '',
-                video: '',
-                descricao: 'Corte social com acabamento perfeito. Ideal para quem busca elegância e praticidade.',
-                likes: 12,
-                comentarios: [
-                    { usuario: 'Carlos', texto: 'Ficou ótimo!', data: new Date().toISOString() },
-                    { usuario: 'Ana', texto: 'Recomendo!', data: new Date().toISOString() }
-                ],
-                dataCriacao: new Date(Date.now() - 86400000).toISOString()
-            },
-            {
-                id: 2,
-                barbeiroId: 1,
-                titulo: 'Corte Degradê',
-                preco: 45.00,
-                imagem: '',
-                video: '',
-                descricao: 'Degradê moderno com máquina e tesoura. Técnica avançada para um visual impecável.',
-                likes: 8,
-                comentarios: [
-                    { usuario: 'Rafael', texto: 'Melhor degradê da cidade!', data: new Date().toISOString() }
-                ],
-                dataCriacao: new Date(Date.now() - 172800000).toISOString()
-            },
-            {
-                id: 3,
-                barbeiroId: 1,
-                titulo: 'Corte Navalhado',
-                preco: 50.00,
-                imagem: '',
-                video: '',
-                descricao: 'Corte com navalha para um acabamento preciso e definido. Perfeito para visuais marcantes.',
-                likes: 5,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 259200000).toISOString()
-            },
-            {
-                id: 4,
-                barbeiroId: 1,
-                titulo: 'Barba',
-                preco: 25.00,
-                imagem: '',
-                video: '',
-                descricao: 'Barba completa com toalha quente, hidratação e acabamento perfeito.',
-                likes: 15,
-                comentarios: [
-                    { usuario: 'Pedro', texto: 'Sai de lá parecendo outro!', data: new Date().toISOString() },
-                    { usuario: 'Mariana', texto: 'Meu marido adorou!', data: new Date().toISOString() }
-                ],
-                dataCriacao: new Date(Date.now() - 345600000).toISOString()
-            },
-            {
-                id: 5,
-                barbeiroId: 1,
-                titulo: 'Barba + Corte',
-                preco: 55.00,
-                imagem: '',
-                video: '',
-                descricao: 'Combo completo: corte + barba. Pacote especial com desconto!',
-                likes: 20,
-                comentarios: [
-                    { usuario: 'Lucas', texto: 'Melhor combo da cidade!', data: new Date().toISOString() }
-                ],
-                dataCriacao: new Date(Date.now() - 432000000).toISOString()
-            },
-            {
-                id: 6,
-                barbeiroId: 1,
-                titulo: 'Pintura',
-                preco: 80.00,
-                imagem: '',
-                video: '',
-                descricao: 'Pintura capilar com produtos de alta qualidade. Cores vibrantes e duradouras.',
-                likes: 3,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 518400000).toISOString()
-            },
-            {
-                id: 7,
-                barbeiroId: 1,
-                titulo: 'Luzes',
-                preco: 90.00,
-                imagem: '',
-                video: '',
-                descricao: 'Luzes e reflexos para iluminar seu visual. Técnica moderna e natural.',
-                likes: 7,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 604800000).toISOString()
-            },
-            {
-                id: 8,
-                barbeiroId: 1,
-                titulo: 'Platinado',
-                preco: 120.00,
-                imagem: '',
-                video: '',
-                descricao: 'Platinado completo com descoloração e tonalização. Visual moderno e ousado.',
-                likes: 10,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 691200000).toISOString()
-            },
-            {
-                id: 9,
-                barbeiroId: 1,
-                titulo: 'Selagem',
-                preco: 70.00,
-                imagem: '',
-                video: '',
-                descricao: 'Selagem capilar para cabelos lisos e sedosos. Duração prolongada.',
-                likes: 4,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 777600000).toISOString()
-            },
-            {
-                id: 10,
-                barbeiroId: 1,
-                titulo: 'Progressiva',
-                preco: 100.00,
-                imagem: '',
-                video: '',
-                descricao: 'Progressiva com fórmula exclusiva que não agride os fios. Cabelo liso e saudável.',
-                likes: 6,
-                comentarios: [],
-                dataCriacao: new Date(Date.now() - 864000000).toISOString()
-            }
-        ];
-
-        for (var post of posts) {
-            await db.collection('posts').doc(post.id.toString()).set(post);
-        }
-
-        console.log('✅ Posts padrão criados com sucesso!');
-
-    } catch (error) {
-        console.error('❌ Erro ao criar posts padrão:', error);
-    }
-}
-
-// ==========================================================
-// ===== AGENDAMENTO CLIENTE =====
-// ==========================================================
-
-async function agendarCorte() {
-    if (!clienteLogado) {
-        mostrarToast('Faça login primeiro!', 'error');
-        return;
-    }
-
-    var data = document.getElementById('agendamentoData').value;
-    var horario = document.getElementById('agendamentoHorario').value;
-    var tipo = document.getElementById('agendamentoTipo').value;
-
-    console.log('📝 Tentando agendar:', { data, horario, tipo });
-
-    if (!data) {
-        mostrarToast('Selecione uma data!', 'error');
-        return;
-    }
-
-    if (!horario) {
-        mostrarToast('Selecione um horário!', 'error');
-        return;
-    }
-
-    try {
-        var agendamento = {
-            id: Date.now(),
-            clienteId: clienteLogado.id,
-            clienteNome: clienteLogado.nome,
-            clienteEmail: clienteLogado.email,
-            clienteCelular: clienteLogado.celular || '',
-            data: data,
-            horario: horario,
-            tipo: tipo,
-            status: 'pendente',
-            dataCriacao: new Date().toISOString()
-        };
-
-        console.log('💾 Salvando agendamento:', agendamento);
-
-        await db.collection('agendamentos').doc(agendamento.id.toString()).set(agendamento);
-        
-        console.log('✅ Agendamento salvo com sucesso!');
-        mostrarToast('✅ Agendamento realizado!', 'success');
-        
-        // Limpar campos
-        document.getElementById('agendamentoData').value = '';
-        document.getElementById('agendamentoHorario').value = '09:00';
-        
-        // Recarregar a lista
-        setTimeout(function() {
-            carregarAgendaCliente();
-        }, 500);
-        
-    } catch (error) {
-        console.error('❌ Erro ao agendar:', error);
-        console.error('❌ Código:', error.code);
-        console.error('❌ Mensagem:', error.message);
-        mostrarToast('❌ Erro ao agendar: ' + error.message, 'error');
-    }
-}
-async function carregarAgendaCliente() {
-    if (!clienteLogado) {
-        console.log('❌ Cliente não logado');
-        return;
-    }
-
-    var container = document.getElementById('agendaClienteContainer');
-    if (!container) {
-        console.log('❌ Container não encontrado');
-        return;
-    }
-
-    console.log('🔍 Buscando agendamentos para o cliente:', clienteLogado.id);
-    console.log('📧 Email do cliente:', clienteLogado.email);
-
-    try {
-        // BUSCAR POR CLIENTE ID
-        var snapshot = await db.collection('agendamentos')
-            .where('clienteId', '==', clienteLogado.id)
-            .get();
-
-        console.log('📅 Agendamentos encontrados (por ID):', snapshot.size);
-
-        // SE NÃO ENCONTRAR POR ID, TENTAR POR EMAIL
-        if (snapshot.empty) {
-            console.log('🔍 Tentando buscar por email...');
-            snapshot = await db.collection('agendamentos')
-                .where('clienteEmail', '==', clienteLogado.email)
-                .get();
-            console.log('📅 Agendamentos encontrados (por email):', snapshot.size);
-        }
-
-        var agendamentos = snapshot.docs.map(doc => ({ 
-            id: doc.id, 
-            ...doc.data() 
-        }));
-
-        if (agendamentos.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento encontrado</p>';
-            return;
-        }
-
-        // ORDENAR POR DATA (MAIS RECENTE PRIMEIRO)
-        agendamentos.sort(function(a, b) {
-            return new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario);
-        });
-
-        container.innerHTML = agendamentos.map(function(a) {
-            var statusClass = a.status === 'confirmado' ? 'confirmado' : 
-                            a.status === 'cancelado' ? 'cancelado' : 'pendente';
-            var statusText = a.status === 'confirmado' ? '✅ Confirmado' : 
-                           a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
-            
-            return `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <div class="agenda-cliente">${a.tipo || 'Corte'}</div>
-                        <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
-                        ${a.clienteNome ? `<div style="font-size:12px; color:#6B7280;">👤 ${a.clienteNome}</div>` : ''}
-                    </div>
-                    <span class="agenda-status ${statusClass}">${statusText}</span>
-                </div>
-            `;
-        }).join('');
-
-        console.log('✅ Agendamentos carregados com sucesso!');
-
-    } catch (error) {
-        console.error('❌ Erro detalhado ao carregar agenda:', error);
-        console.error('❌ Código do erro:', error.code);
-        console.error('❌ Mensagem:', error.message);
-        container.innerHTML = '<p style="color:#EF4444; text-align:center;">❌ Erro ao carregar agendamentos: ' + error.message + '</p>';
-    }
-}
-// ==========================================================
-// ===== POSTS (BARBEIRO) =====
-// ==========================================================
-
-async function criarPost() {
-    if (!barbeiroLogado) {
-        mostrarToast('Faça login como barbeiro!', 'error');
-        return;
-    }
-
-    var titulo = document.getElementById('postTitulo').value.trim();
-    var preco = parseFloat(document.getElementById('postPreco').value);
-    var imagem = document.getElementById('postImagem').value;
-    var video = document.getElementById('postVideo').value;
-    var descricao = document.getElementById('postDescricao').value.trim();
-
-    if (!titulo) {
-        mostrarToast('Digite um título!', 'error');
-        return;
-    }
-
-    if (!preco || preco <= 0) {
-        mostrarToast('Digite um preço válido!', 'error');
-        return;
-    }
-
-    try {
-        var post = {
-            id: Date.now(),
-            barbeiroId: barbeiroLogado.id,
-            titulo: titulo,
-            preco: preco,
-            imagem: imagem || '',
-            video: video || '',
-            descricao: descricao || '',
-            likes: 0,
-            comentarios: [],
-            dataCriacao: new Date().toISOString()
-        };
-
-        await db.collection('posts').doc(post.id.toString()).set(post);
-        mostrarToast('✅ Post publicado com sucesso!', 'success');
-        
-        document.getElementById('postTitulo').value = '';
-        document.getElementById('postPreco').value = '';
-        document.getElementById('postDescricao').value = '';
-        removerImagem();
-        removerVideo();
-        
-        mostrarTela('homeBarbeiroScreen');
-    } catch (error) {
-        console.error('❌ Erro ao criar post:', error);
-        mostrarToast('Erro ao publicar: ' + error.message, 'error');
-    }
-}
-
-// ==========================================================
-// ===== PLANOS (BARBEIRO) =====
-// ==========================================================
-
-async function criarPlano() {
-    if (!barbeiroLogado) {
-        mostrarToast('Faça login como barbeiro!', 'error');
-        return;
-    }
-
-    var nome = document.getElementById('planoNome').value.trim();
-    var periodo = document.getElementById('planoPeriodo').value;
-    var preco = parseFloat(document.getElementById('planoPreco').value);
-    var descricao = document.getElementById('planoDescricao').value.trim();
-
+    var planoId = document.getElementById('editPlanoId').value;
+    var nome = document.getElementById('editPlanoNome').value.trim();
+    var periodo = document.getElementById('editPlanoPeriodo').value;
+    var preco = parseFloat(document.getElementById('editPlanoPreco').value);
+    var descricao = document.getElementById('editPlanoDescricao').value.trim();
+    
     if (!nome || !preco || preco <= 0) {
-        mostrarToast('Preencha todos os campos!', 'error');
+        mostrarToast('❌ Preencha todos os campos!', 'error');
         return;
     }
-
+    
     try {
-        var plano = {
-            id: Date.now(),
-            barbeiroId: barbeiroLogado.id,
+        await db.collection('planos').doc(planoId).update({
             nome: nome,
             periodo: periodo,
             preco: preco,
-            descricao: descricao || '',
-            dataCriacao: new Date().toISOString()
-        };
-
-        await db.collection('planos').doc(plano.id.toString()).set(plano);
-        mostrarToast('✅ Plano criado!', 'success');
-        document.getElementById('planoNome').value = '';
-        document.getElementById('planoPreco').value = '';
-        document.getElementById('planoDescricao').value = '';
+            descricao: descricao
+        });
+        
+        mostrarToast('✅ Plano atualizado!', 'success');
         carregarPlanos();
         mostrarTela('homeBarbeiroScreen');
     } catch (error) {
-        console.error('❌ Erro ao criar plano:', error);
-        mostrarToast('Erro ao criar plano!', 'error');
+        console.error('❌ Erro ao atualizar plano:', error);
+        mostrarToast('Erro ao atualizar!', 'error');
     }
 }
 
+async function excluirPlano() {
+    if (!confirm('Tem certeza que deseja excluir este plano?')) return;
+    
+    var planoId = document.getElementById('editPlanoId').value;
+    
+    try {
+        await db.collection('planos').doc(planoId).delete();
+        mostrarToast('🗑 Plano excluído!', 'success');
+        carregarPlanos();
+        mostrarTela('homeBarbeiroScreen');
+    } catch (error) {
+        console.error('❌ Erro ao excluir plano:', error);
+        mostrarToast('Erro ao excluir!', 'error');
+    }
+}
+
+// Atualizar a função carregarPlanos para incluir botões de edição
 async function carregarPlanos() {
     var container = document.getElementById('planosContainer');
     if (!container) return;
@@ -896,6 +94,10 @@ async function carregarPlanos() {
                         <div class="plano-nome">${p.nome}</div>
                         <div class="plano-periodo">📅 ${p.periodo}</div>
                         <div style="font-size:12px; color:#6B7280;">${p.descricao || ''}</div>
+                        <div class="plano-actions">
+                            <button class="btn btn-small btn-primary" onclick="editarPlano('${p.id}')">✏️ Editar</button>
+                            <button class="btn btn-small btn-danger" onclick="excluirPlanoDireto('${p.id}')">🗑 Excluir</button>
+                        </div>
                     </div>
                     <div class="plano-preco">R$ ${p.preco.toFixed(2)}</div>
                 </div>
@@ -906,343 +108,445 @@ async function carregarPlanos() {
     }
 }
 
+async function excluirPlanoDireto(planoId) {
+    if (!confirm('Tem certeza que deseja excluir este plano?')) return;
+    
+    try {
+        await db.collection('planos').doc(planoId).delete();
+        mostrarToast('🗑 Plano excluído!', 'success');
+        carregarPlanos();
+    } catch (error) {
+        console.error('❌ Erro ao excluir plano:', error);
+        mostrarToast('Erro ao excluir!', 'error');
+    }
+}
+
 // ==========================================================
-// ===== AGENDAMENTOS BARBEIRO =====
+// ===== GALERIA DE CORTES =====
 // ==========================================================
 
-async function carregarAgendamentosBarbeiro() {
-    var container = document.getElementById('agendamentosBarbeiroContainer');
+var todosPosts = [];
+
+async function carregarGaleria() {
+    var container = document.getElementById('galeriaContainer');
     if (!container) return;
 
     try {
-        const snapshot = await db.collection('agendamentos')
-            .orderBy('data', 'asc')
+        const snapshot = await db.collection('posts')
+            .orderBy('dataCriacao', 'desc')
             .get();
 
-        var agendamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        todosPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        filtrarGaleria();
+    } catch (error) {
+        console.error('❌ Erro ao carregar galeria:', error);
+        container.innerHTML = '<p style="color:#6B7280; text-align:center;">Erro ao carregar galeria</p>';
+    }
+}
 
-        if (agendamentos.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>';
+function filtrarGaleria() {
+    var categoria = document.getElementById('filtroCategoria').value;
+    var container = document.getElementById('galeriaContainer');
+    
+    var postsFiltrados = categoria === 'todos' 
+        ? todosPosts 
+        : todosPosts.filter(function(p) { return p.titulo === categoria; });
+    
+    if (postsFiltrados.length === 0) {
+        container.innerHTML = '<p style="color:#6B7280; text-align:center; grid-column: 1/-1;">Nenhum corte encontrado</p>';
+        return;
+    }
+    
+    var servicoIcones = {
+        'Corte Social': '💇',
+        'Corte Degradê': '✂️',
+        'Corte Navalhado': '🔪',
+        'Corte Máquina': '⚡',
+        'Barba': '🧔',
+        'Barba + Corte': '✨',
+        'Pintura': '🎨',
+        'Luzes': '💡',
+        'Platinado': '⭐',
+        'Selagem': '💧',
+        'Progressiva': '🌟'
+    };
+    
+    container.innerHTML = postsFiltrados.map(function(post) {
+        var icone = servicoIcones[post.titulo] || '✂️';
+        return `
+            <div class="galeria-item" onclick="verDetalheCorte('${post.id}')">
+                ${post.imagem ? 
+                    `<img src="${post.imagem}" class="galeria-item-image" alt="${post.titulo}">` :
+                    `<div class="galeria-item-image">${icone}</div>`
+                }
+                <div class="galeria-item-info">
+                    <div class="galeria-item-title">${post.titulo}</div>
+                    <div class="galeria-item-price">R$ ${post.preco ? post.preco.toFixed(2) : '0,00'}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function verDetalheCorte(postId) {
+    var post = todosPosts.find(function(p) { return p.id === postId; });
+    if (!post) return;
+    
+    var servicoIcones = {
+        'Corte Social': '💇',
+        'Corte Degradê': '✂️',
+        'Corte Navalhado': '🔪',
+        'Corte Máquina': '⚡',
+        'Barba': '🧔',
+        'Barba + Corte': '✨',
+        'Pintura': '🎨',
+        'Luzes': '💡',
+        'Platinado': '⭐',
+        'Selagem': '💧',
+        'Progressiva': '🌟'
+    };
+    var icone = servicoIcones[post.titulo] || '✂️';
+    
+    var conteudo = document.getElementById('detalhePostConteudo');
+    conteudo.innerHTML = `
+        <div class="card">
+            <h3>${icone} ${post.titulo}</h3>
+            ${post.imagem ? `<img src="${post.imagem}" style="width:100%; max-height:300px; object-fit:cover; border-radius:12px; margin:10px 0;">` : ''}
+            ${post.video ? `<video controls style="width:100%; border-radius:12px; margin:10px 0;"><source src="${post.video}" type="video/mp4"></video>` : ''}
+            <p style="font-size:24px; color:var(--primary); font-weight:700;">R$ ${post.preco ? post.preco.toFixed(2) : '0,00'}</p>
+            <p style="color:#B0B0B0;">${post.descricao || ''}</p>
+            <button class="btn btn-primary" onclick="agendarPorPost('${post.id}')">✂️ AGENDAR ESTE CORTE</button>
+            <button class="btn btn-outline" onclick="mostrarTela('galeriaCortesScreen')">← Voltar</button>
+        </div>
+    `;
+    mostrarTela('detalhePostScreen');
+}
+
+// ==========================================================
+// ===== HORÁRIOS DE TRABALHO =====
+// ==========================================================
+
+var horariosTrabalho = {
+    diasTrabalho: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
+    horarioInicio: '09:00',
+    horarioFim: '18:00',
+    intervaloCortes: 30,
+    folgas: []
+};
+
+async function carregarHorarios() {
+    if (!barbeiroLogado) return;
+    
+    try {
+        const doc = await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).get();
+        
+        if (doc.exists) {
+            horariosTrabalho = doc.data();
+        }
+        
+        // Atualizar checkboxes
+        var dias = ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'];
+        dias.forEach(function(dia) {
+            var checkbox = document.getElementById('dia' + dia);
+            if (checkbox) {
+                checkbox.checked = horariosTrabalho.diasTrabalho.includes(dia.toLowerCase());
+            }
+        });
+        
+        document.getElementById('horarioInicio').value = horariosTrabalho.horarioInicio;
+        document.getElementById('horarioFim').value = horariosTrabalho.horarioFim;
+        document.getElementById('intervaloCortes').value = horariosTrabalho.intervaloCortes;
+        
+        carregarFolgas();
+    } catch (error) {
+        console.error('❌ Erro ao carregar horários:', error);
+    }
+}
+
+function carregarFolgas() {
+    var container = document.getElementById('folgasContainer');
+    if (!container) return;
+    
+    if (!horariosTrabalho.folgas || horariosTrabalho.folgas.length === 0) {
+        container.innerHTML = '<p style="color:#6B7280; text-align:center;">Nenhuma folga cadastrada</p>';
+        return;
+    }
+    
+    container.innerHTML = horariosTrabalho.folgas.map(function(folga, index) {
+        var data = new Date(folga);
+        return `
+            <div class="folga-item">
+                <span>🏖️ ${data.toLocaleDateString('pt-BR')}</span>
+                <button onclick="removerFolga(${index})">❌ Remover</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function adicionarFolga() {
+    var data = document.getElementById('folgaData').value;
+    if (!data) {
+        mostrarToast('❌ Selecione uma data!', 'error');
+        return;
+    }
+    
+    if (horariosTrabalho.folgas.includes(data)) {
+        mostrarToast('❌ Esta data já está cadastrada!', 'error');
+        return;
+    }
+    
+    horariosTrabalho.folgas.push(data);
+    horariosTrabalho.folgas.sort();
+    carregarFolgas();
+    document.getElementById('folgaData').value = '';
+    mostrarToast('✅ Folga adicionada!', 'success');
+}
+
+function removerFolga(index) {
+    horariosTrabalho.folgas.splice(index, 1);
+    carregarFolgas();
+    mostrarToast('🗑 Folga removida!', 'info');
+}
+
+async function salvarHorarios() {
+    if (!barbeiroLogado) return;
+    
+    // Coletar dias selecionados
+    var diasSelecionados = [];
+    var dias = ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'];
+    dias.forEach(function(dia) {
+        var checkbox = document.getElementById('dia' + dia);
+        if (checkbox && checkbox.checked) {
+            diasSelecionados.push(dia.toLowerCase());
+        }
+    });
+    
+    if (diasSelecionados.length === 0) {
+        mostrarToast('❌ Selecione pelo menos um dia de trabalho!', 'error');
+        return;
+    }
+    
+    horariosTrabalho.diasTrabalho = diasSelecionados;
+    horariosTrabalho.horarioInicio = document.getElementById('horarioInicio').value;
+    horariosTrabalho.horarioFim = document.getElementById('horarioFim').value;
+    horariosTrabalho.intervaloCortes = parseInt(document.getElementById('intervaloCortes').value);
+    
+    try {
+        await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).set(horariosTrabalho);
+        mostrarToast('✅ Horários salvos com sucesso!', 'success');
+        
+        // Atualizar opções de horário no agendamento
+        atualizarHorariosAgendamento();
+    } catch (error) {
+        console.error('❌ Erro ao salvar horários:', error);
+        mostrarToast('Erro ao salvar!', 'error');
+    }
+}
+
+function atualizarHorariosAgendamento() {
+    var select = document.getElementById('agendamentoHorario');
+    if (!select) return;
+    
+    var inicio = horariosTrabalho.horarioInicio;
+    var fim = horariosTrabalho.horarioFim;
+    var intervalo = horariosTrabalho.intervaloCortes;
+    
+    // Converter para minutos
+    var inicioMinutos = parseInt(inicio.split(':')[0]) * 60 + parseInt(inicio.split(':')[1]);
+    var fimMinutos = parseInt(fim.split(':')[0]) * 60 + parseInt(fim.split(':')[1]);
+    
+    select.innerHTML = '';
+    
+    for (var minutos = inicioMinutos; minutos < fimMinutos; minutos += intervalo) {
+        var hora = Math.floor(minutos / 60);
+        var minuto = minutos % 60;
+        var horario = String(hora).padStart(2, '0') + ':' + String(minuto).padStart(2, '0');
+        
+        var option = document.createElement('option');
+        option.value = horario;
+        option.textContent = horario;
+        select.appendChild(option);
+    }
+}
+
+// ==========================================================
+// ===== REELS =====
+// ==========================================================
+
+var reelsAtual = 0;
+var todosReels = [];
+
+async function carregarReels() {
+    var container = document.getElementById('reelsContainer');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('posts')
+            .orderBy('dataCriacao', 'desc')
+            .get();
+
+        todosReels = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        if (todosReels.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280; text-align:center; padding:40px;">Nenhum reel disponível</p>';
             return;
         }
-
-        container.innerHTML = agendamentos.map(function(a) {
-            var statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
-            var statusText = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
-            return `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <div class="agenda-cliente">${a.clienteNome}</div>
-                        <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario} • ${a.tipo || 'Corte'}</div>
-                    </div>
-                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                        <span class="agenda-status ${statusClass}">${statusText}</span>
-                        ${a.status === 'pendente' ? `<button class="btn btn-small btn-success" onclick="confirmarAgendamentoBarbeiro('${a.id}')" style="padding:2px 8px; font-size:10px;">✅</button>` : ''}
-                        ${a.status === 'pendente' || a.status === 'confirmado' ? `<button class="btn btn-small btn-danger" onclick="cancelarAgendamentoBarbeiro('${a.id}')" style="padding:2px 8px; font-size:10px;">❌</button>` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
+        
+        exibirReel(reelsAtual);
     } catch (error) {
-        console.error('❌ Erro ao carregar agendamentos:', error);
+        console.error('❌ Erro ao carregar reels:', error);
+        container.innerHTML = '<p style="color:#EF4444; text-align:center;">Erro ao carregar reels</p>';
     }
 }
 
-async function confirmarAgendamentoBarbeiro(id) {
-    try {
-        await db.collection('agendamentos').doc(id).update({ status: 'confirmado' });
-        mostrarToast('✅ Agendamento confirmado!', 'success');
-        carregarAgendamentosBarbeiro();
-    } catch (error) {
-        console.error('❌ Erro ao confirmar:', error);
-        mostrarToast('Erro ao confirmar!', 'error');
+function exibirReel(index) {
+    if (index < 0) index = 0;
+    if (index >= todosReels.length) index = todosReels.length - 1;
+    reelsAtual = index;
+    
+    var container = document.getElementById('reelsContainer');
+    var post = todosReels[index];
+    
+    var servicoIcones = {
+        'Corte Social': '💇',
+        'Corte Degradê': '✂️',
+        'Corte Navalhado': '🔪',
+        'Corte Máquina': '⚡',
+        'Barba': '🧔',
+        'Barba + Corte': '✨',
+        'Pintura': '🎨',
+        'Luzes': '💡',
+        'Platinado': '⭐',
+        'Selagem': '💧',
+        'Progressiva': '🌟'
+    };
+    var icone = servicoIcones[post.titulo] || '✂️';
+    
+    container.innerHTML = `
+        <div class="reel-item">
+            ${post.video ? 
+                `<video src="${post.video}" autoplay loop muted playsinline></video>` :
+                post.imagem ? 
+                `<img src="${post.imagem}" class="reel-item-image" alt="${post.titulo}">` :
+                `<div class="reel-item-image" style="display:flex; align-items:center; justify-content:center; font-size:80px; background:linear-gradient(135deg, #1A1A1A, #2D2D2D);">${icone}</div>`
+            }
+            <div class="reel-item-overlay">
+                <div class="reel-item-title">${post.titulo}</div>
+                <div class="reel-item-price">R$ ${post.preco ? post.preco.toFixed(2) : '0,00'}</div>
+                <div style="font-size:12px; color:#B0B0B0;">${post.descricao ? post.descricao.substring(0, 50) + '...' : ''}</div>
+            </div>
+            <div class="reel-item-actions">
+                <button onclick="likeReel('${post.id}', this)" title="Curtir">❤️</button>
+                <button onclick="agendarPorReel('${post.id}')" title="Agendar">✂️</button>
+                <button onclick="compartilharReel('${post.id}')" title="Compartilhar">📤</button>
+            </div>
+        </div>
+    `;
+}
+
+function reelAnterior() {
+    if (reelsAtual > 0) {
+        reelsAtual--;
+        exibirReel(reelsAtual);
     }
 }
 
-async function cancelarAgendamentoBarbeiro(id) {
-    if (!confirm('Cancelar este agendamento?')) return;
-    try {
-        await db.collection('agendamentos').doc(id).update({ status: 'cancelado' });
-        mostrarToast('✅ Agendamento cancelado!', 'success');
-        carregarAgendamentosBarbeiro();
-    } catch (error) {
-        console.error('❌ Erro ao cancelar:', error);
-        mostrarToast('Erro ao cancelar!', 'error');
+function reelProximo() {
+    if (reelsAtual < todosReels.length - 1) {
+        reelsAtual++;
+        exibirReel(reelsAtual);
     }
 }
 
-// ==========================================================
-// ===== FATURAMENTO =====
-// ==========================================================
-
-async function calcularFaturamento() {
-    try {
-        const snapshot = await db.collection('agendamentos')
-            .where('status', '==', 'confirmado')
-            .get();
-
-        var agendamentos = snapshot.docs.map(doc => doc.data());
-        var hoje = new Date().toISOString().split('T')[0];
-        var semana = new Date();
-        semana.setDate(semana.getDate() - 7);
-        var mes = new Date();
-        mes.setMonth(mes.getMonth() - 1);
-        var ano = new Date();
-        ano.setFullYear(ano.getFullYear() - 1);
-
-        var valorHoje = 0, valorSemana = 0, valorMes = 0, valorAno = 0;
-
-        agendamentos.forEach(function(a) {
-            var valor = 35;
-            if (a.data === hoje) valorHoje += valor;
-            if (a.data >= semana.toISOString().split('T')[0]) valorSemana += valor;
-            if (a.data >= mes.toISOString().split('T')[0]) valorMes += valor;
-            if (a.data >= ano.toISOString().split('T')[0]) valorAno += valor;
-        });
-
-        document.getElementById('faturamentoHoje').textContent = 'R$ ' + valorHoje.toFixed(2);
-        document.getElementById('faturamentoSemana').textContent = 'R$ ' + valorSemana.toFixed(2);
-        document.getElementById('faturamentoMes').textContent = 'R$ ' + valorMes.toFixed(2);
-        document.getElementById('faturamentoAno').textContent = 'R$ ' + valorAno.toFixed(2);
-    } catch (error) {
-        console.error('❌ Erro ao calcular faturamento:', error);
-    }
+function likeReel(postId, btn) {
+    btn.classList.toggle('liked');
+    mostrarToast('❤️ Curtido!', 'success');
 }
 
-// ==========================================================
-// ===== FUNÇÕES AUXILIARES =====
-// ==========================================================
-
-function agendarPorPost(postId) {
+function agendarPorReel(postId) {
     mostrarTela('agendamentoScreen');
     mostrarToast('✂️ Agende seu horário!', 'info');
 }
 
-function likePost(postId, btn) {
-    btn.classList.toggle('liked');
-    var count = btn.querySelector('.count');
-    var current = parseInt(count.textContent);
-    count.textContent = btn.classList.contains('liked') ? current + 1 : current - 1;
-}
-
-function abrirComentarios(postId) {
-    postSelecionado = postId;
-    document.getElementById('modalComentario').classList.add('active');
-}
-
-function adicionarComentario() {
-    var comentario = document.getElementById('novoComentario').value.trim();
-    if (!comentario) {
-        mostrarToast('Digite um comentário!', 'error');
-        return;
+function compartilharReel(postId) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Barbearia RM',
+            text: 'Confira este corte incrível!',
+            url: window.location.href
+        }).catch(function() {});
+    } else {
+        mostrarToast('📋 Link copiado!', 'success');
     }
-    mostrarToast('✅ Comentário adicionado!', 'success');
-    document.getElementById('novoComentario').value = '';
-    fecharModal('modalComentario');
-}
-
-function filtrarExtrato(tipo) {
-    mostrarToast('📊 Filtrando por ' + tipo, 'info');
-}
-
-function copiarPix() {
-    var chave = document.getElementById('pixChave').textContent;
-    navigator.clipboard.writeText(chave).then(function() {
-        mostrarToast('✅ Chave PIX copiada!', 'success');
-    });
-}
-
-function processarPagamento() {
-    mostrarToast('💳 Pagamento processado!', 'success');
-    setTimeout(function() { mostrarTela('homeClienteScreen'); }, 1500);
-}
-
-function fecharPagamento() {
-    mostrarTela('homeClienteScreen');
 }
 
 // ==========================================================
-// ===== PERFIL CLIENTE =====
+// ===== ATUALIZAR FUNÇÃO mostrarTela =====
 // ==========================================================
 
-function carregarPerfilCliente() {
-    if (!clienteLogado) return;
-    document.getElementById('perfilClienteNome').textContent = clienteLogado.nome;
-    document.getElementById('perfilClienteEmail').textContent = clienteLogado.email;
-    document.getElementById('editClienteNome').value = clienteLogado.nome || '';
-    document.getElementById('editClienteCelular').value = clienteLogado.celular || '';
-    if (clienteLogado.fotoPerfil) {
-        document.getElementById('perfilClienteAvatar').innerHTML = 
-            '<img src="' + clienteLogado.fotoPerfil + '" style="width:100%;height:100%;object-fit:cover;">';
+// Sobrescrever a função mostrarTela para incluir as novas telas
+var mostrarTelaOriginal = mostrarTela;
+mostrarTela = function(id) {
+    mostrarTelaOriginal(id);
+    
+    if (id === 'galeriaCortesScreen') {
+        carregarGaleria();
     }
-}
-
-async function salvarPerfilCliente() {
-    if (!clienteLogado) return;
-    clienteLogado.nome = document.getElementById('editClienteNome').value.trim();
-    clienteLogado.celular = document.getElementById('editClienteCelular').value.trim();
-    try {
-        await db.collection('clientes').doc(clienteLogado.id.toString()).update({
-            nome: clienteLogado.nome,
-            celular: clienteLogado.celular
-        });
-        mostrarToast('✅ Perfil atualizado!', 'success');
-        carregarPerfilCliente();
-    } catch (error) {
-        console.error('❌ Erro ao salvar perfil:', error);
-        mostrarToast('Erro ao salvar!', 'error');
+    if (id === 'reelsScreen') {
+        carregarReels();
     }
-}
-
-function uploadFotoCliente(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = async function(ev) {
-        var foto = ev.target.result;
-        document.getElementById('perfilClienteAvatar').innerHTML = 
-            '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;">';
-        clienteLogado.fotoPerfil = foto;
-        await db.collection('clientes').doc(clienteLogado.id.toString()).update({ fotoPerfil: foto });
-        mostrarToast('✅ Foto atualizada!', 'success');
-    };
-    reader.readAsDataURL(file);
-}
-
-async function trocarSenhaCliente() {
-    if (!clienteLogado) return;
-    var atual = document.getElementById('senhaAtualCliente').value;
-    var nova = document.getElementById('novaSenhaCliente').value;
-    var confirmar = document.getElementById('confirmarSenhaCliente').value;
-
-    if (atual !== clienteLogado.senha) {
-        mostrarToast('Senha atual incorreta!', 'error');
-        return;
+    if (id === 'horariosTrabalhoScreen') {
+        carregarHorarios();
     }
-    if (nova.length < 6) {
-        mostrarToast('Nova senha mínima de 6 caracteres!', 'error');
-        return;
-    }
-    if (nova !== confirmar) {
-        mostrarToast('Senhas não coincidem!', 'error');
-        return;
-    }
-
-    clienteLogado.senha = nova;
-    await db.collection('clientes').doc(clienteLogado.id.toString()).update({ senha: nova });
-    mostrarToast('✅ Senha alterada!', 'success');
-    document.getElementById('senhaAtualCliente').value = '';
-    document.getElementById('novaSenhaCliente').value = '';
-    document.getElementById('confirmarSenhaCliente').value = '';
-}
-
-function sairCliente() {
-    clienteLogado = null;
-    document.getElementById('bottomNavCliente').style.display = 'none';
-    mostrarTela('loginScreen');
-    mostrarToast('👋 Até logo!', 'info');
-}
+};
 
 // ==========================================================
-// ===== PERFIL BARBEIRO =====
+// ===== ADICIONAR BOTÕES NAS TELAS EXISTENTES =====
 // ==========================================================
 
-function carregarPerfilBarbeiro() {
-    if (!barbeiroLogado) return;
-    document.getElementById('perfilBarbeiroNome').textContent = barbeiroLogado.nome;
-    document.getElementById('perfilBarbeiroEmail').textContent = barbeiroLogado.email;
-    document.getElementById('editBarbeiroNome').value = barbeiroLogado.nome || '';
-    document.getElementById('editBarbeiroCelular').value = barbeiroLogado.celular || '';
-    document.getElementById('editBarbeiroEmail').value = barbeiroLogado.email || '';
-    if (barbeiroLogado.fotoPerfil) {
-        document.getElementById('perfilBarbeiroAvatar').innerHTML = 
-            '<img src="' + barbeiroLogado.fotoPerfil + '" style="width:100%;height:100%;object-fit:cover;">';
+// Adicionar botão de galeria na home do cliente
+function adicionarBotoesExtras() {
+    // Botão na home do cliente
+    var homeCliente = document.getElementById('homeClienteScreen');
+    if (homeCliente) {
+        var botoesDiv = document.createElement('div');
+        botoesDiv.style.cssText = 'display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;';
+        botoesDiv.innerHTML = `
+            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('galeriaCortesScreen')">💇 GALERIA</button>
+            <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('reelsScreen')">🎬 REELS</button>
+        `;
+        
+        // Inserir após o botão de agendamento
+        var btnAgendar = homeCliente.querySelector('.btn-primary');
+        if (btnAgendar && btnAgendar.parentNode) {
+            btnAgendar.parentNode.insertBefore(botoesDiv, btnAgendar.nextSibling);
+        }
+    }
+    
+    // Botão na home do barbeiro
+    var homeBarbeiro = document.getElementById('homeBarbeiroScreen');
+    if (homeBarbeiro) {
+        var botoesBarbeiro = document.createElement('div');
+        botoesBarbeiro.style.cssText = 'display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;';
+        botoesBarbeiro.innerHTML = `
+            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('horariosTrabalhoScreen')">⏰ HORÁRIOS</button>
+        `;
+        
+        var ultimoBotao = homeBarbeiro.querySelector('div:last-child');
+        if (ultimoBotao) {
+            ultimoBotao.appendChild(botoesBarbeiro.firstChild);
+        }
     }
 }
 
-async function salvarPerfilBarbeiro() {
-    if (!barbeiroLogado) return;
-    barbeiroLogado.nome = document.getElementById('editBarbeiroNome').value.trim();
-    barbeiroLogado.celular = document.getElementById('editBarbeiroCelular').value.trim();
-    barbeiroLogado.email = document.getElementById('editBarbeiroEmail').value.trim();
-    try {
-        await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({
-            nome: barbeiroLogado.nome,
-            celular: barbeiroLogado.celular,
-            email: barbeiroLogado.email
-        });
-        mostrarToast('✅ Perfil atualizado!', 'success');
-        carregarPerfilBarbeiro();
-    } catch (error) {
-        console.error('❌ Erro ao salvar perfil:', error);
-        mostrarToast('Erro ao salvar!', 'error');
-    }
-}
-
-function uploadFotoBarbeiro(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = async function(ev) {
-        var foto = ev.target.result;
-        document.getElementById('perfilBarbeiroAvatar').innerHTML = 
-            '<img src="' + foto + '" style="width:100%;height:100%;object-fit:cover;">';
-        barbeiroLogado.fotoPerfil = foto;
-        await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({ fotoPerfil: foto });
-        mostrarToast('✅ Foto atualizada!', 'success');
-    };
-    reader.readAsDataURL(file);
-}
-
-async function trocarSenhaBarbeiro() {
-    if (!barbeiroLogado) return;
-    var atual = document.getElementById('senhaAtualBarbeiro').value;
-    var nova = document.getElementById('novaSenhaBarbeiro').value;
-    var confirmar = document.getElementById('confirmarSenhaBarbeiro').value;
-
-    if (atual !== barbeiroLogado.senha) {
-        mostrarToast('Senha atual incorreta!', 'error');
-        return;
-    }
-    if (nova.length < 6) {
-        mostrarToast('Nova senha mínima de 6 caracteres!', 'error');
-        return;
-    }
-    if (nova !== confirmar) {
-        mostrarToast('Senhas não coincidem!', 'error');
-        return;
-    }
-
-    barbeiroLogado.senha = nova;
-    await db.collection('barbeiros').doc(barbeiroLogado.id.toString()).update({ senha: nova });
-    mostrarToast('✅ Senha alterada!', 'success');
-    document.getElementById('senhaAtualBarbeiro').value = '';
-    document.getElementById('novaSenhaBarbeiro').value = '';
-    document.getElementById('confirmarSenhaBarbeiro').value = '';
-}
-
-function sairBarbeiro() {
-    barbeiroLogado = null;
-    document.getElementById('bottomNavBarbeiro').style.display = 'none';
-    mostrarTela('loginScreen');
-    mostrarToast('👋 Até logo!', 'info');
-}
-
-// ==========================================================
-// ===== INICIALIZAÇÃO =====
-// ==========================================================
-
-console.log('✅ Barbearia RM com Firebase!');
-console.log('🔥 Projeto: barbearia-rm');
-console.log('📁 Coleções: clientes, barbeiros, posts, agendamentos, planos');
-console.log('🎨 Tema Neon - Barbearia RM');
-
-// Configurar drag and drop
+// Executar após carregar
 setTimeout(function() {
-    setupDragAndDrop();
-}, 500);
+    adicionarBotoesExtras();
+    atualizarHorariosAgendamento();
+}, 1000);
 
-// Criar posts padrão se não existirem
-setTimeout(function() {
-    criarPostsPadrao();
-}, 2000);
+console.log('✅ Novas funcionalidades carregadas!');
+console.log('📋 Edição de planos');
+console.log('💇 Galeria de cortes');
+console.log('⏰ Horários de trabalho');
+console.log('🎬 Reels');
