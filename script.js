@@ -366,6 +366,318 @@ async function loginBarbeiro() {
 }
 
 // ==========================================================
+// ===== FUNÇÕES QUE ESTAVAM FALTANDO =====
+// ==========================================================
+
+// Carregar agendamentos do barbeiro
+async function carregarAgendamentosBarbeiro() {
+    var container = document.getElementById('agendamentosBarbeiroContainer');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .orderBy('data', 'desc')
+            .get();
+
+        var agendamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (agendamentos.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280; text-align:center; padding:20px;">Nenhum agendamento</p>';
+            return;
+        }
+
+        container.innerHTML = agendamentos.map(function(a) {
+            var statusClass = a.status === 'confirmado' ? 'confirmado' : 
+                            a.status === 'cancelado' ? 'cancelado' : 'pendente';
+            var statusText = a.status === 'confirmado' ? '✅ Confirmado' : 
+                           a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+            
+            return `
+                <div class="agenda-item">
+                    <div class="agenda-info">
+                        <div class="agenda-cliente">👤 ${a.clienteNome || 'Cliente'}</div>
+                        <div class="agenda-data">📅 ${a.data || 'N/A'} • ⏰ ${a.horario || 'N/A'}</div>
+                        <div style="font-size:12px; color:#6B7280;">✂️ ${a.tipo || 'Corte'}</div>
+                    </div>
+                    <span class="agenda-status ${statusClass}">${statusText}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('❌ Erro:', error);
+        container.innerHTML = '<p style="color:#EF4444; text-align:center;">Erro ao carregar</p>';
+    }
+}
+
+// Carregar planos
+async function carregarPlanos() {
+    var container = document.getElementById('planosContainer');
+    if (!container) return;
+
+    try {
+        const snapshot = await db.collection('planos')
+            .orderBy('dataCriacao', 'desc')
+            .get();
+
+        var planos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (planos.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280; text-align:center; padding:20px;">Nenhum plano criado</p>';
+            return;
+        }
+
+        container.innerHTML = planos.map(function(p) {
+            return `
+                <div class="plano-card">
+                    <div class="plano-info">
+                        <div class="plano-nome">${p.nome}</div>
+                        <div class="plano-periodo">📅 ${p.periodo}</div>
+                        <div style="font-size:12px; color:#6B7280;">${p.descricao || ''}</div>
+                    </div>
+                    <div class="plano-preco">R$ ${p.preco ? p.preco.toFixed(2) : '0,00'}</div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('❌ Erro:', error);
+        container.innerHTML = '<p style="color:#EF4444; text-align:center;">Erro ao carregar</p>';
+    }
+}
+
+// Calcular faturamento
+async function calcularFaturamento() {
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .where('status', '==', 'confirmado')
+            .get();
+
+        var agendamentos = snapshot.docs.map(doc => doc.data());
+        
+        var hoje = new Date().toISOString().split('T')[0];
+        var semanaInicio = new Date();
+        semanaInicio.setDate(semanaInicio.getDate() - 7);
+        var mesInicio = new Date();
+        mesInicio.setMonth(mesInicio.getMonth() - 1);
+        var anoInicio = new Date();
+        anoInicio.setFullYear(anoInicio.getFullYear() - 1);
+
+        var valorHoje = 0, valorSemana = 0, valorMes = 0, valorAno = 0;
+
+        agendamentos.forEach(function(a) {
+            var valor = 35;
+            if (a.data === hoje) valorHoje += valor;
+            if (a.data >= semanaInicio.toISOString().split('T')[0]) valorSemana += valor;
+            if (a.data >= mesInicio.toISOString().split('T')[0]) valorMes += valor;
+            if (a.data >= anoInicio.toISOString().split('T')[0]) valorAno += valor;
+        });
+
+        var elHoje = document.getElementById('faturamentoHoje');
+        var elSemana = document.getElementById('faturamentoSemana');
+        var elMes = document.getElementById('faturamentoMes');
+        var elAno = document.getElementById('faturamentoAno');
+        
+        if (elHoje) elHoje.textContent = 'R$ ' + valorHoje.toFixed(2);
+        if (elSemana) elSemana.textContent = 'R$ ' + valorSemana.toFixed(2);
+        if (elMes) elMes.textContent = 'R$ ' + valorMes.toFixed(2);
+        if (elAno) elAno.textContent = 'R$ ' + valorAno.toFixed(2);
+    } catch (error) {
+        console.error('❌ Erro faturamento:', error);
+    }
+}
+
+// Criar post
+async function criarPost() {
+    if (!barbeiroLogado) {
+        mostrarToast('❌ Faça login como barbeiro!', 'error');
+        return;
+    }
+
+    var titulo = document.getElementById('postTitulo').value.trim();
+    var preco = parseFloat(document.getElementById('postPreco').value);
+    var descricao = document.getElementById('postDescricao').value.trim();
+    var imagem = document.getElementById('postImagem').value || '';
+    var video = document.getElementById('postVideo').value || '';
+
+    if (!titulo || !preco || preco <= 0) {
+        mostrarToast('❌ Preencha título e preço!', 'error');
+        return;
+    }
+
+    try {
+        var postId = Date.now().toString();
+        
+        await db.collection('posts').doc(postId).set({
+            id: postId,
+            barbeiroId: barbeiroLogado.id,
+            barbeiroNome: barbeiroLogado.nome,
+            titulo: titulo,
+            preco: preco,
+            imagem: imagem,
+            video: video,
+            descricao: descricao,
+            likes: 0,
+            comentarios: [],
+            dataCriacao: new Date().toISOString()
+        });
+        
+        mostrarToast('✅ Post publicado!', 'success');
+        document.getElementById('postTitulo').value = '';
+        document.getElementById('postPreco').value = '';
+        document.getElementById('postDescricao').value = '';
+        removerImagem();
+        removerVideo();
+        mostrarTela('homeBarbeiroScreen');
+    } catch (error) {
+        mostrarToast('❌ Erro: ' + error.message, 'error');
+    }
+}
+
+// Preview imagem
+function previewImagem(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        imagemBase64 = e.target.result;
+        document.getElementById('postImagem').value = imagemBase64;
+        document.getElementById('imagemPreviewImg').src = imagemBase64;
+        document.getElementById('imagemPreview').style.display = 'block';
+        document.getElementById('imagemUploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerImagem() {
+    imagemBase64 = '';
+    document.getElementById('postImagem').value = '';
+    document.getElementById('imagemPreview').style.display = 'none';
+    document.getElementById('imagemUploadArea').style.display = 'block';
+    document.getElementById('postImagemInput').value = '';
+}
+
+// Preview video
+function previewVideo(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        videoBase64 = e.target.result;
+        document.getElementById('postVideo').value = videoBase64;
+        document.getElementById('videoPreviewVideo').src = videoBase64;
+        document.getElementById('videoPreview').style.display = 'block';
+        document.getElementById('videoUploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerVideo() {
+    videoBase64 = '';
+    document.getElementById('postVideo').value = '';
+    document.getElementById('videoPreview').style.display = 'none';
+    document.getElementById('videoUploadArea').style.display = 'block';
+    document.getElementById('postVideoInput').value = '';
+}
+
+// Perfil cliente
+function carregarPerfilCliente() {
+    if (!clienteLogado) return;
+    document.getElementById('perfilClienteNome').textContent = clienteLogado.nome;
+    document.getElementById('perfilClienteEmail').textContent = clienteLogado.email;
+    document.getElementById('editClienteNome').value = clienteLogado.nome || '';
+    document.getElementById('editClienteCelular').value = clienteLogado.celular || '';
+}
+
+async function salvarPerfilCliente() {
+    if (!clienteLogado) return;
+    var nome = document.getElementById('editClienteNome').value.trim();
+    var celular = document.getElementById('editClienteCelular').value.trim();
+    try {
+        await db.collection('clientes').doc(clienteLogado.id).update({ nome, celular });
+        clienteLogado.nome = nome;
+        clienteLogado.celular = celular;
+        mostrarToast('✅ Perfil atualizado!', 'success');
+        carregarPerfilCliente();
+    } catch (error) {
+        mostrarToast('❌ Erro!', 'error');
+    }
+}
+
+// Perfil barbeiro
+function carregarPerfilBarbeiro() {
+    if (!barbeiroLogado) return;
+    document.getElementById('perfilBarbeiroNome').textContent = barbeiroLogado.nome;
+    document.getElementById('perfilBarbeiroEmail').textContent = barbeiroLogado.email;
+    document.getElementById('editBarbeiroNome').value = barbeiroLogado.nome || '';
+    document.getElementById('editBarbeiroCelular').value = barbeiroLogado.celular || '';
+    document.getElementById('editBarbeiroEmail').value = barbeiroLogado.email || '';
+}
+
+async function salvarPerfilBarbeiro() {
+    if (!barbeiroLogado) return;
+    var nome = document.getElementById('editBarbeiroNome').value.trim();
+    var celular = document.getElementById('editBarbeiroCelular').value.trim();
+    var email = document.getElementById('editBarbeiroEmail').value.trim();
+    try {
+        await db.collection('barbeiros').doc(barbeiroLogado.id).update({ nome, celular, email });
+        barbeiroLogado.nome = nome;
+        barbeiroLogado.celular = celular;
+        barbeiroLogado.email = email;
+        mostrarToast('✅ Perfil atualizado!', 'success');
+        carregarPerfilBarbeiro();
+    } catch (error) {
+        mostrarToast('❌ Erro!', 'error');
+    }
+}
+
+// Upload foto
+function uploadFotoCliente(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+        var foto = ev.target.result;
+        document.getElementById('perfilClienteAvatar').querySelector('img').src = foto;
+        clienteLogado.fotoPerfil = foto;
+        await db.collection('clientes').doc(clienteLogado.id).update({ fotoPerfil: foto });
+        mostrarToast('✅ Foto atualizada!', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+function uploadFotoBarbeiro(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = async function(ev) {
+        var foto = ev.target.result;
+        document.getElementById('perfilBarbeiroAvatar').querySelector('img').src = foto;
+        barbeiroLogado.fotoPerfil = foto;
+        await db.collection('barbeiros').doc(barbeiroLogado.id).update({ fotoPerfil: foto });
+        mostrarToast('✅ Foto atualizada!', 'success');
+    };
+    reader.readAsDataURL(file);
+}
+
+// Extrato
+function filtrarExtrato(tipo) {
+    mostrarToast('📊 Filtrando por ' + tipo, 'info');
+}
+
+// Pagamento
+function copiarPix() {
+    var chave = document.getElementById('pixChave').textContent;
+    navigator.clipboard.writeText(chave).then(function() {
+        mostrarToast('✅ Chave PIX copiada!', 'success');
+    });
+}
+
+function fecharPagamento() {
+    mostrarTela('homeClienteScreen');
+}
+
+console.log('✅ Todas as funções carregadas!');
+
+// ==========================================================
 // ===== LOGOUT =====
 // ==========================================================
 
