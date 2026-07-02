@@ -130,8 +130,80 @@ async function cadastrarCliente() {
         document.getElementById('bottomNavCliente').style.display = 'flex';
         document.getElementById('bottomNavBarbeiro').style.display = 'none';
         
-        mostrarToast('✅ Cadastro realizado com sucesso!', 'success');
+        mostrarToast('✅ Cadastro de cliente realizado com sucesso!', 'success');
         mostrarTela('homeClienteScreen');
+        
+    } catch (error) {
+        console.error('❌ Erro detalhado:', error);
+        
+        if (error.code === 'permission-denied') {
+            mostrarToast('❌ Erro de permissão! Publique as regras do Firestore.', 'error');
+        } else {
+            mostrarToast('❌ Erro: ' + error.message, 'error');
+        }
+    }
+}
+
+// ==========================================================
+// ===== CADASTRO BARBEIRO (NOVO) =====
+// ==========================================================
+
+function mostrarCadastroBarbeiro() {
+    document.getElementById('loginFormCliente').style.display = 'none';
+    document.getElementById('loginFormBarbeiro').style.display = 'none';
+    mostrarTela('cadastroBarbeiroScreen');
+}
+
+async function cadastrarBarbeiro() {
+    var nome = document.getElementById('cadNomeBarbeiro').value.trim();
+    var email = document.getElementById('cadEmailBarbeiro').value.trim();
+    var celular = document.getElementById('cadCelularBarbeiro').value.trim();
+    var senha = document.getElementById('cadSenhaBarbeiro').value;
+
+    if (!nome || !email || !celular || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
+    }
+
+    if (senha.length < 6) {
+        mostrarToast('❌ Senha mínima de 6 caracteres!', 'error');
+        return;
+    }
+
+    if (!email.includes('@')) {
+        mostrarToast('❌ E-mail inválido!', 'error');
+        return;
+    }
+
+    try {
+        const snapshot = await db.collection('barbeiros')
+            .where('email', '==', email)
+            .get();
+
+        if (!snapshot.empty) {
+            mostrarToast('❌ E-mail já cadastrado como barbeiro!', 'error');
+            return;
+        }
+
+        var barbeiro = {
+            id: Date.now(),
+            nome: nome,
+            email: email,
+            celular: celular,
+            senha: senha,
+            fotoPerfil: '',
+            dataCriacao: new Date().toISOString()
+        };
+
+        await db.collection('barbeiros').doc(barbeiro.id.toString()).set(barbeiro);
+        
+        barbeiroLogado = barbeiro;
+        document.getElementById('welcomeBarbeiroNome').textContent = barbeiro.nome;
+        document.getElementById('bottomNavBarbeiro').style.display = 'flex';
+        document.getElementById('bottomNavCliente').style.display = 'none';
+        
+        mostrarToast('✅ Cadastro de barbeiro realizado com sucesso!', 'success');
+        mostrarTela('homeBarbeiroScreen');
         
     } catch (error) {
         console.error('❌ Erro detalhado:', error);
@@ -327,7 +399,7 @@ async function criarPostsPadrao() {
                     { usuario: 'Carlos', texto: 'Ficou ótimo!', data: new Date().toISOString() },
                     { usuario: 'Ana', texto: 'Recomendo!', data: new Date().toISOString() }
                 ],
-                dataCriacao: new Date(Date.now() - 86400000).toISOString() // 1 dia atrás
+                dataCriacao: new Date(Date.now() - 86400000).toISOString()
             },
             {
                 id: 2,
@@ -341,7 +413,7 @@ async function criarPostsPadrao() {
                 comentarios: [
                     { usuario: 'Rafael', texto: 'Melhor degradê da cidade!', data: new Date().toISOString() }
                 ],
-                dataCriacao: new Date(Date.now() - 172800000).toISOString() // 2 dias atrás
+                dataCriacao: new Date(Date.now() - 172800000).toISOString()
             },
             {
                 id: 3,
@@ -353,7 +425,7 @@ async function criarPostsPadrao() {
                 descricao: 'Corte com navalha para um acabamento preciso e definido. Perfeito para visuais marcantes.',
                 likes: 5,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 259200000).toISOString() // 3 dias atrás
+                dataCriacao: new Date(Date.now() - 259200000).toISOString()
             },
             {
                 id: 4,
@@ -368,7 +440,7 @@ async function criarPostsPadrao() {
                     { usuario: 'Pedro', texto: 'Sai de lá parecendo outro!', data: new Date().toISOString() },
                     { usuario: 'Mariana', texto: 'Meu marido adorou!', data: new Date().toISOString() }
                 ],
-                dataCriacao: new Date(Date.now() - 345600000).toISOString() // 4 dias atrás
+                dataCriacao: new Date(Date.now() - 345600000).toISOString()
             },
             {
                 id: 5,
@@ -382,7 +454,7 @@ async function criarPostsPadrao() {
                 comentarios: [
                     { usuario: 'Lucas', texto: 'Melhor combo da cidade!', data: new Date().toISOString() }
                 ],
-                dataCriacao: new Date(Date.now() - 432000000).toISOString() // 5 dias atrás
+                dataCriacao: new Date(Date.now() - 432000000).toISOString()
             },
             {
                 id: 6,
@@ -394,7 +466,7 @@ async function criarPostsPadrao() {
                 descricao: 'Pintura capilar com produtos de alta qualidade. Cores vibrantes e duradouras.',
                 likes: 3,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 518400000).toISOString() // 6 dias atrás
+                dataCriacao: new Date(Date.now() - 518400000).toISOString()
             },
             {
                 id: 7,
@@ -406,7 +478,7 @@ async function criarPostsPadrao() {
                 descricao: 'Luzes e reflexos para iluminar seu visual. Técnica moderna e natural.',
                 likes: 7,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 604800000).toISOString() // 7 dias atrás
+                dataCriacao: new Date(Date.now() - 604800000).toISOString()
             },
             {
                 id: 8,
@@ -418,7 +490,7 @@ async function criarPostsPadrao() {
                 descricao: 'Platinado completo com descoloração e tonalização. Visual moderno e ousado.',
                 likes: 10,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 691200000).toISOString() // 8 dias atrás
+                dataCriacao: new Date(Date.now() - 691200000).toISOString()
             },
             {
                 id: 9,
@@ -430,7 +502,7 @@ async function criarPostsPadrao() {
                 descricao: 'Selagem capilar para cabelos lisos e sedosos. Duração prolongada.',
                 likes: 4,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 777600000).toISOString() // 9 dias atrás
+                dataCriacao: new Date(Date.now() - 777600000).toISOString()
             },
             {
                 id: 10,
@@ -442,11 +514,10 @@ async function criarPostsPadrao() {
                 descricao: 'Progressiva com fórmula exclusiva que não agride os fios. Cabelo liso e saudável.',
                 likes: 6,
                 comentarios: [],
-                dataCriacao: new Date(Date.now() - 864000000).toISOString() // 10 dias atrás
+                dataCriacao: new Date(Date.now() - 864000000).toISOString()
             }
         ];
 
-        // Salvar todos os posts
         for (var post of posts) {
             await db.collection('posts').doc(post.id.toString()).set(post);
         }
@@ -477,6 +548,11 @@ async function agendarCorte() {
         return;
     }
 
+    if (!horario) {
+        mostrarToast('Selecione um horário!', 'error');
+        return;
+    }
+
     try {
         var agendamento = {
             id: Date.now(),
@@ -494,9 +570,10 @@ async function agendarCorte() {
         mostrarToast('✅ Agendamento realizado!', 'success');
         carregarAgendaCliente();
         document.getElementById('agendamentoData').value = '';
+        document.getElementById('agendamentoHorario').value = '09:00';
     } catch (error) {
         console.error('❌ Erro ao agendar:', error);
-        mostrarToast('Erro ao agendar!', 'error');
+        mostrarToast('❌ Erro ao agendar: ' + error.message, 'error');
     }
 }
 
@@ -534,6 +611,7 @@ async function carregarAgendaCliente() {
         }).join('');
     } catch (error) {
         console.error('❌ Erro ao carregar agenda:', error);
+        container.innerHTML = '<p style="color:#EF4444; text-align:center;">❌ Erro ao carregar agendamentos</p>';
     }
 }
 
