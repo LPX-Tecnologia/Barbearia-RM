@@ -1,11 +1,7 @@
 // ==========================================================
-// ===== CONFIGURAÇÃO DO FIREBASE =====
-// ==========================================================
-// ==========================================================
 // ===== CONFIGURAÇÃO DO FIREBASE (PROJETO BARBEARIA-RM) =====
 // ==========================================================
 
-// 🔥 SUAS NOVAS CREDENCIAIS DO PROJETO BARBEARIA-RM
 const firebaseConfig = {
     apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
     authDomain: "barbearia-rm.firebaseapp.com",
@@ -20,7 +16,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔥 COMENTE ESTA LINHA PARA TESTAR (DESATIVA O CACHE)
+// Comentar para teste
 // db.enablePersistence()
 //     .then(() => console.log('🔥 Firestore cache ativado!'))
 //     .catch(err => console.warn('⚠️ Erro ao ativar cache:', err));
@@ -69,7 +65,7 @@ function fecharModal(id) {
 }
 
 // ==========================================================
-// ===== LOGIN CLIENTE =====
+// ===== LOGIN E CADASTRO =====
 // ==========================================================
 
 function mostrarLoginCliente() {
@@ -83,7 +79,7 @@ function mostrarLoginBarbeiro() {
 }
 
 // ==========================================================
-// ===== CADASTRO CLIENTE (CORRIGIDO) =====
+// ===== CADASTRO CLIENTE =====
 // ==========================================================
 
 async function cadastrarCliente() {
@@ -108,7 +104,6 @@ async function cadastrarCliente() {
     }
 
     try {
-        // Verificar se e-mail já existe
         const snapshot = await db.collection('clientes')
             .where('email', '==', email)
             .get();
@@ -143,8 +138,6 @@ async function cadastrarCliente() {
         
         if (error.code === 'permission-denied') {
             mostrarToast('❌ Erro de permissão! Publique as regras do Firestore.', 'error');
-        } else if (error.code === 'not-found') {
-            mostrarToast('❌ Coleção não encontrada! Crie a coleção "clientes".', 'error');
         } else {
             mostrarToast('❌ Erro: ' + error.message, 'error');
         }
@@ -239,6 +232,16 @@ async function carregarFeedCliente() {
         var posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         if (posts.length === 0) {
+            // Se não houver posts, cria os posts padrão
+            await criarPostsPadrao();
+            // Recarrega o feed
+            const newSnapshot = await db.collection('posts')
+                .orderBy('dataCriacao', 'desc')
+                .get();
+            posts = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        if (posts.length === 0) {
             container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3><p style="color:#6B7280;">Aguarde novos cortes!</p></div>';
             return;
         }
@@ -246,6 +249,22 @@ async function carregarFeedCliente() {
         container.innerHTML = posts.map(function(post) {
             var videoHtml = post.video ? 
                 `<iframe class="feed-post-video" src="${post.video.replace('watch?v=', 'embed/')}" allowfullscreen></iframe>` : '';
+            
+            // Mapeamento de ícones por tipo de serviço
+            var servicoIcones = {
+                'Corte Social': '💇',
+                'Corte Degradê': '✂️',
+                'Corte Navalhado': '🔪',
+                'Corte Máquina': '⚡',
+                'Barba': '🧔',
+                'Barba + Corte': '✨',
+                'Pintura': '🎨',
+                'Luzes': '💡',
+                'Platinado': '⭐',
+                'Selagem': '💧',
+                'Progressiva': '🌟'
+            };
+            var icone = servicoIcones[post.titulo] || '✂️';
             
             return `
                 <div class="feed-post">
@@ -256,7 +275,8 @@ async function carregarFeedCliente() {
                             <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
                         </div>
                     </div>
-                    ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : ''}
+                    ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : 
+                      `<div class="feed-card-image" style="background:linear-gradient(135deg, #1A1A1A, #2D2D2D); font-size:60px; display:flex; align-items:center; justify-content:center; height:160px;">${icone}</div>`}
                     ${videoHtml}
                     <div class="feed-post-body">
                         <div class="feed-post-title">${post.titulo}</div>
@@ -278,6 +298,163 @@ async function carregarFeedCliente() {
     } catch (error) {
         console.error('❌ Erro ao carregar feed:', error);
         mostrarToast('Erro ao carregar feed!', 'error');
+    }
+}
+
+// ==========================================================
+// ===== CRIAR POSTS PADRÃO =====
+// ==========================================================
+
+async function criarPostsPadrao() {
+    try {
+        // Verificar se já existem posts
+        const snapshot = await db.collection('posts').get();
+        if (!snapshot.empty) return;
+
+        console.log('📝 Criando posts padrão...');
+
+        var posts = [
+            {
+                id: 1,
+                barbeiroId: 1,
+                titulo: 'Corte Social',
+                preco: 35.00,
+                imagem: '',
+                video: '',
+                descricao: 'Corte social com acabamento perfeito. Ideal para quem busca elegância e praticidade.',
+                likes: 12,
+                comentarios: [
+                    { usuario: 'Carlos', texto: 'Ficou ótimo!', data: new Date().toISOString() },
+                    { usuario: 'Ana', texto: 'Recomendo!', data: new Date().toISOString() }
+                ],
+                dataCriacao: new Date(Date.now() - 86400000).toISOString() // 1 dia atrás
+            },
+            {
+                id: 2,
+                barbeiroId: 1,
+                titulo: 'Corte Degradê',
+                preco: 45.00,
+                imagem: '',
+                video: '',
+                descricao: 'Degradê moderno com máquina e tesoura. Técnica avançada para um visual impecável.',
+                likes: 8,
+                comentarios: [
+                    { usuario: 'Rafael', texto: 'Melhor degradê da cidade!', data: new Date().toISOString() }
+                ],
+                dataCriacao: new Date(Date.now() - 172800000).toISOString() // 2 dias atrás
+            },
+            {
+                id: 3,
+                barbeiroId: 1,
+                titulo: 'Corte Navalhado',
+                preco: 50.00,
+                imagem: '',
+                video: '',
+                descricao: 'Corte com navalha para um acabamento preciso e definido. Perfeito para visuais marcantes.',
+                likes: 5,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 259200000).toISOString() // 3 dias atrás
+            },
+            {
+                id: 4,
+                barbeiroId: 1,
+                titulo: 'Barba',
+                preco: 25.00,
+                imagem: '',
+                video: '',
+                descricao: 'Barba completa com toalha quente, hidratação e acabamento perfeito.',
+                likes: 15,
+                comentarios: [
+                    { usuario: 'Pedro', texto: 'Sai de lá parecendo outro!', data: new Date().toISOString() },
+                    { usuario: 'Mariana', texto: 'Meu marido adorou!', data: new Date().toISOString() }
+                ],
+                dataCriacao: new Date(Date.now() - 345600000).toISOString() // 4 dias atrás
+            },
+            {
+                id: 5,
+                barbeiroId: 1,
+                titulo: 'Barba + Corte',
+                preco: 55.00,
+                imagem: '',
+                video: '',
+                descricao: 'Combo completo: corte + barba. Pacote especial com desconto!',
+                likes: 20,
+                comentarios: [
+                    { usuario: 'Lucas', texto: 'Melhor combo da cidade!', data: new Date().toISOString() }
+                ],
+                dataCriacao: new Date(Date.now() - 432000000).toISOString() // 5 dias atrás
+            },
+            {
+                id: 6,
+                barbeiroId: 1,
+                titulo: 'Pintura',
+                preco: 80.00,
+                imagem: '',
+                video: '',
+                descricao: 'Pintura capilar com produtos de alta qualidade. Cores vibrantes e duradouras.',
+                likes: 3,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 518400000).toISOString() // 6 dias atrás
+            },
+            {
+                id: 7,
+                barbeiroId: 1,
+                titulo: 'Luzes',
+                preco: 90.00,
+                imagem: '',
+                video: '',
+                descricao: 'Luzes e reflexos para iluminar seu visual. Técnica moderna e natural.',
+                likes: 7,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 604800000).toISOString() // 7 dias atrás
+            },
+            {
+                id: 8,
+                barbeiroId: 1,
+                titulo: 'Platinado',
+                preco: 120.00,
+                imagem: '',
+                video: '',
+                descricao: 'Platinado completo com descoloração e tonalização. Visual moderno e ousado.',
+                likes: 10,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 691200000).toISOString() // 8 dias atrás
+            },
+            {
+                id: 9,
+                barbeiroId: 1,
+                titulo: 'Selagem',
+                preco: 70.00,
+                imagem: '',
+                video: '',
+                descricao: 'Selagem capilar para cabelos lisos e sedosos. Duração prolongada.',
+                likes: 4,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 777600000).toISOString() // 9 dias atrás
+            },
+            {
+                id: 10,
+                barbeiroId: 1,
+                titulo: 'Progressiva',
+                preco: 100.00,
+                imagem: '',
+                video: '',
+                descricao: 'Progressiva com fórmula exclusiva que não agride os fios. Cabelo liso e saudável.',
+                likes: 6,
+                comentarios: [],
+                dataCriacao: new Date(Date.now() - 864000000).toISOString() // 10 dias atrás
+            }
+        ];
+
+        // Salvar todos os posts
+        for (var post of posts) {
+            await db.collection('posts').doc(post.id.toString()).set(post);
+        }
+
+        console.log('✅ Posts padrão criados com sucesso!');
+
+    } catch (error) {
+        console.error('❌ Erro ao criar posts padrão:', error);
     }
 }
 
@@ -818,6 +995,11 @@ function sairBarbeiro() {
 // ==========================================================
 
 console.log('✅ Barbearia RM com Firebase!');
-console.log('🔥 Projeto: construtorlpx');
+console.log('🔥 Projeto: barbearia-rm');
 console.log('📁 Coleções: clientes, barbeiros, posts, agendamentos, planos');
 console.log('🎨 Tema Neon - Barbearia RM');
+
+// Criar posts padrão se não existirem
+setTimeout(function() {
+    criarPostsPadrao();
+}, 2000);
