@@ -58,6 +58,10 @@ function voltarParaLogin() {
 // ===== NAVEGAÇÃO =====
 // ==========================================================
 
+// ==========================================================
+// ===== FUNÇÃO MOSTRAR TELA (VERSÃO FINAL CORRIGIDA) =====
+// ==========================================================
+
 function mostrarTela(id) {
     console.log('📱 Mostrando tela:', id);
     
@@ -80,20 +84,25 @@ function mostrarTela(id) {
     var navBarbeiro = document.getElementById('bottomNavBarbeiro');
     
     // Telas de cliente
-    var telasCliente = ['homeClienteScreen', 'agendamentoScreen', 'galeriaCortesScreen', 'reelsScreen', 'perfilClienteScreen'];
+    var telasCliente = ['homeClienteScreen', 'agendamentoScreen', 'galeriaCortesScreen', 'reelsScreen', 'perfilClienteScreen', 'detalhePostScreen', 'pagamentoScreen'];
     // Telas de barbeiro
     var telasBarbeiro = ['homeBarbeiroScreen', 'criarPostScreen', 'extratoScreen', 'criarPlanoScreen', 'editarPlanoScreen', 'horariosTrabalhoScreen', 'perfilBarbeiroScreen'];
     
     if (telasCliente.includes(id)) {
-        navCliente.style.display = 'flex';
-        navBarbeiro.style.display = 'none';
+        if (navCliente) navCliente.style.display = 'flex';
+        if (navBarbeiro) navBarbeiro.style.display = 'none';
     } else if (telasBarbeiro.includes(id)) {
-        navBarbeiro.style.display = 'flex';
-        navCliente.style.display = 'none';
+        if (navBarbeiro) navBarbeiro.style.display = 'flex';
+        if (navCliente) navCliente.style.display = 'none';
     } else {
-        navCliente.style.display = 'none';
-        navBarbeiro.style.display = 'none';
+        if (navCliente) navCliente.style.display = 'none';
+        if (navBarbeiro) navBarbeiro.style.display = 'none';
     }
+    
+    // Atualizar nav ativa
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.classList.remove('active');
+    });
     
     // Carregar dados específicos
     if (id === 'homeClienteScreen') {
@@ -104,6 +113,13 @@ function mostrarTela(id) {
         carregarAgendamentosBarbeiro();
         carregarPlanos();
         calcularFaturamento();
+        
+        // Criar posts padrão para o barbeiro se necessário
+        if (barbeiroLogado) {
+            setTimeout(function() {
+                criarPostsPadraoParaBarbeiro();
+            }, 300);
+        }
     }
     if (id === 'perfilClienteScreen') carregarPerfilCliente();
     if (id === 'perfilBarbeiroScreen') carregarPerfilBarbeiro();
