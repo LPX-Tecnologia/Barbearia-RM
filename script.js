@@ -14,6 +14,10 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// Evitar erro de índice composto
+db.settings({ timestampsInSnapshots: true, ignoreUndefinedProperties: true });
+
 console.log('🔥 Firebase conectado!');
 
 // ==========================================================
@@ -193,7 +197,7 @@ async function carregarAgendamentosBarbeiro() {
         c.innerHTML = ag.map(function(a) {
             var sc = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
             var st = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
-            return `<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">👤 ${a.clienteNome||'Cliente'}</div><div class="agenda-data">📅 ${a.data||'N/A'} • ⏰ ${a.horario||'N/A'}</div><div style="font-size:12px;color:#6B7280;">✂️ ${a.tipo||'Corte'}</div></div><div style="display:flex;gap:4px;align-items:center;"><span class="agenda-status ${sc}">${st}</span>${a.status==='pendente'?`<button class="btn btn-small btn-success" onclick="confirmarAgendamento('${a.id}')" style="padding:4px 8px;font-size:11px;">✅</button><button class="btn btn-small btn-danger" onclick="cancelarAgendamento('${a.id}')" style="padding:4px 8px;font-size:11px;">❌</button>`:''}</div></div>`;
+            return '<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">👤 ' + (a.clienteNome||'Cliente') + '</div><div class="agenda-data">📅 ' + (a.data||'N/A') + ' • ⏰ ' + (a.horario||'N/A') + '</div><div style="font-size:12px;color:#6B7280;">✂️ ' + (a.tipo||'Corte') + '</div></div><div style="display:flex;gap:4px;align-items:center;"><span class="agenda-status ' + sc + '">' + st + '</span>' + (a.status==='pendente'?'<button class="btn btn-small btn-success" onclick="confirmarAgendamento(\'' + a.id + '\')" style="padding:4px 8px;font-size:11px;">✅</button><button class="btn btn-small btn-danger" onclick="cancelarAgendamento(\'' + a.id + '\')" style="padding:4px 8px;font-size:11px;">❌</button>':'') + '</div></div>';
         }).join('');
     } catch (e) { c.innerHTML = '<p style="color:#EF4444;text-align:center;">Erro ao carregar</p>'; }
 }
@@ -218,14 +222,14 @@ async function carregarPlanos() {
         var planos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         if (planos.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum plano criado</p>'; return; }
         c.innerHTML = planos.map(function(p) {
-            return `<div class="plano-card" style="flex-direction:column;align-items:flex-start;">
-                ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : ''}
-                <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-                    <div class="plano-info"><div class="plano-nome">${p.nome}</div><div class="plano-periodo">📅 ${p.periodo}</div><div style="font-size:12px;color:#6B7280;">${p.descricao||''}</div></div>
-                    <div class="plano-preco">R$ ${p.preco?p.preco.toFixed(2):'0,00'}</div>
-                </div>
-                <div class="plano-actions" style="margin-top:8px;"><button class="btn btn-small btn-primary" onclick="editarPlano('${p.id}')">✏️ Editar</button><button class="btn btn-small btn-danger" onclick="excluirPlanoDireto('${p.id}')">🗑</button></div>
-            </div>`;
+            return '<div class="plano-card" style="flex-direction:column;align-items:flex-start;">' +
+                (p.imagem ? '<img src="' + p.imagem + '" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;">' : '') +
+                '<div style="display:flex;justify-content:space-between;width:100%;align-items:center;">' +
+                    '<div class="plano-info"><div class="plano-nome">' + p.nome + '</div><div class="plano-periodo">📅 ' + p.periodo + '</div><div style="font-size:12px;color:#6B7280;">' + (p.descricao||'') + '</div></div>' +
+                    '<div class="plano-preco">R$ ' + (p.preco?p.preco.toFixed(2):'0,00') + '</div>' +
+                '</div>' +
+                '<div class="plano-actions" style="margin-top:8px;"><button class="btn btn-small btn-primary" onclick="editarPlano(\'' + p.id + '\')">✏️ Editar</button><button class="btn btn-small btn-danger" onclick="excluirPlanoDireto(\'' + p.id + '\')">🗑</button></div>' +
+            '</div>';
         }).join('');
     } catch (e) { c.innerHTML = '<p style="color:#EF4444;text-align:center;">Erro ao carregar</p>'; }
 }
@@ -258,6 +262,7 @@ function editarPlano(planoId) {
             document.getElementById('editPlanoDescricao').value = p.descricao || '';
             document.getElementById('editPlanoImagem').value = p.imagem || '';
             if (p.imagem) { document.getElementById('editPlanoImagemPreview').src = p.imagem; document.getElementById('editPlanoImagemPreview').style.display = 'block'; }
+            else { document.getElementById('editPlanoImagemPreview').style.display = 'none'; }
             mostrarTela('editarPlanoScreen');
         }
     });
@@ -267,7 +272,13 @@ async function salvarEdicaoPlano() {
     var id = document.getElementById('editPlanoId').value;
     var imagem = document.getElementById('editPlanoImagem').value || '';
     try {
-        await db.collection('planos').doc(id).update({ nome: document.getElementById('editPlanoNome').value.trim(), periodo: document.getElementById('editPlanoPeriodo').value, preco: parseFloat(document.getElementById('editPlanoPreco').value), descricao: document.getElementById('editPlanoDescricao').value.trim(), imagem });
+        await db.collection('planos').doc(id).update({
+            nome: document.getElementById('editPlanoNome').value.trim(),
+            periodo: document.getElementById('editPlanoPeriodo').value,
+            preco: parseFloat(document.getElementById('editPlanoPreco').value),
+            descricao: document.getElementById('editPlanoDescricao').value.trim(),
+            imagem: imagem
+        });
         mostrarToast('✅ Plano atualizado!', 'success'); mostrarTela('homeBarbeiroScreen');
     } catch (e) { mostrarToast('❌ Erro!', 'error'); }
 }
@@ -338,36 +349,19 @@ async function carregarFeedCliente() {
         if (posts.length === 0) { c.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3></div>'; return; }
         c.innerHTML = posts.map(function(post) {
             var comentarios = post.comentarios || [];
-            return `<div class="feed-post">
-                <div class="feed-post-header">
-                    <div class="feed-post-avatar">✂️</div>
-                    <div class="feed-post-user">
-                        <div class="feed-post-user-name">${post.barbeiroNome||'Barbearia RM'}</div>
-                        <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
-                    </div>
-                </div>
-                ${post.video ? `<video class="feed-post-video" controls style="width:100%;"><source src="${post.video}" type="video/mp4"></video>` : post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : ''}
-                <div class="feed-post-body">
-                    <div class="feed-post-title">${post.titulo}</div>
-                    <div class="feed-post-price">R$ ${post.preco?post.preco.toFixed(2):'0,00'}</div>
-                    <div class="feed-post-desc">${post.descricao||''}</div>
-                </div>
-                <div class="feed-post-actions">
-                    <button onclick="likePost('${post.id}', this)">❤️ <span class="count">${post.likes||0}</span></button>
-                    <button onclick="abrirComentarios('${post.id}')">💬 <span class="count">${comentarios.length}</span></button>
-                    <button onclick="agendarPorPost()">✂️ Agendar</button>
-                </div>
-                ${comentarios.length > 0 ? `<div class="comentarios-preview" style="padding:0 14px 10px;">
-                    ${comentarios.slice(-3).map(function(c) { return `<div style="font-size:12px;color:#B0B0B0;margin:4px 0;"><strong style="color:#D4A84B;">${c.autor}:</strong> ${c.texto}</div>`; }).join('')}
-                    ${comentarios.length > 3 ? `<div style="font-size:11px;color:var(--primary);cursor:pointer;" onclick="abrirComentarios('${post.id}')">Ver todos os ${comentarios.length} comentários</div>` : ''}
-                </div>` : ''}
-            </div>`;
+            return '<div class="feed-post">' +
+                '<div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + (post.barbeiroNome||'Barbearia RM') + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + '</div></div></div>' +
+                (post.video ? '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>' : post.imagem ? '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">' : '') +
+                '<div class="feed-post-body"><div class="feed-post-title">' + post.titulo + '</div><div class="feed-post-price">R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div><div class="feed-post-desc">' + (post.descricao||'') + '</div></div>' +
+                '<div class="feed-post-actions"><button onclick="likePost(\'' + post.id + '\', this)">❤️ <span class="count">' + (post.likes||0) + '</span></button><button onclick="abrirComentarios(\'' + post.id + '\')">💬 <span class="count">' + comentarios.length + '</span></button><button onclick="agendarPorPost()">✂️ Agendar</button></div>' +
+                (comentarios.length > 0 ? '<div class="comentarios-preview" style="padding:0 14px 10px;">' + comentarios.slice(-3).map(function(c) { return '<div style="font-size:12px;color:#B0B0B0;margin:4px 0;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '</div>'; }).join('') + (comentarios.length > 3 ? '<div style="font-size:11px;color:var(--primary);cursor:pointer;" onclick="abrirComentarios(\'' + post.id + '\')">Ver todos os ' + comentarios.length + ' comentários</div>' : '') + '</div>' : '') +
+            '</div>';
         }).join('');
     } catch (e) { console.error('❌ Erro feed:', e); }
 }
 
 // ==========================================================
-// ===== MEUS POSTS (BARBEIRO VÊ SEUS POSTS) =====
+// ===== MEUS POSTS (BARBEIRO) - CORRIGIDO =====
 // ==========================================================
 
 async function carregarMeusPosts() {
@@ -380,48 +374,41 @@ async function carregarMeusPosts() {
     }
 
     try {
+        // Buscar posts sem ordenação (evita erro de índice)
         const snap = await db.collection('posts')
             .where('barbeiroId', '==', barbeiroLogado.id)
-            .orderBy('dataCriacao', 'desc')
             .get();
         
-        var posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        var posts = [];
+        snap.forEach(function(doc) {
+            posts.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Ordenar manualmente
+        posts.sort(function(a, b) {
+            return new Date(b.dataCriacao) - new Date(a.dataCriacao);
+        });
         
         if (posts.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Você ainda não publicou nenhum post</p>';
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Você ainda não publicou nenhum post.<br><br><button class="btn btn-small btn-primary" onclick="mostrarTela(\'criarPostScreen\')">📸 Criar Primeiro Post</button></p>';
             return;
         }
 
         container.innerHTML = posts.map(function(post) {
             var comentarios = post.comentarios || [];
-            return `<div class="feed-post">
-                <div class="feed-post-header">
-                    <div class="feed-post-avatar">✂️</div>
-                    <div class="feed-post-user">
-                        <div class="feed-post-user-name">${post.titulo}</div>
-                        <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')} • R$ ${post.preco?post.preco.toFixed(2):'0,00'}</div>
-                    </div>
-                </div>
-                ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image" alt="${post.titulo}">` : ''}
-                ${post.video ? `<video class="feed-post-video" controls style="width:100%;"><source src="${post.video}" type="video/mp4"></video>` : ''}
-                <div class="feed-post-body">
-                    <div class="feed-post-desc">${post.descricao||'Sem descrição'}</div>
-                    <div style="font-size:12px;color:#6B7280;margin-top:4px;">
-                        ❤️ ${post.likes||0} curtidas • 💬 ${comentarios.length} comentários
-                    </div>
-                </div>
-                ${comentarios.length > 0 ? `<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);">
-                    <div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>
-                    ${comentarios.map(function(c) { return `<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;"><strong style="color:#D4A84B;">${c.autor}:</strong> ${c.texto}<div style="font-size:10px;color:#6B7280;">${new Date(c.data).toLocaleString('pt-BR')}</div></div>`; }).join('')}
-                </div>` : ''}
-                <div class="feed-post-actions">
-                    <button onclick="excluirMeuPost('${post.id}')" style="color:#EF4444;">🗑 Excluir</button>
-                </div>
-            </div>`;
+            return '<div class="feed-post" style="margin-bottom:12px;">' +
+                '<div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + post.titulo + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + ' • R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div></div></div>' +
+                (post.imagem ? '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">' : '') +
+                (post.video ? '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>' : '') +
+                '<div class="feed-post-body"><div class="feed-post-desc">' + (post.descricao||'Sem descrição') + '</div><div style="font-size:12px;color:#6B7280;margin-top:4px;">❤️ ' + (post.likes||0) + ' curtidas • 💬 ' + comentarios.length + ' comentários</div></div>' +
+                (comentarios.length > 0 ? '<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);"><div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>' + comentarios.map(function(c) { return '<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '<div style="font-size:10px;color:#6B7280;">' + new Date(c.data).toLocaleString('pt-BR') + '</div></div>'; }).join('') + '</div>' : '') +
+                '<div class="feed-post-actions"><button onclick="excluirMeuPost(\'' + post.id + '\')" style="color:#EF4444;">🗑 Excluir</button></div>' +
+            '</div>';
         }).join('');
-    } catch (e) {
-        console.error('❌ Erro meus posts:', e);
-        container.innerHTML = '<p style="color:#EF4444;text-align:center;">Erro ao carregar posts</p>';
+        
+    } catch (error) {
+        console.error('❌ Erro meus posts:', error);
+        container.innerHTML = '<p style="color:#EF4444;text-align:center;padding:20px;">Erro ao carregar posts<br><br><button class="btn btn-small btn-primary" onclick="carregarMeusPosts()">🔄 Tentar Novamente</button></p>';
     }
 }
 
@@ -432,9 +419,7 @@ async function excluirMeuPost(postId) {
         mostrarToast('🗑 Post excluído!', 'success');
         carregarMeusPosts();
         carregarFeedCliente();
-    } catch (e) {
-        mostrarToast('❌ Erro ao excluir!', 'error');
-    }
+    } catch (e) { mostrarToast('❌ Erro!', 'error'); }
 }
 
 // ==========================================================
@@ -450,73 +435,36 @@ function abrirComentarios(postId) {
 async function carregarComentarios(postId) {
     var container = document.getElementById('comentariosContainer');
     if (!container) return;
-
     try {
         const doc = await db.collection('posts').doc(postId).get();
         if (!doc.exists) return;
-        
         var post = doc.data();
         var comentarios = post.comentarios || [];
-        
-        if (comentarios.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum comentário ainda. Seja o primeiro!</p>';
-            return;
-        }
-
+        if (comentarios.length === 0) { container.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum comentário ainda. Seja o primeiro!</p>'; return; }
         container.innerHTML = comentarios.map(function(c) {
-            return `<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,0.03);border-radius:8px;">
-                <strong style="color:#D4A84B;">${c.autor}</strong>
-                <span style="font-size:10px;color:#6B7280;margin-left:8px;">${new Date(c.data).toLocaleString('pt-BR')}</span>
-                <p style="margin:4px 0 0;color:#B0B0B0;">${c.texto}</p>
-            </div>`;
+            return '<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,0.03);border-radius:8px;"><strong style="color:#D4A84B;">' + c.autor + '</strong><span style="font-size:10px;color:#6B7280;margin-left:8px;">' + new Date(c.data).toLocaleString('pt-BR') + '</span><p style="margin:4px 0 0;color:#B0B0B0;">' + c.texto + '</p></div>';
         }).join('');
-    } catch (e) {
-        container.innerHTML = '<p style="color:#EF4444;">Erro ao carregar comentários</p>';
-    }
+    } catch (e) { container.innerHTML = '<p style="color:#EF4444;">Erro ao carregar</p>'; }
 }
 
 async function adicionarComentario() {
     var texto = document.getElementById('novoComentario').value.trim();
-    
-    if (!texto) {
-        mostrarToast('❌ Digite um comentário!', 'error');
-        return;
-    }
-
-    if (!clienteLogado && !barbeiroLogado) {
-        mostrarToast('❌ Faça login para comentar!', 'error');
-        return;
-    }
-
+    if (!texto) { mostrarToast('❌ Digite um comentário!', 'error'); return; }
+    if (!clienteLogado && !barbeiroLogado) { mostrarToast('❌ Faça login para comentar!', 'error'); return; }
     var autor = clienteLogado ? clienteLogado.nome : (barbeiroLogado ? barbeiroLogado.nome : 'Anônimo');
-    
     try {
         const doc = await db.collection('posts').doc(postSelecionadoId).get();
-        if (!doc.exists) {
-            mostrarToast('❌ Post não encontrado!', 'error');
-            return;
-        }
-
+        if (!doc.exists) { mostrarToast('❌ Post não encontrado!', 'error'); return; }
         var post = doc.data();
         var comentarios = post.comentarios || [];
-        
-        comentarios.push({
-            autor: autor,
-            texto: texto,
-            data: new Date().toISOString()
-        });
-
+        comentarios.push({ autor: autor, texto: texto, data: new Date().toISOString() });
         await db.collection('posts').doc(postSelecionadoId).update({ comentarios: comentarios });
-        
         mostrarToast('✅ Comentário adicionado!', 'success');
         document.getElementById('novoComentario').value = '';
         carregarComentarios(postSelecionadoId);
         carregarFeedCliente();
-        
-    } catch (e) {
-        console.error('❌ Erro ao comentar:', e);
-        mostrarToast('❌ Erro ao comentar!', 'error');
-    }
+        if (barbeiroLogado) carregarMeusPosts();
+    } catch (e) { mostrarToast('❌ Erro!', 'error'); }
 }
 
 function fecharModalComentario() {
@@ -529,61 +477,28 @@ function fecharModalComentario() {
 // ==========================================================
 
 async function criarPost() {
-    console.log('📝 Iniciando criação de post...');
-    
-    if (!barbeiroLogado) {
-        mostrarToast('❌ Faça login como barbeiro!', 'error');
-        return;
-    }
-
+    if (!barbeiroLogado) { mostrarToast('❌ Faça login como barbeiro!', 'error'); return; }
     var titulo = document.getElementById('postTitulo').value.trim();
     var preco = parseFloat(document.getElementById('postPreco').value);
     var descricao = document.getElementById('postDescricao').value.trim();
     var imagem = document.getElementById('postImagem').value || '';
     var video = document.getElementById('postVideo').value || '';
-
-    console.log('📋 Dados:', { titulo, preco, descricao, temImagem: !!imagem, temVideo: !!video });
-
     if (!titulo) { mostrarToast('❌ Digite um título!', 'error'); return; }
     if (!preco || preco <= 0) { mostrarToast('❌ Digite um preço válido!', 'error'); return; }
-
     try {
         var postId = Date.now().toString();
-        var post = {
-            id: postId,
-            barbeiroId: barbeiroLogado.id,
-            barbeiroNome: barbeiroLogado.nome,
-            titulo: titulo,
-            preco: preco,
-            imagem: imagem,
-            video: video,
-            descricao: descricao,
-            likes: 0,
-            comentarios: [],
-            dataCriacao: new Date().toISOString()
-        };
-
-        console.log('💾 Salvando no Firebase...');
-        await db.collection('posts').doc(postId).set(post);
-        console.log('✅ Post salvo com sucesso! ID:', postId);
-        
-        mostrarToast('✅ Post publicado com sucesso!', 'success');
-        
-        document.getElementById('postTitulo').value = '';
-        document.getElementById('postPreco').value = '';
-        document.getElementById('postDescricao').value = '';
-        removerImagem();
-        removerVideo();
-        
-        mostrarTela('homeBarbeiroScreen');
-    } catch (error) {
-        console.error('❌ Erro ao publicar:', error);
-        mostrarToast('❌ Erro: ' + error.message, 'error');
-    }
+        await db.collection('posts').doc(postId).set({
+            id: postId, barbeiroId: barbeiroLogado.id, barbeiroNome: barbeiroLogado.nome,
+            titulo, preco, imagem, video, descricao, likes: 0, comentarios: [], dataCriacao: new Date().toISOString()
+        });
+        mostrarToast('✅ Post publicado!', 'success');
+        document.getElementById('postTitulo').value = ''; document.getElementById('postPreco').value = ''; document.getElementById('postDescricao').value = '';
+        removerImagem(); removerVideo(); mostrarTela('homeBarbeiroScreen');
+    } catch (error) { mostrarToast('❌ Erro: ' + error.message, 'error'); }
 }
 
 // ==========================================================
-// ===== UPLOAD IMAGEM/VIDEO =====
+// ===== UPLOAD =====
 // ==========================================================
 
 function previewImagem(event) {
@@ -657,7 +572,7 @@ async function carregarAgendaCliente() {
         c.innerHTML = ag.map(function(a) {
             var sc = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
             var st = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
-            return `<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">${a.tipo}</div><div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div></div><span class="agenda-status ${sc}">${st}</span></div>`;
+            return '<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">' + a.tipo + '</div><div class="agenda-data">📅 ' + a.data + ' • ⏰ ' + a.horario + '</div></div><span class="agenda-status ' + sc + '">' + st + '</span></div>';
         }).join('');
     } catch (e) {}
 }
@@ -681,23 +596,19 @@ function filtrarGaleria() {
     var filtrados = cat === 'todos' ? todosPosts : todosPosts.filter(p => p.titulo === cat);
     if (filtrados.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;grid-column:1/-1;">Nenhum corte</p>'; return; }
     c.innerHTML = filtrados.map(function(post) {
-        return `<div class="galeria-item" onclick="verDetalheCorte('${post.id}')">
-            ${post.imagem ? `<img src="${post.imagem}" class="galeria-item-image" alt="${post.titulo}">` : `<div class="galeria-item-image" style="background:linear-gradient(135deg,#1A1A1A,#2D2D2D);display:flex;align-items:center;justify-content:center;font-size:40px;">✂️</div>`}
-            <div class="galeria-item-info"><div class="galeria-item-title">${post.titulo}</div><div class="galeria-item-price">R$ ${post.preco?post.preco.toFixed(2):'0,00'}</div>${post.video ? '<span style="font-size:11px;color:var(--primary);">🎬 Vídeo</span>' : ''}</div>
-        </div>`;
+        return '<div class="galeria-item" onclick="verDetalheCorte(\'' + post.id + '\')">' +
+            (post.imagem ? '<img src="' + post.imagem + '" class="galeria-item-image" alt="' + post.titulo + '">' : '<div class="galeria-item-image" style="background:linear-gradient(135deg,#1A1A1A,#2D2D2D);display:flex;align-items:center;justify-content:center;font-size:40px;">✂️</div>') +
+            '<div class="galeria-item-info"><div class="galeria-item-title">' + post.titulo + '</div><div class="galeria-item-price">R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div>' + (post.video ? '<span style="font-size:11px;color:var(--primary);">🎬 Vídeo</span>' : '') + '</div>' +
+        '</div>';
     }).join('');
 }
 
 function verDetalheCorte(postId) {
     var post = todosPosts.find(p => p.id === postId); if (!post) return;
-    document.getElementById('detalhePostConteudo').innerHTML = `<div class="card">
-        <h3>${post.titulo}</h3>
-        ${post.video ? `<video controls style="width:100%;border-radius:12px;margin:10px 0;"><source src="${post.video}" type="video/mp4"></video>` : post.imagem ? `<img src="${post.imagem}" style="width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin:10px 0;">` : ''}
-        <p style="font-size:24px;color:var(--primary);">R$ ${post.preco?post.preco.toFixed(2):'0,00'}</p>
-        <p style="color:#B0B0B0;">${post.descricao||''}</p>
-        <button class="btn btn-primary" onclick="agendarPorPost()">✂️ AGENDAR</button>
-        <button class="btn btn-outline" onclick="mostrarTela('galeriaCortesScreen')">← Voltar</button>
-    </div>`;
+    document.getElementById('detalhePostConteudo').innerHTML = '<div class="card"><h3>' + post.titulo + '</h3>' +
+        (post.video ? '<video controls style="width:100%;border-radius:12px;margin:10px 0;"><source src="' + post.video + '" type="video/mp4"></video>' : post.imagem ? '<img src="' + post.imagem + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:12px;margin:10px 0;">' : '') +
+        '<p style="font-size:24px;color:var(--primary);">R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</p><p style="color:#B0B0B0;">' + (post.descricao||'') + '</p>' +
+        '<button class="btn btn-primary" onclick="agendarPorPost()">✂️ AGENDAR</button><button class="btn btn-outline" onclick="mostrarTela(\'galeriaCortesScreen\')">← Voltar</button></div>';
     mostrarTela('detalhePostScreen');
 }
 
@@ -720,11 +631,10 @@ function exibirReel(index) {
     if (index >= todosReels.length) index = todosReels.length - 1;
     reelsAtual = index;
     var post = todosReels[index];
-    document.getElementById('reelsContainer').innerHTML = `<div class="reel-item">
-        ${post.video ? `<video src="${post.video}" autoplay loop muted playsinline></video>` : post.imagem ? `<img src="${post.imagem}" class="reel-item-image">` : '<div class="reel-item-image" style="display:flex;align-items:center;justify-content:center;font-size:80px;">✂️</div>'}
-        <div class="reel-item-overlay"><div class="reel-item-title">${post.titulo}</div><div class="reel-item-price">R$ ${post.preco?post.preco.toFixed(2):'0,00'}</div></div>
-        <div class="reel-item-actions"><button onclick="likeReel(this)">❤️</button><button onclick="agendarPorPost()">✂️</button></div>
-    </div>`;
+    document.getElementById('reelsContainer').innerHTML = '<div class="reel-item">' +
+        (post.video ? '<video src="' + post.video + '" autoplay loop muted playsinline></video>' : post.imagem ? '<img src="' + post.imagem + '" class="reel-item-image">' : '<div class="reel-item-image" style="display:flex;align-items:center;justify-content:center;font-size:80px;">✂️</div>') +
+        '<div class="reel-item-overlay"><div class="reel-item-title">' + post.titulo + '</div><div class="reel-item-price">R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div></div>' +
+        '<div class="reel-item-actions"><button onclick="likeReel(this)">❤️</button><button onclick="agendarPorPost()">✂️</button></div></div>';
 }
 
 function reelAnterior() { if (reelsAtual > 0) { reelsAtual--; exibirReel(reelsAtual); } }
@@ -823,7 +733,7 @@ async function carregarHorarios() {
 function carregarFolgas() {
     var c = document.getElementById('folgasContainer'); if (!c) return;
     if (!horariosTrabalho.folgas || horariosTrabalho.folgas.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhuma folga</p>'; return; }
-    c.innerHTML = horariosTrabalho.folgas.map((f,i) => `<div class="folga-item"><span>🏖️ ${new Date(f).toLocaleDateString('pt-BR')}</span><button onclick="removerFolga(${i})">❌</button></div>`).join('');
+    c.innerHTML = horariosTrabalho.folgas.map((f,i) => '<div class="folga-item"><span>🏖️ ' + new Date(f).toLocaleDateString('pt-BR') + '</span><button onclick="removerFolga(' + i + ')">❌</button></div>').join('');
 }
 
 function adicionarFolga() {
