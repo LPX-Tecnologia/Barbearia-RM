@@ -200,6 +200,14 @@
             <div id="agendamentosBarbeiroContainer"></div>
         </div>
 
+        <!-- ===== MEUS POSTS (BARBEIRO VÊ SEUS POSTS E COMENTÁRIOS) ===== -->
+        <div class="card">
+            <h3>📸 MEUS POSTS</h3>
+            <div id="meusPostsContainer">
+                <p style="color:#6B7280;text-align:center;">Carregando...</p>
+            </div>
+        </div>
+
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button>
             <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button>
@@ -256,7 +264,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST (COM IMAGEM E VÍDEO) -->
+    <!-- TELA: CRIAR POST -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
@@ -270,7 +278,6 @@
                 <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
             </div>
             
-            <!-- UPLOAD DE IMAGEM -->
             <div class="input-group">
                 <label>📷 Imagem</label>
                 <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()">
@@ -286,7 +293,6 @@
                 <input type="hidden" id="postImagem" value="">
             </div>
             
-            <!-- UPLOAD DE VÍDEO -->
             <div class="input-group">
                 <label>🎬 Vídeo (opcional)</label>
                 <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()">
@@ -313,7 +319,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR PLANO (COM IMAGEM) -->
+    <!-- TELA: CRIAR PLANO -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
@@ -338,7 +344,6 @@
                 <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
             </div>
             
-            <!-- UPLOAD DE IMAGEM DO PLANO -->
             <div class="input-group">
                 <label>📷 Imagem do Plano</label>
                 <div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()">
@@ -362,7 +367,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: EDITAR PLANO (COM IMAGEM) -->
+    <!-- TELA: EDITAR PLANO -->
     <!-- ============================================================ -->
     <section class="screen" id="editarPlanoScreen">
         <h2 class="screen-title">✏️ EDITAR PLANO</h2>
@@ -388,7 +393,6 @@
                 <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
             </div>
             
-            <!-- UPLOAD DE IMAGEM DO PLANO (EDIÇÃO) -->
             <div class="input-group">
                 <label>📷 Imagem do Plano</label>
                 <div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()">
@@ -536,7 +540,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: DETALHE POST (VIEW) -->
+    <!-- TELA: DETALHE POST -->
     <!-- ============================================================ -->
     <section class="screen" id="detalhePostScreen">
         <div id="detalhePostConteudo"></div>
@@ -586,6 +590,21 @@
         </div>
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
+
+    <!-- ============================================================ -->
+    <!-- MODAL COMENTÁRIOS -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalComentario">
+        <div class="modal-content">
+            <h3>💬 Comentários</h3>
+            <div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
+            <div class="input-group">
+                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
+            <button class="btn btn-outline" onclick="fecharModalComentario()">Fechar</button>
+        </div>
+    </div>
 
     <!-- ============================================================ -->
     <!-- TOAST -->
