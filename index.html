@@ -15,63 +15,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
     <style>
-        @keyframes livePulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .live-badge {
-            display: inline-block;
-            background: #FF0000;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            animation: livePulse 2s infinite;
-        }
-        .live-chat-message {
-            padding: 8px;
-            margin: 4px 0;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            font-size: 13px;
-        }
-        .live-chat-message .autor {
-            color: #FF0000;
-            font-weight: 700;
-            font-size: 12px;
-        }
-        .live-chat-message .texto {
-            color: #B0B0B0;
-            margin-top: 2px;
-        }
-        #livePlayerContainer {
-            border: 2px solid #FF0000;
-            box-shadow: 0 0 20px rgba(255,0,0,0.3);
-        }
+        @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.7;transform:scale(1.05);} }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+        .live-badge{display:inline-block;background:#F00;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;animation:livePulse 2s infinite;}
+        .live-chat-message{padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;font-size:13px;}
+        .live-chat-message .autor{color:#F00;font-weight:700;font-size:12px;}
+        .live-chat-message .texto{color:#B0B0B0;margin-top:2px;}
+        #livePlayerContainer{border:2px solid #F00;box-shadow:0 0 20px rgba(255,0,0,.3);}
     </style>
 </head>
 <body>
 
-    <!-- ============================================================ -->
-    <!-- HEADER -->
-    <!-- ============================================================ -->
     <header class="header">
         <div class="header-logo">
-            <div class="logo-container">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header">
-            </div>
+            <div class="logo-container"><img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header"></div>
             <div class="slogan">Atitude, Estilo e Confiança</div>
         </div>
     </header>
 
-    <!-- ============================================================ -->
-    <!-- TELA: LOGIN -->
-    <!-- ============================================================ -->
+    <!-- LOGIN -->
     <section class="screen active" id="loginScreen">
         <div class="login-container">
             <div class="login-logo"><img src="logobarbearia-rm.png" alt="Barbearia RM"></div>
@@ -97,9 +59,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CADASTRO CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- CADASTRO CLIENTE -->
     <section class="screen" id="cadastroClienteScreen">
         <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
@@ -112,9 +72,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CADASTRO BARBEIRO -->
-    <!-- ============================================================ -->
+    <!-- CADASTRO BARBEIRO -->
     <section class="screen" id="cadastroBarbeiroScreen">
         <h2 class="screen-title">✂️ CADASTRO BARBEIRO</h2>
         <div class="card">
@@ -127,14 +85,9 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: HOME CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- HOME CLIENTE -->
     <section class="screen" id="homeClienteScreen">
-        <div class="welcome-banner">
-            <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
-            <p>Confira os cortes e agende seu horário</p>
-        </div>
+        <div class="welcome-banner"><h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2><p>Confira os cortes e agende seu horário</p></div>
         <div class="feed-container" id="feedClienteContainer"></div>
         <div class="card" id="agendaClienteCard"><h3>📅 Meus Agendamentos</h3><div id="agendaClienteContainer"><p style="color:#6B7280;text-align:center;">Nenhum agendamento</p></div></div>
         <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
@@ -148,14 +101,9 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: HOME BARBEIRO -->
-    <!-- ============================================================ -->
+    <!-- HOME BARBEIRO -->
     <section class="screen" id="homeBarbeiroScreen">
-        <div class="welcome-banner barbeiro">
-            <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
-            <p>Gerencie sua barbearia</p>
-        </div>
+        <div class="welcome-banner barbeiro"><h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2><p>Gerencie sua barbearia</p></div>
         <div class="card"><h3>💰 FATURAMENTO</h3><div class="financeiro-resumo"><div class="financeiro-item"><span>📅 Hoje</span><strong id="faturamentoHoje">R$ 0,00</strong></div><div class="financeiro-item"><span>📆 Semana</span><strong id="faturamentoSemana">R$ 0,00</strong></div><div class="financeiro-item"><span>📊 Mês</span><strong id="faturamentoMes">R$ 0,00</strong></div><div class="financeiro-item"><span>📈 Ano</span><strong id="faturamentoAno">R$ 0,00</strong></div></div></div>
         <div class="card"><h3>📋 PLANOS</h3><div id="planosContainer"></div><button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button></div>
         <div class="card"><h3>📅 AGENDAMENTOS</h3><div id="agendamentosBarbeiroContainer"></div></div>
@@ -173,9 +121,7 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: AGENDAMENTO -->
-    <!-- ============================================================ -->
+    <!-- AGENDAMENTO -->
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
@@ -187,124 +133,135 @@
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST -->
-    <!-- ============================================================ -->
+    <!-- CRIAR POST -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
         <div class="card">
             <div class="input-group"><label>📝 Título</label><input type="text" id="postTitulo" placeholder="Título do corte"></div>
             <div class="input-group"><label>💰 Preço</label><input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00"></div>
-            <div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="postImagemInput" accept="image/*" style="display:none" onchange="previewImagem(event)"></div><div id="imagemPreview" style="display:none;margin-top:10px;"><img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;"><button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px;padding:4px 12px;">❌ Remover</button></div><input type="hidden" id="postImagem" value=""></div>
-            <div class="input-group"><label>🎬 Vídeo (opcional)</label><div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()"><div class="file-upload-icon">🎥</div><p>Clique para selecionar um vídeo</p><span style="font-size:12px;color:#6B7280;">MP4, MOV, AVI até 20MB</span><input type="file" id="postVideoInput" accept="video/*" style="display:none" onchange="previewVideo(event)"></div><div id="videoPreview" style="display:none;margin-top:10px;"><video id="videoPreviewVideo" controls style="width:100%;max-height:200px;border-radius:12px;"></video><button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px;padding:4px 12px;">❌ Remover</button></div><input type="hidden" id="postVideo" value=""></div>
+            <div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar</p><input type="file" id="postImagemInput" accept="image/*" style="display:none" onchange="previewImagem(event)"></div><div id="imagemPreview" style="display:none;margin-top:10px;"><img id="imagemPreviewImg" src="#" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;"><button class="btn btn-small btn-danger" onclick="removerImagem()">❌ Remover</button></div><input type="hidden" id="postImagem" value=""></div>
+            <div class="input-group"><label>🎬 Vídeo</label><div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()"><div class="file-upload-icon">🎥</div><p>Clique para selecionar</p><input type="file" id="postVideoInput" accept="video/*" style="display:none" onchange="previewVideo(event)"></div><div id="videoPreview" style="display:none;margin-top:10px;"><video id="videoPreviewVideo" controls style="width:100%;max-height:200px;border-radius:12px;"></video><button class="btn btn-small btn-danger" onclick="removerVideo()">❌ Remover</button></div><input type="hidden" id="postVideo" value=""></div>
             <div class="input-group"><label>📝 Descrição</label><textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea></div>
             <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: CRIAR PLANO -->
-    <!-- ============================================================ -->
+    <!-- CRIAR PLANO -->
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
         <div class="card">
-            <div class="input-group"><label>📝 Nome do Plano</label><input type="text" id="planoNome" placeholder="Ex: Plano Mensal"></div>
+            <div class="input-group"><label>📝 Nome</label><input type="text" id="planoNome" placeholder="Ex: Plano Mensal"></div>
             <div class="input-group"><label>📅 Período</label><select id="planoPeriodo"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option></select></div>
             <div class="input-group"><label>💰 Preço</label><input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00"></div>
-            <div class="input-group"><label>📷 Imagem do Plano</label><div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="planoImagemInput" accept="image/*" style="display:none" onchange="previewImagemPlano(event)"></div><img id="planoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><button class="btn btn-small btn-danger" id="btnRemoverImagemPlano" onclick="removerImagemPlano()" style="margin-top:5px;display:none;">❌ Remover Imagem</button><input type="hidden" id="planoImagem" value=""></div>
-            <div class="input-group"><label>📝 Descrição</label><textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea></div>
-            <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR PLANO</button>
+            <div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar</p><input type="file" id="planoImagemInput" accept="image/*" style="display:none" onchange="previewImagemPlano(event)"></div><img id="planoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><button class="btn btn-small btn-danger" id="btnRemoverImagemPlano" onclick="removerImagemPlano()" style="margin-top:5px;display:none;">❌ Remover</button><input type="hidden" id="planoImagem" value=""></div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="planoDescricao" rows="2" placeholder="Benefícios..."></textarea></div>
+            <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: EDITAR PLANO -->
-    <!-- ============================================================ -->
+    <!-- EDITAR PLANO -->
     <section class="screen" id="editarPlanoScreen">
         <h2 class="screen-title">✏️ EDITAR PLANO</h2>
         <div class="card">
             <input type="hidden" id="editPlanoId">
-            <div class="input-group"><label>📝 Nome do Plano</label><input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal"></div>
+            <div class="input-group"><label>📝 Nome</label><input type="text" id="editPlanoNome"></div>
             <div class="input-group"><label>📅 Período</label><select id="editPlanoPeriodo"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option></select></div>
-            <div class="input-group"><label>💰 Preço</label><input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00"></div>
-            <div class="input-group"><label>📷 Imagem do Plano</label><div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para alterar a imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="editPlanoImagemInput" accept="image/*" style="display:none" onchange="previewEditPlanoImagem(event)"></div><img id="editPlanoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><input type="hidden" id="editPlanoImagem" value=""></div>
-            <div class="input-group"><label>📝 Descrição</label><textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea></div>
-            <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
-            <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR PLANO</button>
+            <div class="input-group"><label>💰 Preço</label><input type="number" id="editPlanoPreco" step="0.01"></div>
+            <div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Alterar imagem</p><input type="file" id="editPlanoImagemInput" accept="image/*" style="display:none" onchange="previewEditPlanoImagem(event)"></div><img id="editPlanoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><input type="hidden" id="editPlanoImagem" value=""></div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="editPlanoDescricao" rows="2"></textarea></div>
+            <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR</button>
+            <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: HORÁRIOS DE TRABALHO -->
-    <!-- ============================================================ -->
+    <!-- HORÁRIOS -->
     <section class="screen" id="horariosTrabalhoScreen">
-        <h2 class="screen-title">⏰ HORÁRIOS DE TRABALHO</h2>
-        <div class="card"><h3>📅 Dias de Trabalho</h3><div id="diasTrabalhoContainer"><label class="checkbox-label"><input type="checkbox" id="diaSegunda" checked> Segunda-feira</label><label class="checkbox-label"><input type="checkbox" id="diaTerca" checked> Terça-feira</label><label class="checkbox-label"><input type="checkbox" id="diaQuarta" checked> Quarta-feira</label><label class="checkbox-label"><input type="checkbox" id="diaQuinta" checked> Quinta-feira</label><label class="checkbox-label"><input type="checkbox" id="diaSexta" checked> Sexta-feira</label><label class="checkbox-label"><input type="checkbox" id="diaSabado" checked> Sábado</label><label class="checkbox-label"><input type="checkbox" id="diaDomingo"> Domingo</label></div></div>
-        <div class="card"><h3>🕐 Horário de Atendimento</h3><div class="input-group"><label>⏰ Início</label><input type="time" id="horarioInicio" value="09:00"></div><div class="input-group"><label>⏰ Fim</label><input type="time" id="horarioFim" value="18:00"></div><div class="input-group"><label>⏱️ Intervalo (minutos)</label><select id="intervaloCortes"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></div></div>
-        <div class="card"><h3>🏖️ Dias de Folga</h3><div class="input-group"><label>📅 Adicionar folga</label><input type="date" id="folgaData"><button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar</button></div><div id="folgasContainer"></div></div>
+        <h2 class="screen-title">⏰ HORÁRIOS</h2>
+        <div class="card"><h3>📅 Dias</h3><label class="checkbox-label"><input type="checkbox" id="diaSegunda" checked> Segunda</label><label class="checkbox-label"><input type="checkbox" id="diaTerca" checked> Terça</label><label class="checkbox-label"><input type="checkbox" id="diaQuarta" checked> Quarta</label><label class="checkbox-label"><input type="checkbox" id="diaQuinta" checked> Quinta</label><label class="checkbox-label"><input type="checkbox" id="diaSexta" checked> Sexta</label><label class="checkbox-label"><input type="checkbox" id="diaSabado" checked> Sábado</label><label class="checkbox-label"><input type="checkbox" id="diaDomingo"> Domingo</label></div>
+        <div class="card"><h3>🕐 Horário</h3><div class="input-group"><label>⏰ Início</label><input type="time" id="horarioInicio" value="09:00"></div><div class="input-group"><label>⏰ Fim</label><input type="time" id="horarioFim" value="18:00"></div><div class="input-group"><label>⏱️ Intervalo</label><select id="intervaloCortes"><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></div></div>
+        <div class="card"><h3>🏖️ Folgas</h3><div class="input-group"><input type="date" id="folgaData"><button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕</button></div><div id="folgasContainer"></div></div>
         <button class="btn btn-primary" onclick="salvarHorarios()">💾 SALVAR</button>
         <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: ANÚNCIOS -->
-    <!-- ============================================================ -->
+    <!-- ANÚNCIOS -->
     <section class="screen" id="anunciosScreen">
         <h2 class="screen-title">📢 ANÚNCIOS</h2>
-        <div class="card" id="anunciosContainer" style="min-height:200px;"><p style="color:#6B7280;text-align:center;padding:40px;">Carregando anúncios...</p></div>
-        <div class="card" id="formAnuncio" style="display:none;"><h3>📢 CRIAR ANÚNCIO</h3><div class="input-group"><label>📝 Título</label><input type="text" id="anuncioTitulo" placeholder="Ex: Promoção de Corte!"></div><div class="input-group"><label>📝 Descrição</label><textarea id="anuncioDescricao" rows="3" placeholder="Detalhes..."></textarea></div><div class="input-group"><label>🔗 Link (opcional)</label><input type="text" id="anuncioLink" placeholder="https://..."></div><div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" onclick="document.getElementById('anuncioImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar</p><input type="file" id="anuncioImagemInput" accept="image/*" style="display:none" onchange="previewAnuncioImagem(event)"></div><img id="anuncioImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><button class="btn btn-small btn-danger" id="btnRemoverAnuncioImagem" onclick="removerAnuncioImagem()" style="margin-top:5px;display:none;">❌ Remover</button><input type="hidden" id="anuncioImagem" value=""></div><div class="input-group"><label>⏱️ Duração</label><select id="anuncioDuracao"><option value="1">1 dia - Grátis</option><option value="7">7 dias - R$ 9,90</option><option value="15">15 dias - R$ 14,90</option><option value="30">30 dias - R$ 24,90</option></select></div><button class="btn btn-primary" onclick="criarAnuncio()">📢 PUBLICAR</button></div>
+        <div class="card" id="anunciosContainer" style="min-height:200px;"><p style="color:#6B7280;text-align:center;padding:40px;">Carregando...</p></div>
+        <div class="card" id="formAnuncio" style="display:none;"><h3>📢 CRIAR ANÚNCIO</h3><div class="input-group"><label>📝 Título</label><input type="text" id="anuncioTitulo"></div><div class="input-group"><label>📝 Descrição</label><textarea id="anuncioDescricao" rows="3"></textarea></div><div class="input-group"><label>🔗 Link</label><input type="text" id="anuncioLink" placeholder="https://..."></div><div class="input-group"><label>📷 Imagem</label><div class="file-upload-area" onclick="document.getElementById('anuncioImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique</p><input type="file" id="anuncioImagemInput" accept="image/*" style="display:none" onchange="previewAnuncioImagem(event)"></div><img id="anuncioImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;"><button class="btn btn-small btn-danger" id="btnRemoverAnuncioImagem" onclick="removerAnuncioImagem()" style="margin-top:5px;display:none;">❌</button><input type="hidden" id="anuncioImagem" value=""></div><div class="input-group"><label>⏱️ Duração</label><select id="anuncioDuracao"><option value="1">1 dia - Grátis</option><option value="7">7 dias - R$ 9,90</option><option value="15">15 dias - R$ 14,90</option><option value="30">30 dias - R$ 24,90</option></select></div><button class="btn btn-primary" onclick="criarAnuncio()">📢 PUBLICAR</button></div>
         <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: AO VIVO / LIVES -->
-    <!-- ============================================================ -->
+    <!-- AO VIVO / LIVE INTERNA -->
     <section class="screen" id="liveScreen">
-        <h2 class="screen-title">🔴 AO VIVO</h2>
+        <h2 class="screen-title">🔴 LIVE EXCLUSIVA</h2>
         
         <div class="card" id="livePlayerContainer" style="padding:0;overflow:hidden;background:#000;">
-            <div id="livePlayer" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
-                <iframe id="liveIframe" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" src="" allow="autoplay;encrypted-media" allowfullscreen></iframe>
+            <div id="livePlaceholder" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
+                <div style="text-align:center;color:white;">
+                    <div style="font-size:60px;">🔴</div>
+                    <p style="margin-top:10px;color:#B0B0B0;font-size:16px;">Nenhuma transmissão ativa</p>
+                    <p style="font-size:12px;color:#6B7280;">O barbeiro ainda não iniciou uma live</p>
+                    <button class="btn btn-small btn-primary" onclick="carregarLive()" style="margin-top:10px;">🔄 Atualizar</button>
+                </div>
             </div>
-            <div style="padding:12px;background:linear-gradient(135deg,#FF0000,#CC0000);"><span style="color:white;font-weight:700;">🔴 TRANSMISSÃO AO VIVO</span></div>
+            <div id="livePlayer" style="display:none;">
+                <video id="liveVideo" autoplay playsinline muted style="width:100%;display:block;background:#000;"></video>
+                <video id="liveVideoLocal" autoplay playsinline muted style="position:absolute;bottom:10px;right:10px;width:120px;height:80px;object-fit:cover;border-radius:8px;border:2px solid #F00;display:none;z-index:10;"></video>
+            </div>
+            <div style="padding:12px;background:linear-gradient(135deg,#FF0000,#CC0000);">
+                <span style="color:white;font-weight:700;">🔴 TRANSMISSÃO AO VIVO</span>
+                <span id="liveViewerCount" style="color:rgba(255,255,255,0.8);font-size:12px;margin-left:8px;"></span>
+            </div>
+        </div>
+
+        <div id="liveStatus" class="card" style="text-align:center;display:none;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <span style="width:12px;height:12px;background:#F00;border-radius:50%;animation:pulse 2s infinite;"></span>
+                <span style="color:#F00;font-weight:700;">AO VIVO AGORA</span>
+                <span id="liveStatusViewers" style="color:#6B7280;font-size:12px;"></span>
+            </div>
+            <p id="liveStatusTitulo" style="color:white;margin-top:8px;font-weight:700;"></p>
+            <p id="liveStatusBarbeiro" style="color:#B0B0B0;font-size:13px;"></p>
         </div>
 
         <div class="card" id="liveChatCard">
             <h3>💬 CHAT AO VIVO</h3>
-            <div id="liveChatContainer" style="max-height:300px;overflow-y:auto;margin-bottom:12px;"><p style="color:#6B7280;text-align:center;">Conecte-se para interagir!</p></div>
-            <div style="display:flex;gap:8px;"><input type="text" id="liveChatInput" placeholder="Envie uma mensagem..." style="flex:1;padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;"><button class="btn btn-small btn-primary" onclick="enviarMensagemLive()" style="width:auto;">📤</button></div>
+            <div id="liveChatContainer" style="max-height:300px;min-height:100px;overflow-y:auto;margin-bottom:12px;background:rgba(0,0,0,0.2);border-radius:8px;padding:10px;"><p style="color:#6B7280;text-align:center;">Carregando chat...</p></div>
+            <div style="display:flex;gap:8px;"><input type="text" id="liveChatInput" placeholder="Envie uma mensagem..." style="flex:1;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:14px;"><button class="btn btn-primary" onclick="enviarMensagemLive()" style="width:auto;padding:12px 20px;">📤 Enviar</button></div>
         </div>
 
         <div class="card" id="liveControls" style="display:none;">
             <h3>🎥 CONTROLES DA LIVE</h3>
-            <div class="input-group"><label>📺 Plataforma</label><select id="livePlataforma" onchange="atualizarPreviewLive()"><option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="personalizado">Link Personalizado</option></select></div>
-            <div class="input-group"><label>🔗 Link da Transmissão</label><input type="text" id="liveLink" placeholder="https://www.youtube.com/live/..." oninput="atualizarPreviewLive()"></div>
             <div class="input-group"><label>📝 Título da Live</label><input type="text" id="liveTitulo" placeholder="Ex: Cortes ao vivo!"></div>
             <div class="input-group"><label>📝 Descrição</label><textarea id="liveDescricao" rows="2" placeholder="O que vai rolar..."></textarea></div>
-            <button class="btn btn-primary" onclick="iniciarLive()" style="background:linear-gradient(135deg,#FF0000,#CC0000);">🔴 INICIAR LIVE</button>
+            <div style="text-align:center;margin:10px 0;"><video id="previewCamera" autoplay playsinline muted style="width:100%;max-height:200px;border-radius:8px;background:#000;display:none;"></video></div>
+            <button class="btn btn-primary" onclick="iniciarLive()" style="background:linear-gradient(135deg,#F00,#C00);">🔴 INICIAR LIVE</button>
             <button class="btn btn-danger" onclick="encerrarLive()">⏹ ENCERRAR LIVE</button>
         </div>
 
-        <div id="liveStatus" class="card" style="text-align:center;display:none;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="width:12px;height:12px;background:#FF0000;border-radius:50%;animation:pulse 2s infinite;"></span><span style="color:#FF0000;font-weight:700;">AO VIVO AGORA</span></div><p id="liveStatusTitulo" style="color:white;margin-top:8px;"></p></div>
-        <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
+        <div id="liveLoginWarning" class="card" style="text-align:center;display:none;">
+            <div style="font-size:40px;">🔒</div>
+            <h3 style="color:#FF6B6B;">Conteúdo Exclusivo</h3>
+            <p style="color:#B0B0B0;">Faça login como cliente para assistir à live</p>
+            <button class="btn btn-primary" onclick="mostrarTela('loginScreen')">🔑 FAZER LOGIN</button>
+        </div>
+
+        <button class="btn btn-outline" onclick="pararTransmissao();mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: GALERIA DE CORTES -->
-    <!-- ============================================================ -->
+    <!-- GALERIA -->
     <section class="screen" id="galeriaCortesScreen">
-        <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
-        <div class="filtro-cortes"><select id="filtroCategoria" onchange="filtrarGaleria()"><option value="todos">Todos os Cortes</option><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div>
+        <h2 class="screen-title">💇 GALERIA</h2>
+        <div class="filtro-cortes"><select id="filtroCategoria" onchange="filtrarGaleria()"><option value="todos">Todos</option><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div>
         <div id="galeriaContainer" class="galeria-grid"></div>
         <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: REELS -->
-    <!-- ============================================================ -->
+    <!-- REELS -->
     <section class="screen" id="reelsScreen">
         <h2 class="screen-title">🎬 REELS</h2>
         <div class="reels-container" id="reelsContainer"></div>
@@ -312,58 +269,42 @@
         <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: EXTRATO -->
-    <!-- ============================================================ -->
+    <!-- EXTRATO -->
     <section class="screen" id="extratoScreen">
         <h2 class="screen-title">📊 EXTRATO</h2>
-        <div class="card"><div class="filtro-extrato"><button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button><button class="btn btn-small btn-primary" onclick="filtrarExtrato('todos')">📋 Todos</button></div><div id="extratoContainer"></div><button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button></div>
+        <div class="card"><div class="filtro-extrato"><button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button></div><div id="extratoContainer"></div><button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button></div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: PAGAMENTO -->
-    <!-- ============================================================ -->
+    <!-- PAGAMENTO -->
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
-        <div class="card" style="text-align:center;"><div class="logo-pagamento"><img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-small"></div><h3 style="margin-top:10px;color:#FFFFFF;">Barbearia RM</h3><p><strong style="color:#FFFFFF;">Chave PIX:</strong> <span id="pixChave" style="color:var(--primary);">barbearia.rm@email.com</span></p><button class="btn btn-outline" onclick="copiarPix()">📋 Copiar PIX</button><button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button></div>
+        <div class="card" style="text-align:center;"><div class="logo-pagamento"><img src="logobarbearia-rm.png" class="logo-small"></div><h3>Barbearia RM</h3><p>Chave PIX: <span id="pixChave" style="color:var(--primary);">barbearia.rm@email.com</span></p><button class="btn btn-outline" onclick="copiarPix()">📋 Copiar PIX</button><button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button></div>
     </section>
 
-    <!-- ============================================================ -->
-    <!-- TELA: DETALHE POST -->
-    <!-- ============================================================ -->
+    <!-- DETALHE POST -->
     <section class="screen" id="detalhePostScreen"><div id="detalhePostConteudo"></div></section>
 
-    <!-- ============================================================ -->
     <!-- PERFIL CLIENTE -->
-    <!-- ============================================================ -->
     <section class="screen" id="perfilClienteScreen">
-        <div class="profile-header"><div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()"><img src="logobarbearia-rm.png" alt="RM" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)"><h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail">cliente@email.com</p></div>
-        <div class="card"><h3>✏️ EDITAR PERFIL</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button></div>
+        <div class="profile-header"><div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)"><h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail"></p></div>
+        <div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button></div>
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
     </section>
 
-    <!-- ============================================================ -->
     <!-- PERFIL BARBEIRO -->
-    <!-- ============================================================ -->
     <section class="screen" id="perfilBarbeiroScreen">
-        <div class="profile-header"><div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()"><img src="logobarbearia-rm.png" alt="RM" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)"><h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail">barbeiro@email.com</p></div>
-        <div class="card"><h3>✏️ EDITAR PERFIL</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button></div>
+        <div class="profile-header"><div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)"><h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail"></p></div>
+        <div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button></div>
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
 
-    <!-- ============================================================ -->
     <!-- MODAL COMENTÁRIOS -->
-    <!-- ============================================================ -->
-    <div class="modal" id="modalComentario"><div class="modal-content"><h3>💬 Comentários</h3><div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div><div class="input-group"><textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea></div><button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button><button class="btn btn-outline" onclick="fecharModalComentario()">Fechar</button></div></div>
+    <div class="modal" id="modalComentario"><div class="modal-content"><h3>💬 Comentários</h3><div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div><div class="input-group"><textarea id="novoComentario" rows="2" placeholder="Escreva..."></textarea></div><button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button><button class="btn btn-outline" onclick="fecharModalComentario()">Fechar</button></div></div>
 
-    <!-- ============================================================ -->
     <!-- TOAST -->
-    <!-- ============================================================ -->
     <div class="toast" id="toast" style="display:none;"></div>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - CLIENTE -->
-    <!-- ============================================================ -->
+    <!-- BOTTOM NAV CLIENTE -->
     <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')"><span class="nav-icon">🏠</span> Início</button>
         <button class="nav-item" onclick="mostrarTela('agendamentoScreen')"><span class="nav-icon">✂️</span> Agendar</button>
@@ -372,9 +313,7 @@
         <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
-    <!-- ============================================================ -->
-    <!-- BOTTOM NAV - BARBEIRO -->
-    <!-- ============================================================ -->
+    <!-- BOTTOM NAV BARBEIRO -->
     <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
         <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')"><span class="nav-icon">🏠</span> Início</button>
         <button class="nav-item" onclick="mostrarTela('criarPostScreen')"><span class="nav-icon">📸</span> Postar</button>
@@ -383,9 +322,6 @@
         <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
-    <!-- ============================================================ -->
-    <!-- JAVASCRIPT -->
-    <!-- ============================================================ -->
     <script src="script.js"></script>
 </body>
 </html>
