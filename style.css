@@ -1355,3 +1355,25 @@ body::after {
         height: 300px;
     }
 }
+/* ===== ANÚNCIOS ===== */
+#anunciosContainer .card {
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+#anunciosContainer .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #FF6B6B, #FF4757, #FF6B6B);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
