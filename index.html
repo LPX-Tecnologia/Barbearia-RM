@@ -256,7 +256,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR POST -->
+    <!-- TELA: CRIAR POST (COM IMAGEM E VÍDEO) -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
@@ -270,6 +270,7 @@
                 <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
             </div>
             
+            <!-- UPLOAD DE IMAGEM -->
             <div class="input-group">
                 <label>📷 Imagem</label>
                 <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()">
@@ -282,8 +283,10 @@
                     <img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;">
                     <button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
                 </div>
+                <input type="hidden" id="postImagem" value="">
             </div>
             
+            <!-- UPLOAD DE VÍDEO -->
             <div class="input-group">
                 <label>🎬 Vídeo (opcional)</label>
                 <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()">
@@ -296,6 +299,7 @@
                     <video id="videoPreviewVideo" controls style="width:100%; max-height:200px; border-radius:12px;"></video>
                     <button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
                 </div>
+                <input type="hidden" id="postVideo" value="">
             </div>
             
             <div class="input-group">
@@ -309,7 +313,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: CRIAR PLANO -->
+    <!-- TELA: CRIAR PLANO (COM IMAGEM) -->
     <!-- ============================================================ -->
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
@@ -333,6 +337,21 @@
                 <label>💰 Preço</label>
                 <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
             </div>
+            
+            <!-- UPLOAD DE IMAGEM DO PLANO -->
+            <div class="input-group">
+                <label>📷 Imagem do Plano</label>
+                <div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()">
+                    <div class="file-upload-icon">🖼️</div>
+                    <p>Clique para selecionar uma imagem</p>
+                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
+                    <input type="file" id="planoImagemInput" accept="image/*" style="display:none" onchange="previewImagemPlano(event)">
+                </div>
+                <img id="planoImagemPreview" src="#" style="display:none; width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-top:8px;">
+                <button class="btn btn-small btn-danger" id="btnRemoverImagemPlano" onclick="removerImagemPlano()" style="margin-top:5px; display:none;">❌ Remover Imagem</button>
+                <input type="hidden" id="planoImagem" value="">
+            </div>
+            
             <div class="input-group">
                 <label>📝 Descrição</label>
                 <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
@@ -343,7 +362,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: EDITAR PLANO -->
+    <!-- TELA: EDITAR PLANO (COM IMAGEM) -->
     <!-- ============================================================ -->
     <section class="screen" id="editarPlanoScreen">
         <h2 class="screen-title">✏️ EDITAR PLANO</h2>
@@ -368,6 +387,20 @@
                 <label>💰 Preço</label>
                 <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
             </div>
+            
+            <!-- UPLOAD DE IMAGEM DO PLANO (EDIÇÃO) -->
+            <div class="input-group">
+                <label>📷 Imagem do Plano</label>
+                <div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()">
+                    <div class="file-upload-icon">🖼️</div>
+                    <p>Clique para alterar a imagem</p>
+                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
+                    <input type="file" id="editPlanoImagemInput" accept="image/*" style="display:none" onchange="previewEditPlanoImagem(event)">
+                </div>
+                <img id="editPlanoImagemPreview" src="#" style="display:none; width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-top:8px;">
+                <input type="hidden" id="editPlanoImagem" value="">
+            </div>
+            
             <div class="input-group">
                 <label>📝 Descrição</label>
                 <textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
@@ -503,7 +536,7 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- TELA: DETALHE POST -->
+    <!-- TELA: DETALHE POST (VIEW) -->
     <!-- ============================================================ -->
     <section class="screen" id="detalhePostScreen">
         <div id="detalhePostConteudo"></div>
