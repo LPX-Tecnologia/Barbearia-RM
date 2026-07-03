@@ -1,7 +1,6 @@
 // ==========================================================
 // ===== CONFIGURAÇÃO DO FIREBASE =====
 // ==========================================================
-
 const firebaseConfig = {
     apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
     authDomain: "barbearia-rm.firebaseapp.com",
@@ -11,7 +10,6 @@ const firebaseConfig = {
     appId: "1:512819922057:web:6a913791cb6435e4f63258",
     measurementId: "G-TKVLVLPBJH"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 db.settings({ ignoreUndefinedProperties: true });
@@ -32,19 +30,17 @@ var reelsAtual = 0;
 var postSelecionadoId = null;
 var liveAtiva = false;
 var liveChatMessages = [];
+var liveChatInterval = null;
 var horariosTrabalho = {
     diasTrabalho: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
-    horarioInicio: '09:00',
-    horarioFim: '18:00',
-    intervaloCortes: 30,
-    folgas: []
+    horarioInicio: '09:00', horarioFim: '18:00', intervaloCortes: 30, folgas: []
 };
 
 // ==========================================================
-// ===== SESSÃO (LOCALSTORAGE) =====
+// ===== SESSÃO =====
 // ==========================================================
 function salvarSessao(tipo, dados) {
-    var sessao = { tipo: tipo, id: dados.id, nome: dados.nome, email: dados.email, celular: dados.celular || '', senha: dados.senha || '', fotoPerfil: dados.fotoPerfil || '', timestamp: new Date().getTime() };
+    var sessao = { tipo, id: dados.id, nome: dados.nome, email: dados.email, celular: dados.celular || '', senha: dados.senha || '', fotoPerfil: dados.fotoPerfil || '', timestamp: new Date().getTime() };
     localStorage.setItem('barbeariaRM_sessao', JSON.stringify(sessao));
 }
 function carregarSessao() {
@@ -132,8 +128,38 @@ function previewAnuncioImagem(e) { var f = e.target.files[0]; if (!f) return; va
 function removerAnuncioImagem() { anuncioImagemBase64 = ''; document.getElementById('anuncioImagem').value = ''; document.getElementById('anuncioImagemPreview').style.display = 'none'; document.getElementById('btnRemoverAnuncioImagem').style.display = 'none'; document.getElementById('anuncioImagemInput').value = ''; }
 
 // ==========================================================
-// ===== LIVES / AO VIVO =====
+// ===== LIVES / AO VIVO (CORRIGIDO) =====
 // ==========================================================
+async function carregarLive() {
+    console.log('🔍 Carregando live...');
+    var placeholder = document.getElementById('livePlaceholder');
+    var player = document.getElementById('livePlayer');
+    var status = document.getElementById('liveStatus');
+    var controls = document.getElementById('liveControls');
+    try {
+        const doc = await db.collection('lives').doc('live_atual').get();
+        if (doc.exists && doc.data().ativa) {
+            var live = doc.data(); liveAtiva = true;
+            if (placeholder) placeholder.style.display = 'none';
+            if (player) player.style.display = 'block';
+            if (status) status.style.display = 'block';
+            document.getElementById('liveStatusTitulo').textContent = live.titulo;
+            document.getElementById('livePlataforma').value = live.plataforma;
+            document.getElementById('liveLink').value = live.link;
+            document.getElementById('liveTitulo').value = live.titulo;
+            atualizarPreviewLive();
+            liveChatMessages = live.chat || []; atualizarChat(); iniciarChatListener();
+            if (barbeiroLogado && barbeiroLogado.id === live.barbeiroId) { if (controls) controls.style.display = 'block'; } else { if (controls) controls.style.display = 'none'; }
+        } else {
+            liveAtiva = false;
+            if (placeholder) placeholder.style.display = 'block';
+            if (player) player.style.display = 'none';
+            if (status) status.style.display = 'none';
+            if (barbeiroLogado) { if (controls) controls.style.display = 'block'; } else { if (controls) controls.style.display = 'none'; }
+            pararChatListener();
+        }
+    } catch (e) { console.error('❌ Erro live:', e); }
+}
 function atualizarPreviewLive() {
     var plataforma = document.getElementById('livePlataforma').value;
     var link = document.getElementById('liveLink').value.trim();
@@ -141,104 +167,71 @@ function atualizarPreviewLive() {
     if (!link) { iframe.src = ''; return; }
     var embedUrl = '';
     switch(plataforma) {
-        case 'youtube':
-            var videoId = link;
-            if (link.includes('youtube.com/live/')) videoId = link.split('youtube.com/live/')[1].split('?')[0];
-            else if (link.includes('youtube.com/watch?v=')) videoId = link.split('v=')[1].split('&')[0];
-            else if (link.includes('youtu.be/')) videoId = link.split('youtu.be/')[1].split('?')[0];
-            embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=0';
-            break;
-        case 'tiktok': var username = link.replace('@', '').trim(); embedUrl = 'https://www.tiktok.com/' + username + '/live'; break;
+        case 'youtube': var videoId = link; if (link.includes('youtube.com/live/')) videoId = link.split('youtube.com/live/')[1].split('?')[0]; else if (link.includes('youtube.com/watch?v=')) videoId = link.split('v=')[1].split('&')[0]; else if (link.includes('youtu.be/')) videoId = link.split('youtu.be/')[1].split('?')[0]; embedUrl = 'https://www.youtube.com/embed/' + videoId + '?autoplay=1&mute=0'; break;
+        case 'tiktok': var username = link.replace('@', '').replace('https://www.tiktok.com/', '').replace('/live', '').trim(); embedUrl = 'https://www.tiktok.com/embed/' + username; break;
         case 'instagram': var user = link.replace('@', '').trim(); embedUrl = 'https://www.instagram.com/' + user + '/live/'; break;
         case 'personalizado': embedUrl = link; break;
     }
     iframe.src = embedUrl;
 }
-
 async function iniciarLive() {
     if (!barbeiroLogado) { mostrarToast('❌ Apenas barbeiros!', 'error'); return; }
     var plataforma = document.getElementById('livePlataforma').value;
     var link = document.getElementById('liveLink').value.trim();
-    var titulo = document.getElementById('liveTitulo').value.trim() || 'Live da Barbearia RM';
+    var titulo = document.getElementById('liveTitulo').value.trim() || '🔴 Live da Barbearia RM';
     var descricao = document.getElementById('liveDescricao').value.trim();
     if (!link) { mostrarToast('❌ Insira o link!', 'error'); return; }
     try {
         await db.collection('lives').doc('live_atual').set({ id: 'live_atual', barbeiroId: barbeiroLogado.id, barbeiroNome: barbeiroLogado.nome, plataforma, link, titulo, descricao, ativa: true, chat: [], dataInicio: new Date().toISOString() });
-        liveAtiva = true;
+        liveAtiva = true; liveChatMessages = [];
+        document.getElementById('livePlaceholder').style.display = 'none';
+        document.getElementById('livePlayer').style.display = 'block';
         document.getElementById('liveStatus').style.display = 'block';
         document.getElementById('liveStatusTitulo').textContent = titulo;
-        atualizarPreviewLive();
+        atualizarPreviewLive(); atualizarChat(); iniciarChatListener(); verificarLiveAtiva();
         mostrarToast('🔴 Live iniciada!', 'success');
-        verificarLiveAtiva();
     } catch (e) { mostrarToast('❌ Erro!', 'error'); }
 }
-
 async function encerrarLive() {
     if (!barbeiroLogado) return;
     if (!confirm('Encerrar a live?')) return;
     try {
         await db.collection('lives').doc('live_atual').update({ ativa: false, dataFim: new Date().toISOString() });
-        liveAtiva = false;
+        liveAtiva = false; liveChatMessages = [];
+        document.getElementById('livePlaceholder').style.display = 'block';
+        document.getElementById('livePlayer').style.display = 'none';
         document.getElementById('liveStatus').style.display = 'none';
         document.getElementById('liveIframe').src = '';
-        document.getElementById('liveLink').value = '';
-        document.getElementById('liveTitulo').value = '';
-        liveChatMessages = [];
-        atualizarChat();
+        document.getElementById('liveLink').value = ''; document.getElementById('liveTitulo').value = '';
+        pararChatListener(); atualizarChat(); verificarLiveAtiva();
         mostrarToast('⏹ Live encerrada!', 'info');
-        verificarLiveAtiva();
     } catch (e) { mostrarToast('❌ Erro!', 'error'); }
 }
-
-async function carregarLive() {
+function iniciarChatListener() { pararChatListener(); liveChatInterval = setInterval(async function() { try { const doc = await db.collection('lives').doc('live_atual').get(); if (doc.exists && doc.data().ativa) { var novas = doc.data().chat || []; if (novas.length !== liveChatMessages.length) { liveChatMessages = novas; atualizarChat(); } } } catch (e) {} }, 3000); }
+function pararChatListener() { if (liveChatInterval) { clearInterval(liveChatInterval); liveChatInterval = null; } }
+async function enviarMensagemLive() {
+    var input = document.getElementById('liveChatInput'); if (!input) return;
+    var texto = input.value.trim(); if (!texto) { mostrarToast('❌ Digite uma mensagem!', 'error'); return; }
+    if (!liveAtiva) { mostrarToast('❌ Não há live ativa!', 'error'); return; }
+    var autor = '👤 Anônimo'; if (clienteLogado) autor = clienteLogado.nome; if (barbeiroLogado) autor = '✂️ ' + barbeiroLogado.nome;
+    var mensagem = { autor, texto, data: new Date().toISOString() };
     try {
         const doc = await db.collection('lives').doc('live_atual').get();
-        if (doc.exists && doc.data().ativa) {
-            var live = doc.data();
-            liveAtiva = true;
-            document.getElementById('livePlataforma').value = live.plataforma;
-            document.getElementById('liveLink').value = live.link;
-            document.getElementById('liveTitulo').value = live.titulo;
-            document.getElementById('liveStatus').style.display = 'block';
-            document.getElementById('liveStatusTitulo').textContent = live.titulo;
-            liveChatMessages = live.chat || [];
-            atualizarChat();
-            atualizarPreviewLive();
-            if (barbeiroLogado && barbeiroLogado.id === live.barbeiroId) document.getElementById('liveControls').style.display = 'block';
-        } else { liveAtiva = false; document.getElementById('liveStatus').style.display = 'none'; if (barbeiroLogado) document.getElementById('liveControls').style.display = 'block'; }
-    } catch (e) {}
+        if (!doc.exists || !doc.data().ativa) { mostrarToast('❌ Live não está mais ativa!', 'error'); return; }
+        var chat = doc.data().chat || []; chat.push(mensagem);
+        if (chat.length > 100) chat = chat.slice(-100);
+        await db.collection('lives').doc('live_atual').update({ chat });
+        liveChatMessages = chat; atualizarChat(); input.value = '';
+    } catch (e) { mostrarToast('❌ Erro ao enviar!', 'error'); }
 }
-
-function enviarMensagemLive() {
-    var input = document.getElementById('liveChatInput');
-    var texto = input.value.trim();
-    if (!texto) return;
-    var autor = 'Anônimo';
-    if (clienteLogado) autor = clienteLogado.nome;
-    if (barbeiroLogado) autor = barbeiroLogado.nome;
-    liveChatMessages.push({ autor, texto, data: new Date().toISOString() });
-    if (liveChatMessages.length > 50) liveChatMessages.shift();
-    atualizarChat();
-    input.value = '';
-    db.collection('lives').doc('live_atual').update({ chat: liveChatMessages }).catch(function() {});
-}
-
 function atualizarChat() {
     var c = document.getElementById('liveChatContainer'); if (!c) return;
-    if (liveChatMessages.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhuma mensagem ainda</p>'; return; }
-    c.innerHTML = liveChatMessages.map(function(msg) { return '<div class="live-chat-message"><span class="autor">' + msg.autor + ':</span> <span class="texto">' + msg.texto + '</span></div>'; }).join('');
+    if (!liveChatMessages || liveChatMessages.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">💬 Nenhuma mensagem ainda. Seja o primeiro a comentar!</p>'; return; }
+    c.innerHTML = liveChatMessages.map(function(msg) { var hora = new Date(msg.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); return '<div class="live-chat-message"><span class="autor">' + (msg.autor||'Anônimo') + '</span> <span style="font-size:10px;color:#6B7280;">' + hora + '</span><div class="texto">' + (msg.texto||'') + '</div></div>'; }).join('');
     c.scrollTop = c.scrollHeight;
 }
-
 async function verificarLiveAtiva() {
-    try {
-        const doc = await db.collection('lives').doc('live_atual').get();
-        var ativa = doc.exists && doc.data().ativa;
-        var b1 = document.getElementById('liveBadgeCliente');
-        var b2 = document.getElementById('liveBadgeBarbeiro');
-        if (b1) b1.style.display = ativa ? 'inline-block' : 'none';
-        if (b2) b2.style.display = ativa ? 'inline-block' : 'none';
-    } catch (e) {}
+    try { const doc = await db.collection('lives').doc('live_atual').get(); var ativa = doc.exists && doc.data().ativa; var b1 = document.getElementById('liveBadgeCliente'), b2 = document.getElementById('liveBadgeBarbeiro'); if (b1) b1.style.display = ativa ? 'inline-block' : 'none'; if (b2) b2.style.display = ativa ? 'inline-block' : 'none'; } catch (e) {}
 }
 
 // ==========================================================
@@ -252,16 +245,16 @@ async function calcularFaturamento() { try { const snap = await db.collection('a
 async function carregarFeedCliente() { var c = document.getElementById('feedClienteContainer'); if (!c) return; try { const snap = await db.collection('posts').orderBy('dataCriacao', 'desc').get(); var posts = snap.docs.map(d => ({ id: d.id, ...d.data() })); todosPosts = posts; if (posts.length === 0) { c.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3></div>'; return; } c.innerHTML = posts.map(function(post) { var com = post.comentarios || []; return '<div class="feed-post"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + (post.barbeiroNome||'Barbearia RM') + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + '</div></div></div>' + (post.video ? '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>' : post.imagem ? '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">' : '') + '<div class="feed-post-body"><div class="feed-post-title">' + post.titulo + '</div><div class="feed-post-price">R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div><div class="feed-post-desc">' + (post.descricao||'') + '</div></div><div class="feed-post-actions"><button onclick="likePost(\'' + post.id + '\', this)">❤️ <span class="count">' + (post.likes||0) + '</span></button><button onclick="abrirComentarios(\'' + post.id + '\')">💬 <span class="count">' + com.length + '</span></button><button onclick="agendarPorPost()">✂️ Agendar</button></div>' + (com.length > 0 ? '<div class="comentarios-preview" style="padding:0 14px 10px;">' + com.slice(-3).map(function(c) { return '<div style="font-size:12px;color:#B0B0B0;margin:4px 0;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '</div>'; }).join('') + (com.length > 3 ? '<div style="font-size:11px;color:var(--primary);cursor:pointer;" onclick="abrirComentarios(\'' + post.id + '\')">Ver todos os ' + com.length + ' comentários</div>' : '') + '</div>' : '') + '</div>'; }).join(''); } catch (e) {} }
 
 // ==========================================================
-// ===== MEUS POSTS (BARBEIRO) =====
+// ===== MEUS POSTS =====
 // ==========================================================
-async function carregarMeusPosts() { var c = document.getElementById('meusPostsContainer'); if (!c) return; if (!barbeiroLogado) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Faça login para ver seus posts</p>'; return; } try { const snap = await db.collection('posts').where('barbeiroId', '==', barbeiroLogado.id).get(); var posts = []; snap.forEach(function(doc) { posts.push({ id: doc.id, ...doc.data() }); }); posts.sort(function(a, b) { return new Date(b.dataCriacao) - new Date(a.dataCriacao); }); if (posts.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum post publicado.<br><br><button class="btn btn-small btn-primary" onclick="mostrarTela(\'criarPostScreen\')">📸 Criar Primeiro Post</button></p>'; return; } c.innerHTML = posts.map(function(post) { var com = post.comentarios || []; var h = '<div class="feed-post" style="margin-bottom:12px;"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + post.titulo + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + ' • R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div></div></div>'; if (post.imagem) h += '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">'; if (post.video) h += '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>'; h += '<div class="feed-post-body"><div class="feed-post-desc">' + (post.descricao||'Sem descrição') + '</div><div style="font-size:12px;color:#6B7280;margin-top:4px;">❤️ ' + (post.likes||0) + ' curtidas • 💬 ' + com.length + ' comentários</div></div>'; if (com.length > 0) { h += '<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);"><div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>'; com.forEach(function(c) { h += '<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '<div style="font-size:10px;color:#6B7280;">' + new Date(c.data).toLocaleString('pt-BR') + '</div></div>'; }); h += '</div>'; } h += '<div class="feed-post-actions"><button onclick="excluirMeuPost(\'' + post.id + '\')" style="color:#EF4444;">🗑 Excluir</button></div></div>'; return h; }).join(''); } catch (e) { c.innerHTML = '<p style="color:#EF4444;text-align:center;">Erro ao carregar<br><br><button class="btn btn-small btn-primary" onclick="carregarMeusPosts()">🔄 Tentar Novamente</button></p>'; } }
+async function carregarMeusPosts() { var c = document.getElementById('meusPostsContainer'); if (!c) return; if (!barbeiroLogado) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Faça login para ver seus posts</p>'; return; } try { const snap = await db.collection('posts').where('barbeiroId', '==', barbeiroLogado.id).get(); var posts = []; snap.forEach(function(doc) { posts.push({ id: doc.id, ...doc.data() }); }); posts.sort(function(a, b) { return new Date(b.dataCriacao) - new Date(a.dataCriacao); }); if (posts.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum post.<br><br><button class="btn btn-small btn-primary" onclick="mostrarTela(\'criarPostScreen\')">📸 Criar Primeiro Post</button></p>'; return; } c.innerHTML = posts.map(function(post) { var com = post.comentarios || []; var h = '<div class="feed-post" style="margin-bottom:12px;"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + post.titulo + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + ' • R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div></div></div>'; if (post.imagem) h += '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">'; if (post.video) h += '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>'; h += '<div class="feed-post-body"><div class="feed-post-desc">' + (post.descricao||'Sem descrição') + '</div><div style="font-size:12px;color:#6B7280;margin-top:4px;">❤️ ' + (post.likes||0) + ' curtidas • 💬 ' + com.length + ' comentários</div></div>'; if (com.length > 0) { h += '<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);"><div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>'; com.forEach(function(c) { h += '<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '<div style="font-size:10px;color:#6B7280;">' + new Date(c.data).toLocaleString('pt-BR') + '</div></div>'; }); h += '</div>'; } h += '<div class="feed-post-actions"><button onclick="excluirMeuPost(\'' + post.id + '\')" style="color:#EF4444;">🗑 Excluir</button></div></div>'; return h; }).join(''); } catch (e) { c.innerHTML = '<p style="color:#EF4444;text-align:center;">Erro<br><button class="btn btn-small btn-primary" onclick="carregarMeusPosts()">🔄 Tentar</button></p>'; } }
 async function excluirMeuPost(id) { if (!confirm('Excluir?')) return; await db.collection('posts').doc(id).delete(); mostrarToast('🗑 Excluído!', 'success'); carregarMeusPosts(); carregarFeedCliente(); }
 
 // ==========================================================
 // ===== COMENTÁRIOS =====
 // ==========================================================
 function abrirComentarios(id) { postSelecionadoId = id; carregarComentarios(id); document.getElementById('modalComentario').classList.add('active'); }
-async function carregarComentarios(id) { var c = document.getElementById('comentariosContainer'); if (!c) return; try { const doc = await db.collection('posts').doc(id).get(); if (!doc.exists) return; var com = doc.data().comentarios || []; if (com.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum comentário</p>'; return; } c.innerHTML = com.map(function(c) { return '<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,0.03);border-radius:8px;"><strong style="color:#D4A84B;">' + c.autor + '</strong><span style="font-size:10px;color:#6B7280;margin-left:8px;">' + new Date(c.data).toLocaleString('pt-BR') + '</span><p style="margin:4px 0 0;color:#B0B0B0;">' + c.texto + '</p></div>'; }).join(''); } catch (e) { c.innerHTML = '<p style="color:#EF4444;">Erro</p>'; } }
+async function carregarComentarios(id) { var c = document.getElementById('comentariosContainer'); if (!c) return; try { const doc = await db.collection('posts').doc(id).get(); if (!doc.exists) return; var com = doc.data().comentarios || []; if (com.length === 0) { c.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum comentário</p>'; return; } c.innerHTML = com.map(function(c) { return '<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;"><strong style="color:#D4A84B;">' + c.autor + '</strong><span style="font-size:10px;color:#6B7280;margin-left:8px;">' + new Date(c.data).toLocaleString('pt-BR') + '</span><p style="margin:4px 0 0;color:#B0B0B0;">' + c.texto + '</p></div>'; }).join(''); } catch (e) {} }
 async function adicionarComentario() { var t = document.getElementById('novoComentario').value.trim(); if (!t) { mostrarToast('❌ Digite algo!', 'error'); return; } if (!clienteLogado && !barbeiroLogado) { mostrarToast('❌ Faça login!', 'error'); return; } var autor = clienteLogado ? clienteLogado.nome : barbeiroLogado.nome; try { const doc = await db.collection('posts').doc(postSelecionadoId).get(); var com = doc.data().comentarios || []; com.push({ autor, texto: t, data: new Date().toISOString() }); await db.collection('posts').doc(postSelecionadoId).update({ comentarios: com }); mostrarToast('✅ Comentado!', 'success'); document.getElementById('novoComentario').value = ''; carregarComentarios(postSelecionadoId); carregarFeedCliente(); if (barbeiroLogado) carregarMeusPosts(); } catch (e) { mostrarToast('❌ Erro!', 'error'); } }
 function fecharModalComentario() { document.getElementById('modalComentario').classList.remove('active'); }
 
@@ -336,12 +329,10 @@ function mostrarTela(id) {
     if (tc.includes(id)) { if (nc) nc.style.display = 'flex'; if (nb) nb.style.display = 'none'; }
     else if (tb.includes(id)) { if (nb) nb.style.display = 'flex'; if (nc) nc.style.display = 'none'; }
     else { if (nc) nc.style.display = 'none'; if (nb) nb.style.display = 'none'; }
-    
-    // Carregar dados específicos de cada tela
     if (id === 'homeClienteScreen') { carregarFeedCliente(); carregarAgendaCliente(); verificarLiveAtiva(); }
     if (id === 'homeBarbeiroScreen') { carregarAgendamentosBarbeiro(); carregarPlanos(); calcularFaturamento(); carregarMeusPosts(); verificarLiveAtiva(); }
     if (id === 'anunciosScreen') { carregarAnuncios(); if (barbeiroLogado) { document.getElementById('formAnuncio').style.display = 'block'; } else { document.getElementById('formAnuncio').style.display = 'none'; } }
-    if (id === 'liveScreen') { carregarLive(); if (barbeiroLogado) { document.getElementById('liveControls').style.display = 'block'; } else { document.getElementById('liveControls').style.display = 'none'; } }
+    if (id === 'liveScreen') { carregarLive(); }
     if (id === 'perfilClienteScreen') carregarPerfilCliente();
     if (id === 'perfilBarbeiroScreen') carregarPerfilBarbeiro();
     if (id === 'galeriaCortesScreen') carregarGaleria();
