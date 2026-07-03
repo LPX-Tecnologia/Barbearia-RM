@@ -24,16 +24,15 @@ var todosPosts = [], todosReels = [], reelsAtual = 0, postSelecionadoId = null;
 var horariosTrabalho = { diasTrabalho: ['segunda','terca','quarta','quinta','sexta','sabado'], horarioInicio: '09:00', horarioFim: '18:00', intervaloCortes: 30, folgas: [] };
 
 // ==========================================================
-// ===== VARIÁVEIS LIVE ULTRA RÁPIDA =====
+// ===== VARIÁVEIS LIVE PROFISSIONAL =====
 // ==========================================================
 var liveLocalStream = null, liveChatInterval = null, liveAtiva = false, liveChatMessages = [];
 var liveViewerId = null, liveViewerInterval = null, liveLikes = 0, liveLiked = false;
 var liveFrameInterval = null, liveFrameCanvas = null, liveFrameCtx = null;
 var liveViewersAtivos = {};
-var liveAudioContext = null, liveAudioProcessor = null, liveAudioChunks = [], liveAudioInterval = null;
-var liveAudioPlayerCtx = null;
 var liveUltimoFrameEnviado = 0;
 var liveCarregandoLive = false;
+var liveAudioMonitor = null;
 
 // ==========================================================
 // ===== SESSÃO =====
@@ -135,7 +134,7 @@ async function salvarHorarios(){if(!barbeiroLogado)return;var dias=[];['Segunda'
 async function calcularFaturamento(){var sn=await db.collection('agendamentos').where('status','==','confirmado').get();var ag=sn.docs.map(function(d){return d.data();});var hoje=new Date().toISOString().split('T')[0],vh=0,vt=0;ag.forEach(function(a){var v=35;if(a.data===hoje)vh+=v;vt+=v;});var eh=document.getElementById('faturamentoHoje');if(eh)eh.textContent='R$ '+vh.toFixed(2);var es=document.getElementById('faturamentoSemana');if(es)es.textContent='R$ '+(vt*0.3).toFixed(2);var em=document.getElementById('faturamentoMes');if(em)em.textContent='R$ '+(vt*0.7).toFixed(2);var ea=document.getElementById('faturamentoAno');if(ea)ea.textContent='R$ '+vt.toFixed(2);}
 
 // ==========================================================
-// ===== LIVE ULTRA RÁPIDA (200ms frames / 300ms viewer) =====
+// ===== LIVE PROFISSIONAL (MONITORAMENTO DE ÁUDIO) =====
 // ==========================================================
 async function iniciarLive(){
     if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiros!','error');return;}
@@ -143,16 +142,27 @@ async function iniciarLive(){
     try{
         var stream=await navigator.mediaDevices.getUserMedia({
             video:{width:{ideal:1280},height:{ideal:720},facingMode:'user',frameRate:{ideal:30}},
-            audio:{echoCancellation:true,noiseSuppression:true,sampleRate:22050}
+            audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,sampleRate:48000}
         });
         liveLocalStream=stream;
+        try{
+            if(liveAudioMonitor)liveAudioMonitor.close();
+            liveAudioMonitor=new(window.AudioContext||window.webkitAudioContext)({sampleRate:48000});
+            var source=liveAudioMonitor.createMediaStreamSource(stream);
+            var gainNode=liveAudioMonitor.createGain();
+            gainNode.gain.value=0.5;
+            source.connect(gainNode);
+            gainNode.connect(liveAudioMonitor.destination);
+            console.log('🎤 Monitoramento ativado');
+        }catch(e){console.log('🎤:',e.message);}
         document.getElementById('liveVideo').srcObject=stream;
         document.getElementById('liveVideo').style.display='block';
+        document.getElementById('liveVideo').muted=false;
         document.getElementById('liveFrameImg').style.display='none';
         document.getElementById('liveVideoLocal').srcObject=stream;
         document.getElementById('liveVideoLocal').style.display='block';
-        iniciarCapturaAudio(stream);
-        await db.collection('lives').doc('live_atual').set({id:'live_atual',barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo,ativa:true,chat:[],viewers:0,totalViews:0,likes:0,audioChunks:[],dataInicio:new Date().toISOString()});
+        document.getElementById('liveVideoLocal').muted=true;
+        await db.collection('lives').doc('live_atual').set({id:'live_atual',barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo,ativa:true,chat:[],viewers:0,totalViews:0,likes:0,dataInicio:new Date().toISOString()});
         liveAtiva=true;liveChatMessages=[];liveLikes=0;liveLiked=false;liveViewersAtivos={};liveUltimoFrameEnviado=0;
         document.getElementById('livePlaceholder').style.display='none';
         document.getElementById('livePlayer').style.display='block';
@@ -163,76 +173,30 @@ async function iniciarLive(){
         document.getElementById('liveViewerCount').textContent='👥 0';
         document.getElementById('liveStatusViewers').textContent='👥 0';
         liveFrameCanvas=document.createElement('canvas');
-        liveFrameCanvas.width=480;liveFrameCanvas.height=270;
+        liveFrameCanvas.width=640;liveFrameCanvas.height=360;
         liveFrameCtx=liveFrameCanvas.getContext('2d');
         iniciarCapturaFrames();
         atualizarChat();iniciarChatListener();verificarLiveAtiva();
         adicionarViewerLive();
-        mostrarToast('🔴 Live ultra rápida iniciada!','success');
+        mostrarToast('🔴 Live profissional iniciada!','success');
     }catch(error){mostrarToast('❌ '+error.message,'error');}
 }
 
-function iniciarCapturaAudio(stream){
-    try{
-        liveAudioContext=new(window.AudioContext||window.webkitAudioContext)({sampleRate:22050});
-        var source=liveAudioContext.createMediaStreamSource(stream);
-        liveAudioProcessor=liveAudioContext.createScriptProcessor(2048,1,1);
-        source.connect(liveAudioProcessor);liveAudioProcessor.connect(liveAudioContext.destination);
-        liveAudioChunks=[];
-        liveAudioProcessor.onaudioprocess=function(e){
-            if(!liveAtiva)return;
-            var inputData=e.inputBuffer.getChannelData(0);
-            var int16Array=new Int16Array(inputData.length);
-            for(var i=0;i<inputData.length;i++){var s=Math.max(-1,Math.min(1,inputData[i]));int16Array[i]=s<0?s*0x8000:s*0x7FFF;}
-            liveAudioChunks.push(arrayBufferToBase64(int16Array.buffer));
-            if(liveAudioChunks.length>10)liveAudioChunks.shift();
-        };
-        if(liveAudioInterval)clearInterval(liveAudioInterval);
-        liveAudioInterval=setInterval(async function(){
-            if(!liveAtiva||liveAudioChunks.length===0)return;
-            var chunks=[...liveAudioChunks];liveAudioChunks=[];
-            await db.collection('lives').doc('live_atual').update({audioChunks:chunks,audioTimestamp:Date.now()}).catch(function(){});
-        },600);
-    }catch(e){}
-}
-
-function arrayBufferToBase64(buffer){var binary='';var bytes=new Uint8Array(buffer);for(var i=0;i<bytes.byteLength;i++){binary+=String.fromCharCode(bytes[i]);}return window.btoa(binary);}
-function base64ToArrayBuffer(base64){var s=window.atob(base64);var b=new Uint8Array(s.length);for(var i=0;i<s.length;i++){b[i]=s.charCodeAt(i);}return b.buffer;}
-
-async function reproduzirAudioChunks(chunks){
-    if(!chunks||chunks.length===0)return;
-    try{
-        if(!liveAudioPlayerCtx)liveAudioPlayerCtx=new(window.AudioContext||window.webkitAudioContext)({sampleRate:22050});
-        var totalLength=0,arrays=[];
-        for(var i=0;i<chunks.length;i++){var b=base64ToArrayBuffer(chunks[i]);arrays.push(new Int16Array(b));totalLength+=arrays[i].length;}
-        var combined=new Int16Array(totalLength),offset=0;
-        for(var i=0;i<arrays.length;i++){combined.set(arrays[i],offset);offset+=arrays[i].length;}
-        var float32=new Float32Array(combined.length);
-        for(var i=0;i<combined.length;i++){float32[i]=combined[i]/32768.0;}
-        var audioBuffer=liveAudioPlayerCtx.createBuffer(1,float32.length,22050);
-        audioBuffer.getChannelData(0).set(float32);
-        var source=liveAudioPlayerCtx.createBufferSource();
-        source.buffer=audioBuffer;source.connect(liveAudioPlayerCtx.destination);source.start(0);
-    }catch(e){}
-}
-
 function iniciarCapturaFrames(){
-    if(liveFrameInterval)cancelAnimationFrame(liveFrameInterval);
-    function capturarFrame(){
-        if(!liveAtiva||!liveLocalStream||!liveFrameCtx){liveFrameInterval=requestAnimationFrame(capturarFrame);return;}
+    if(liveFrameInterval)clearInterval(liveFrameInterval);
+    liveFrameInterval=setInterval(async function(){
+        if(!liveAtiva||!liveLocalStream||!liveFrameCtx)return;
         try{
             var video=document.getElementById('liveVideo');
-            if(!video||!video.videoWidth||video.videoWidth===0){liveFrameInterval=requestAnimationFrame(capturarFrame);return;}
+            if(!video||!video.videoWidth||video.videoWidth===0)return;
             var agora=Date.now();
-            if(agora-liveUltimoFrameEnviado<200){liveFrameInterval=requestAnimationFrame(capturarFrame);return;}
+            if(agora-liveUltimoFrameEnviado<250)return;
             liveUltimoFrameEnviado=agora;
-            liveFrameCtx.drawImage(video,0,0,480,270);
-            var frameData=liveFrameCanvas.toDataURL('image/jpeg',0.7);
+            liveFrameCtx.drawImage(video,0,0,640,360);
+            var frameData=liveFrameCanvas.toDataURL('image/jpeg',0.85);
             db.collection('lives').doc('live_atual').update({ultimoFrame:frameData,frameTimestamp:agora}).catch(function(){});
         }catch(e){}
-        liveFrameInterval=requestAnimationFrame(capturarFrame);
-    }
-    liveFrameInterval=requestAnimationFrame(capturarFrame);
+    },250);
 }
 
 function gerarViewerId(){return'v_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);}
@@ -277,14 +241,13 @@ async function carregarLive(){
             if(barbeiroLogado&&barbeiroLogado.id===live.barbeiroId){
                 if(controls)controls.style.display='block';if(player)player.style.display='block';if(warning)warning.style.display='none';
                 document.getElementById('liveTitulo').value=live.titulo;document.getElementById('liveViewerCount').textContent='👥 '+count;
-                if(liveLocalStream){document.getElementById('liveVideo').srcObject=liveLocalStream;document.getElementById('liveVideo').style.display='block';document.getElementById('liveFrameImg').style.display='none';document.getElementById('liveVideoLocal').style.display='block';}
+                if(liveLocalStream){document.getElementById('liveVideo').srcObject=liveLocalStream;document.getElementById('liveVideo').style.display='block';document.getElementById('liveVideo').muted=false;document.getElementById('liveFrameImg').style.display='none';document.getElementById('liveVideoLocal').style.display='block';}
             }else if(clienteLogado){
                 if(controls)controls.style.display='none';if(player)player.style.display='block';if(warning)warning.style.display='none';
                 document.getElementById('liveViewerCount').textContent='👥 '+count;
                 document.getElementById('liveVideo').style.display='none';document.getElementById('liveVideoLocal').style.display='none';
                 if(live.ultimoFrame){var imgEl=document.getElementById('liveFrameImg');if(imgEl.src!==live.ultimoFrame){imgEl.src=live.ultimoFrame;}imgEl.style.display='block';}
-                if(live.audioChunks&&live.audioChunks.length>0){reproduzirAudioChunks(live.audioChunks);}
-                setTimeout(function(){liveCarregandoLive=false;if(liveAtiva&&clienteLogado)carregarLive();},300);
+                setTimeout(function(){liveCarregandoLive=false;if(liveAtiva&&clienteLogado)carregarLive();},350);
                 adicionarViewerLive();liveCarregandoLive=false;return;
             }else{if(player)player.style.display='none';if(warning)warning.style.display='block';if(controls)controls.style.display='none';}
             iniciarChatListener();
@@ -292,7 +255,7 @@ async function carregarLive(){
             liveAtiva=false;removerViewerLive();
             if(placeholder)placeholder.style.display='block';if(player)player.style.display='none';if(status)status.style.display='none';if(warning)warning.style.display='none';
             if(barbeiroLogado){if(controls)controls.style.display='block';}else{if(controls)controls.style.display='none';}
-            pararChatListener();if(liveFrameInterval)cancelAnimationFrame(liveFrameInterval);if(liveAudioInterval)clearInterval(liveAudioInterval);
+            pararChatListener();if(liveFrameInterval)clearInterval(liveFrameInterval);
         }
     }catch(e){liveAtiva=false;}
     liveCarregandoLive=false;
@@ -300,8 +263,8 @@ async function carregarLive(){
 
 async function encerrarLive(){
     if(!barbeiroLogado)return;if(!confirm('Encerrar?'))return;
-    if(liveFrameInterval)cancelAnimationFrame(liveFrameInterval);if(liveAudioInterval)clearInterval(liveAudioInterval);
-    if(liveAudioProcessor)liveAudioProcessor.disconnect();if(liveAudioContext)liveAudioContext.close();
+    if(liveFrameInterval)clearInterval(liveFrameInterval);
+    if(liveAudioMonitor)liveAudioMonitor.close();
     removerViewerLive();
     if(liveLocalStream){liveLocalStream.getTracks().forEach(function(t){t.stop();});liveLocalStream=null;}
     await db.collection('lives').doc('live_atual').update({ativa:false,dataFim:new Date().toISOString()});
@@ -312,7 +275,7 @@ async function encerrarLive(){
     pararChatListener();atualizarChat();verificarLiveAtiva();
     mostrarToast('⏹ Live encerrada!','info');
 }
-function pararTransmissao(){if(liveFrameInterval)cancelAnimationFrame(liveFrameInterval);if(liveAudioInterval)clearInterval(liveAudioInterval);if(liveAudioProcessor)liveAudioProcessor.disconnect();if(liveAudioContext)liveAudioContext.close();if(liveLocalStream){liveLocalStream.getTracks().forEach(function(t){t.stop();});liveLocalStream=null;}document.getElementById('liveVideo').srcObject=null;document.getElementById('liveFrameImg').style.display='none';}
+function pararTransmissao(){if(liveFrameInterval)clearInterval(liveFrameInterval);if(liveAudioMonitor)liveAudioMonitor.close();if(liveLocalStream){liveLocalStream.getTracks().forEach(function(t){t.stop();});liveLocalStream=null;}document.getElementById('liveVideo').srcObject=null;document.getElementById('liveFrameImg').style.display='none';}
 
 async function likeLive(){if(!liveAtiva||liveLiked)return;await db.collection('lives').doc('live_atual').update({likes:firebase.firestore.FieldValue.increment(1)});liveLiked=true;liveLikes++;mostrarToast('❤️ Curtido!','success');}
 function compartilharLive(){if(!liveAtiva)return;var url=window.location.href.split('?')[0]+'?live=1';if(navigator.share){navigator.share({title:'Barbearia RM',text:'🔴 Live ao vivo!',url:url});}else{navigator.clipboard.writeText(url);mostrarToast('📋 Link copiado!','success');}}
