@@ -84,22 +84,10 @@
     <section class="screen" id="cadastroClienteScreen">
         <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
-            </div>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="cadNomeCliente" placeholder="Seu nome completo"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailCliente" placeholder="seu@email.com"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999"></div>
+            <div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres"></div>
             <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button>
             <button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button>
         </div>
@@ -111,22 +99,10 @@
     <section class="screen" id="cadastroBarbeiroScreen">
         <h2 class="screen-title">✂️ CADASTRO BARBEIRO</h2>
         <div class="card">
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
-            </div>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999"></div>
+            <div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres"></div>
             <button class="btn btn-primary" onclick="cadastrarBarbeiro()">✅ FINALIZAR</button>
             <button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button>
         </div>
@@ -145,9 +121,7 @@
 
         <div class="card" id="agendaClienteCard">
             <h3>📅 Meus Agendamentos</h3>
-            <div id="agendaClienteContainer">
-                <p style="color:#6B7280; text-align:center;">Nenhum agendamento</p>
-            </div>
+            <div id="agendaClienteContainer"><p style="color:#6B7280;text-align:center;">Nenhum agendamento</p></div>
         </div>
 
         <button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button>
@@ -155,6 +129,10 @@
         <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
             <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('galeriaCortesScreen')">💇 GALERIA</button>
             <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('reelsScreen')">🎬 REELS</button>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn" style="flex:1; background:linear-gradient(135deg,#FF6B6B,#FF4757); color:white; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;" onclick="mostrarTela('anunciosScreen')">📢 ANÚNCIOS</button>
         </div>
     </section>
 
@@ -170,22 +148,10 @@
         <div class="card">
             <h3>💰 FATURAMENTO</h3>
             <div class="financeiro-resumo">
-                <div class="financeiro-item">
-                    <span>📅 Hoje</span>
-                    <strong id="faturamentoHoje">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📆 Semana</span>
-                    <strong id="faturamentoSemana">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📊 Mês</span>
-                    <strong id="faturamentoMes">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📈 Ano</span>
-                    <strong id="faturamentoAno">R$ 0,00</strong>
-                </div>
+                <div class="financeiro-item"><span>📅 Hoje</span><strong id="faturamentoHoje">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📆 Semana</span><strong id="faturamentoSemana">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📊 Mês</span><strong id="faturamentoMes">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📈 Ano</span><strong id="faturamentoAno">R$ 0,00</strong></div>
             </div>
         </div>
 
@@ -200,12 +166,9 @@
             <div id="agendamentosBarbeiroContainer"></div>
         </div>
 
-        <!-- ===== MEUS POSTS (BARBEIRO VÊ SEUS POSTS E COMENTÁRIOS) ===== -->
         <div class="card">
             <h3>📸 MEUS POSTS</h3>
-            <div id="meusPostsContainer">
-                <p style="color:#6B7280;text-align:center;">Carregando...</p>
-            </div>
+            <div id="meusPostsContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div>
         </div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -215,6 +178,7 @@
         
         <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
             <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('horariosTrabalhoScreen')">⏰ HORÁRIOS</button>
+            <button class="btn" style="flex:1; background:linear-gradient(135deg,#FF6B6B,#FF4757); color:white; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;" onclick="mostrarTela('anunciosScreen');setTimeout(function(){document.getElementById('formAnuncio').style.display='block';},300);">📢 ANÚNCIOS</button>
         </div>
     </section>
 
@@ -224,40 +188,9 @@
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
-            <div class="input-group">
-                <label>📅 Data</label>
-                <input type="date" id="agendamentoData">
-            </div>
-            <div class="input-group">
-                <label>⏰ Horário</label>
-                <select id="agendamentoHorario">
-                    <option value="09:00">09:00</option><option value="09:30">09:30</option>
-                    <option value="10:00">10:00</option><option value="10:30">10:30</option>
-                    <option value="11:00">11:00</option><option value="11:30">11:30</option>
-                    <option value="12:00">12:00</option><option value="13:00">13:00</option>
-                    <option value="13:30">13:30</option><option value="14:00">14:00</option>
-                    <option value="14:30">14:30</option><option value="15:00">15:00</option>
-                    <option value="15:30">15:30</option><option value="16:00">16:00</option>
-                    <option value="16:30">16:30</option><option value="17:00">17:00</option>
-                    <option value="17:30">17:30</option><option value="18:00">18:00</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>✂️ Tipo de Corte</label>
-                <select id="agendamentoTipo">
-                    <option value="Corte Social">Corte Social</option>
-                    <option value="Corte Degradê">Corte Degradê</option>
-                    <option value="Corte Navalhado">Corte Navalhado</option>
-                    <option value="Corte Máquina">Corte Máquina</option>
-                    <option value="Barba">Barba</option>
-                    <option value="Barba + Corte">Barba + Corte</option>
-                    <option value="Pintura">Pintura</option>
-                    <option value="Luzes">Luzes</option>
-                    <option value="Platinado">Platinado</option>
-                    <option value="Selagem">Selagem</option>
-                    <option value="Progressiva">Progressiva</option>
-                </select>
-            </div>
+            <div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div>
+            <div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"><option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option><option value="17:30">17:30</option><option value="18:00">18:00</option></select></div>
+            <div class="input-group"><label>✂️ Tipo de Corte</label><select id="agendamentoTipo"><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div>
             <button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
         </div>
@@ -269,50 +202,21 @@
     <section class="screen" id="criarPostScreen">
         <h2 class="screen-title">📸 NOVO POST</h2>
         <div class="card">
-            <div class="input-group">
-                <label>📝 Título</label>
-                <input type="text" id="postTitulo" placeholder="Título do corte">
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            
+            <div class="input-group"><label>📝 Título</label><input type="text" id="postTitulo" placeholder="Título do corte"></div>
+            <div class="input-group"><label>💰 Preço</label><input type="number" id="postPreco" step="0.01" placeholder="R$ 0,00"></div>
             <div class="input-group">
                 <label>📷 Imagem</label>
-                <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()">
-                    <div class="file-upload-icon">🖼️</div>
-                    <p>Clique para selecionar uma imagem</p>
-                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
-                    <input type="file" id="postImagemInput" accept="image/*" style="display:none" onchange="previewImagem(event)">
-                </div>
-                <div id="imagemPreview" style="display:none; margin-top:10px;">
-                    <img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;">
-                    <button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
-                </div>
+                <div class="file-upload-area" id="imagemUploadArea" onclick="document.getElementById('postImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="postImagemInput" accept="image/*" style="display:none" onchange="previewImagem(event)"></div>
+                <div id="imagemPreview" style="display:none;margin-top:10px;"><img id="imagemPreviewImg" src="#" alt="Preview" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;"><button class="btn btn-small btn-danger" onclick="removerImagem()" style="margin-top:5px;padding:4px 12px;">❌ Remover</button></div>
                 <input type="hidden" id="postImagem" value="">
             </div>
-            
             <div class="input-group">
                 <label>🎬 Vídeo (opcional)</label>
-                <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()">
-                    <div class="file-upload-icon">🎥</div>
-                    <p>Clique para selecionar um vídeo</p>
-                    <span style="font-size:12px; color:#6B7280;">MP4, MOV, AVI até 20MB</span>
-                    <input type="file" id="postVideoInput" accept="video/*" style="display:none" onchange="previewVideo(event)">
-                </div>
-                <div id="videoPreview" style="display:none; margin-top:10px;">
-                    <video id="videoPreviewVideo" controls style="width:100%; max-height:200px; border-radius:12px;"></video>
-                    <button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px; padding:4px 12px;">❌ Remover</button>
-                </div>
+                <div class="file-upload-area" id="videoUploadArea" onclick="document.getElementById('postVideoInput').click()"><div class="file-upload-icon">🎥</div><p>Clique para selecionar um vídeo</p><span style="font-size:12px;color:#6B7280;">MP4, MOV, AVI até 20MB</span><input type="file" id="postVideoInput" accept="video/*" style="display:none" onchange="previewVideo(event)"></div>
+                <div id="videoPreview" style="display:none;margin-top:10px;"><video id="videoPreviewVideo" controls style="width:100%;max-height:200px;border-radius:12px;"></video><button class="btn btn-small btn-danger" onclick="removerVideo()" style="margin-top:5px;padding:4px 12px;">❌ Remover</button></div>
                 <input type="hidden" id="postVideo" value="">
             </div>
-            
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea>
-            </div>
-            
+            <div class="input-group"><label>📝 Descrição</label><textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea></div>
             <button class="btn btn-primary" onclick="criarPost()">📤 PUBLICAR</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
@@ -324,43 +228,17 @@
     <section class="screen" id="criarPlanoScreen">
         <h2 class="screen-title">📋 CRIAR PLANO</h2>
         <div class="card">
-            <div class="input-group">
-                <label>📝 Nome do Plano</label>
-                <input type="text" id="planoNome" placeholder="Ex: Plano Mensal">
-            </div>
-            <div class="input-group">
-                <label>📅 Período</label>
-                <select id="planoPeriodo">
-                    <option value="semanal">Semanal</option>
-                    <option value="quinzenal">Quinzenal</option>
-                    <option value="mensal">Mensal</option>
-                    <option value="trimestral">Trimestral</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="anual">Anual</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            
+            <div class="input-group"><label>📝 Nome do Plano</label><input type="text" id="planoNome" placeholder="Ex: Plano Mensal"></div>
+            <div class="input-group"><label>📅 Período</label><select id="planoPeriodo"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option></select></div>
+            <div class="input-group"><label>💰 Preço</label><input type="number" id="planoPreco" step="0.01" placeholder="R$ 0,00"></div>
             <div class="input-group">
                 <label>📷 Imagem do Plano</label>
-                <div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()">
-                    <div class="file-upload-icon">🖼️</div>
-                    <p>Clique para selecionar uma imagem</p>
-                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
-                    <input type="file" id="planoImagemInput" accept="image/*" style="display:none" onchange="previewImagemPlano(event)">
-                </div>
-                <img id="planoImagemPreview" src="#" style="display:none; width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-top:8px;">
-                <button class="btn btn-small btn-danger" id="btnRemoverImagemPlano" onclick="removerImagemPlano()" style="margin-top:5px; display:none;">❌ Remover Imagem</button>
+                <div class="file-upload-area" onclick="document.getElementById('planoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="planoImagemInput" accept="image/*" style="display:none" onchange="previewImagemPlano(event)"></div>
+                <img id="planoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;">
+                <button class="btn btn-small btn-danger" id="btnRemoverImagemPlano" onclick="removerImagemPlano()" style="margin-top:5px;display:none;">❌ Remover Imagem</button>
                 <input type="hidden" id="planoImagem" value="">
             </div>
-            
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
-            </div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea></div>
             <button class="btn btn-primary" onclick="criarPlano()">💾 SALVAR PLANO</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
@@ -373,42 +251,16 @@
         <h2 class="screen-title">✏️ EDITAR PLANO</h2>
         <div class="card">
             <input type="hidden" id="editPlanoId">
-            <div class="input-group">
-                <label>📝 Nome do Plano</label>
-                <input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal">
-            </div>
-            <div class="input-group">
-                <label>📅 Período</label>
-                <select id="editPlanoPeriodo">
-                    <option value="semanal">Semanal</option>
-                    <option value="quinzenal">Quinzenal</option>
-                    <option value="mensal">Mensal</option>
-                    <option value="trimestral">Trimestral</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="anual">Anual</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>💰 Preço</label>
-                <input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00">
-            </div>
-            
+            <div class="input-group"><label>📝 Nome do Plano</label><input type="text" id="editPlanoNome" placeholder="Ex: Plano Mensal"></div>
+            <div class="input-group"><label>📅 Período</label><select id="editPlanoPeriodo"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option></select></div>
+            <div class="input-group"><label>💰 Preço</label><input type="number" id="editPlanoPreco" step="0.01" placeholder="R$ 0,00"></div>
             <div class="input-group">
                 <label>📷 Imagem do Plano</label>
-                <div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()">
-                    <div class="file-upload-icon">🖼️</div>
-                    <p>Clique para alterar a imagem</p>
-                    <span style="font-size:12px; color:#6B7280;">PNG, JPG, JPEG até 5MB</span>
-                    <input type="file" id="editPlanoImagemInput" accept="image/*" style="display:none" onchange="previewEditPlanoImagem(event)">
-                </div>
-                <img id="editPlanoImagemPreview" src="#" style="display:none; width:100%; max-height:150px; object-fit:cover; border-radius:8px; margin-top:8px;">
+                <div class="file-upload-area" onclick="document.getElementById('editPlanoImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para alterar a imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="editPlanoImagemInput" accept="image/*" style="display:none" onchange="previewEditPlanoImagem(event)"></div>
+                <img id="editPlanoImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;">
                 <input type="hidden" id="editPlanoImagem" value="">
             </div>
-            
-            <div class="input-group">
-                <label>📝 Descrição</label>
-                <textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea>
-            </div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="editPlanoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea></div>
             <button class="btn btn-primary" onclick="salvarEdicaoPlano()">💾 SALVAR ALTERAÇÕES</button>
             <button class="btn btn-danger" onclick="excluirPlano()">🗑 EXCLUIR PLANO</button>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
@@ -432,39 +284,48 @@
                 <label class="checkbox-label"><input type="checkbox" id="diaDomingo"> Domingo</label>
             </div>
         </div>
-        
         <div class="card">
             <h3>🕐 Horário de Atendimento</h3>
-            <div class="input-group">
-                <label>⏰ Início</label>
-                <input type="time" id="horarioInicio" value="09:00">
-            </div>
-            <div class="input-group">
-                <label>⏰ Fim</label>
-                <input type="time" id="horarioFim" value="18:00">
-            </div>
-            <div class="input-group">
-                <label>⏱️ Intervalo (minutos)</label>
-                <select id="intervaloCortes">
-                    <option value="30">30 minutos</option>
-                    <option value="45">45 minutos</option>
-                    <option value="60">60 minutos</option>
-                </select>
-            </div>
+            <div class="input-group"><label>⏰ Início</label><input type="time" id="horarioInicio" value="09:00"></div>
+            <div class="input-group"><label>⏰ Fim</label><input type="time" id="horarioFim" value="18:00"></div>
+            <div class="input-group"><label>⏱️ Intervalo (minutos)</label><select id="intervaloCortes"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></div>
         </div>
-        
         <div class="card">
             <h3>🏖️ Dias de Folga</h3>
-            <div class="input-group">
-                <label>📅 Adicionar folga</label>
-                <input type="date" id="folgaData">
-                <button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar</button>
-            </div>
+            <div class="input-group"><label>📅 Adicionar folga</label><input type="date" id="folgaData"><button class="btn btn-small btn-primary" onclick="adicionarFolga()" style="margin-top:8px;">➕ Adicionar</button></div>
             <div id="folgasContainer"></div>
         </div>
-        
         <button class="btn btn-primary" onclick="salvarHorarios()">💾 SALVAR</button>
         <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: ANÚNCIOS -->
+    <!-- ============================================================ -->
+    <section class="screen" id="anunciosScreen">
+        <h2 class="screen-title">📢 ANÚNCIOS</h2>
+        
+        <div class="card" id="anunciosContainer" style="min-height:200px;">
+            <p style="color:#6B7280;text-align:center;padding:40px;">Carregando anúncios...</p>
+        </div>
+        
+        <div class="card" id="formAnuncio" style="display:none;">
+            <h3>📢 CRIAR ANÚNCIO</h3>
+            <div class="input-group"><label>📝 Título do Anúncio</label><input type="text" id="anuncioTitulo" placeholder="Ex: Promoção de Corte!"></div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="anuncioDescricao" rows="3" placeholder="Detalhes do anúncio..."></textarea></div>
+            <div class="input-group"><label>🔗 Link (opcional)</label><input type="text" id="anuncioLink" placeholder="https://..."></div>
+            <div class="input-group">
+                <label>📷 Imagem do Anúncio</label>
+                <div class="file-upload-area" onclick="document.getElementById('anuncioImagemInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p><span style="font-size:12px;color:#6B7280;">PNG, JPG, JPEG até 5MB</span><input type="file" id="anuncioImagemInput" accept="image/*" style="display:none" onchange="previewAnuncioImagem(event)"></div>
+                <img id="anuncioImagemPreview" src="#" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-top:8px;">
+                <button class="btn btn-small btn-danger" id="btnRemoverAnuncioImagem" onclick="removerAnuncioImagem()" style="margin-top:5px;display:none;">❌ Remover</button>
+                <input type="hidden" id="anuncioImagem" value="">
+            </div>
+            <div class="input-group"><label>⏱️ Duração (dias)</label><select id="anuncioDuracao"><option value="1">1 dia - Grátis</option><option value="7">7 dias - R$ 9,90</option><option value="15">15 dias - R$ 14,90</option><option value="30">30 dias - R$ 24,90</option></select></div>
+            <button class="btn btn-primary" onclick="criarAnuncio()">📢 PUBLICAR ANÚNCIO</button>
+        </div>
+        
+        <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
     <!-- ============================================================ -->
@@ -472,22 +333,7 @@
     <!-- ============================================================ -->
     <section class="screen" id="galeriaCortesScreen">
         <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
-        <div class="filtro-cortes">
-            <select id="filtroCategoria" onchange="filtrarGaleria()">
-                <option value="todos">Todos os Cortes</option>
-                <option value="Corte Social">Corte Social</option>
-                <option value="Corte Degradê">Corte Degradê</option>
-                <option value="Corte Navalhado">Corte Navalhado</option>
-                <option value="Corte Máquina">Corte Máquina</option>
-                <option value="Barba">Barba</option>
-                <option value="Barba + Corte">Barba + Corte</option>
-                <option value="Pintura">Pintura</option>
-                <option value="Luzes">Luzes</option>
-                <option value="Platinado">Platinado</option>
-                <option value="Selagem">Selagem</option>
-                <option value="Progressiva">Progressiva</option>
-            </select>
-        </div>
+        <div class="filtro-cortes"><select id="filtroCategoria" onchange="filtrarGaleria()"><option value="todos">Todos os Cortes</option><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div>
         <div id="galeriaContainer" class="galeria-grid"></div>
         <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
@@ -498,10 +344,7 @@
     <section class="screen" id="reelsScreen">
         <h2 class="screen-title">🎬 REELS</h2>
         <div class="reels-container" id="reelsContainer"></div>
-        <div class="reels-controls">
-            <button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️ Anterior</button>
-            <button class="btn btn-small btn-primary" onclick="reelProximo()">Próximo ➡️</button>
-        </div>
+        <div class="reels-controls"><button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️ Anterior</button><button class="btn btn-small btn-primary" onclick="reelProximo()">Próximo ➡️</button></div>
         <button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
 
@@ -511,13 +354,7 @@
     <section class="screen" id="extratoScreen">
         <h2 class="screen-title">📊 EXTRATO COMPLETO</h2>
         <div class="card">
-            <div class="filtro-extrato">
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button>
-                <button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button>
-                <button class="btn btn-small btn-primary" onclick="filtrarExtrato('todos')">📋 Todos</button>
-            </div>
+            <div class="filtro-extrato"><button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button><button class="btn btn-small btn-primary" onclick="filtrarExtrato('todos')">📋 Todos</button></div>
             <div id="extratoContainer"></div>
             <button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button>
         </div>
@@ -529,10 +366,8 @@
     <section class="screen" id="pagamentoScreen">
         <h2 class="screen-title">💳 PAGAMENTO</h2>
         <div class="card" style="text-align:center;">
-            <div class="logo-pagamento">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-small">
-            </div>
-            <h3 style="margin-top:10px; color:#FFFFFF;">Barbearia RM</h3>
+            <div class="logo-pagamento"><img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-small"></div>
+            <h3 style="margin-top:10px;color:#FFFFFF;">Barbearia RM</h3>
             <p><strong style="color:#FFFFFF;">Chave PIX:</strong> <span id="pixChave" style="color:var(--primary);">barbearia.rm@email.com</span></p>
             <button class="btn btn-outline" onclick="copiarPix()">📋 Copiar PIX</button>
             <button class="btn btn-outline" onclick="fecharPagamento()">← Cancelar</button>
@@ -551,20 +386,11 @@
     <!-- ============================================================ -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
-            <div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
-                <div class="camera-icon">📷</div>
-            </div>
+            <div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()"><img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div>
             <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
-            <h2 id="perfilClienteNome">Cliente</h2>
-            <p id="perfilClienteEmail">cliente@email.com</p>
+            <h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail">cliente@email.com</p>
         </div>
-        <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div>
-            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div>
-            <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
-        </div>
+        <div class="card"><h3>✏️ EDITAR PERFIL</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button></div>
         <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
     </section>
 
@@ -573,21 +399,11 @@
     <!-- ============================================================ -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
-            <div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;">
-                <div class="camera-icon">📷</div>
-            </div>
+            <div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()"><img src="logobarbearia-rm.png" alt="Barbearia RM" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div>
             <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
-            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
-            <p id="perfilBarbeiroEmail">barbeiro@email.com</p>
+            <h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail">barbeiro@email.com</p>
         </div>
-        <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div>
-            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div>
-            <div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div>
-            <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
-        </div>
+        <div class="card"><h3>✏️ EDITAR PERFIL</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button></div>
         <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
     </section>
 
@@ -598,9 +414,7 @@
         <div class="modal-content">
             <h3>💬 Comentários</h3>
             <div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
-            <div class="input-group">
-                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
-            </div>
+            <div class="input-group"><textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea></div>
             <button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button>
             <button class="btn btn-outline" onclick="fecharModalComentario()">Fechar</button>
         </div>
@@ -618,6 +432,7 @@
         <button class="nav-item active" onclick="mostrarTela('homeClienteScreen')"><span class="nav-icon">🏠</span> Início</button>
         <button class="nav-item" onclick="mostrarTela('agendamentoScreen')"><span class="nav-icon">✂️</span> Agendar</button>
         <button class="nav-item" onclick="mostrarTela('galeriaCortesScreen')"><span class="nav-icon">💇</span> Galeria</button>
+        <button class="nav-item" onclick="mostrarTela('anunciosScreen')"><span class="nav-icon">📢</span> Anúncios</button>
         <button class="nav-item" onclick="mostrarTela('perfilClienteScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
@@ -628,6 +443,7 @@
         <button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')"><span class="nav-icon">🏠</span> Início</button>
         <button class="nav-item" onclick="mostrarTela('criarPostScreen')"><span class="nav-icon">📸</span> Postar</button>
         <button class="nav-item" onclick="mostrarTela('extratoScreen')"><span class="nav-icon">📊</span> Extrato</button>
+        <button class="nav-item" onclick="mostrarTela('anunciosScreen')"><span class="nav-icon">📢</span> Anúncios</button>
         <button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')"><span class="nav-icon">👤</span> Perfil</button>
     </nav>
 
