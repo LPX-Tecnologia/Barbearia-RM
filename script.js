@@ -34,22 +34,12 @@ var horariosTrabalho = {
 };
 
 // ==========================================================
-// ===== VARIÁVEIS PARA LIVE INTERNA (WebRTC) =====
+// ===== VARIÁVEIS PARA LIVE INTERNA =====
 // ==========================================================
-var liveStream = null;
-var livePeerConnection = null;
 var liveLocalStream = null;
-var liveViewers = {};
 var liveChatInterval = null;
 var liveAtiva = false;
 var liveChatMessages = [];
-var rtcConfig = {
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-    ]
-};
 
 // ==========================================================
 // ===== SESSÃO =====
@@ -143,30 +133,27 @@ function previewAnuncioImagem(e) { var f = e.target.files[0]; if (!f) return; va
 function removerAnuncioImagem() { anuncioImagemBase64 = ''; document.getElementById('anuncioImagem').value = ''; document.getElementById('anuncioImagemPreview').style.display = 'none'; document.getElementById('btnRemoverAnuncioImagem').style.display = 'none'; document.getElementById('anuncioImagemInput').value = ''; }
 
 // ==========================================================
-// ===== LIVE INTERNA (WebRTC) =====
+// ===== LIVE INTERNA =====
 // ==========================================================
 async function iniciarLive() {
     if (!barbeiroLogado) { mostrarToast('❌ Apenas barbeiros!', 'error'); return; }
-    var titulo = document.getElementById('liveTitulo').value.trim() || '🔴 Live da Barbearia RM';
-    var descricao = document.getElementById('liveDescricao').value.trim();
+    var titulo = document.getElementById('liveTitulo').value.trim() || '🔴 Live da Barbearia RM - ' + barbeiroLogado.nome;
     try {
-        var stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'environment' }, audio: true });
+        var stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: true });
         liveLocalStream = stream;
-        document.getElementById('previewCamera').srcObject = stream;
-        document.getElementById('previewCamera').style.display = 'block';
-        document.getElementById('liveVideoLocal').srcObject = stream;
-        document.getElementById('liveVideoLocal').style.display = 'block';
-        await db.collection('lives').doc('live_atual').set({ id: 'live_atual', barbeiroId: barbeiroLogado.id, barbeiroNome: barbeiroLogado.nome, titulo, descricao: descricao || '', ativa: true, tipo: 'interna', chat: [], viewers: 0, dataInicio: new Date().toISOString() });
+        var preview = document.getElementById('previewCamera'); if (preview) { preview.srcObject = stream; preview.style.display = 'block'; }
+        var videoPrincipal = document.getElementById('liveVideo'); if (videoPrincipal) videoPrincipal.srcObject = stream;
+        var videoLocal = document.getElementById('liveVideoLocal'); if (videoLocal) { videoLocal.srcObject = stream; videoLocal.style.display = 'block'; }
+        await db.collection('lives').doc('live_atual').set({ id: 'live_atual', barbeiroId: barbeiroLogado.id, barbeiroNome: barbeiroLogado.nome, titulo, ativa: true, tipo: 'interna', chat: [], viewers: 0, dataInicio: new Date().toISOString() });
         liveAtiva = true; liveChatMessages = [];
-        document.getElementById('livePlaceholder').style.display = 'none';
-        document.getElementById('livePlayer').style.display = 'block';
-        document.getElementById('liveStatus').style.display = 'block';
-        document.getElementById('liveStatusTitulo').textContent = titulo;
-        document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + barbeiroLogado.nome;
-        document.getElementById('liveLoginWarning').style.display = 'none';
-        document.getElementById('liveChatCard').style.display = 'block';
-        document.getElementById('liveVideo').srcObject = stream;
-        iniciarChatListener(); verificarLiveAtiva();
+        var placeholder = document.getElementById('livePlaceholder'); if (placeholder) placeholder.style.display = 'none';
+        var player = document.getElementById('livePlayer'); if (player) player.style.display = 'block';
+        var status = document.getElementById('liveStatus'); if (status) { status.style.display = 'block'; document.getElementById('liveStatusTitulo').textContent = titulo; document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + barbeiroLogado.nome; }
+        var warning = document.getElementById('liveLoginWarning'); if (warning) warning.style.display = 'none';
+        var chatCard = document.getElementById('liveChatCard'); if (chatCard) chatCard.style.display = 'block';
+        atualizarChat(); iniciarChatListener(); verificarLiveAtiva();
+        document.getElementById('liveViewerCount').textContent = '👥 1';
+        document.getElementById('liveStatusViewers').textContent = '👥 1 assistindo';
         mostrarToast('🔴 Live iniciada!', 'success');
     } catch (error) {
         if (error.name === 'NotAllowedError') mostrarToast('❌ Permissão da câmera negada!', 'error');
@@ -175,66 +162,50 @@ async function iniciarLive() {
     }
 }
 
-async function assistirLive() {
-    if (!clienteLogado) { document.getElementById('liveLoginWarning').style.display = 'block'; document.getElementById('livePlayer').style.display = 'none'; return; }
-    document.getElementById('liveLoginWarning').style.display = 'none';
-    try {
-        const doc = await db.collection('lives').doc('live_atual').get();
-        if (!doc.exists || !doc.data().ativa) return;
-        var live = doc.data();
-        var viewers = (live.viewers || 0) + 1;
-        await db.collection('lives').doc('live_atual').update({ viewers });
-        document.getElementById('liveStatusViewers').textContent = '👥 ' + viewers + ' assistindo';
-        document.getElementById('liveViewerCount').textContent = '👥 ' + viewers;
-        window.addEventListener('beforeunload', decrementarViewer);
-    } catch (e) {}
-}
-
-async function decrementarViewer() {
-    try { const doc = await db.collection('lives').doc('live_atual').get(); if (doc.exists && doc.data().ativa) { var viewers = Math.max(0, (doc.data().viewers || 1) - 1); await db.collection('lives').doc('live_atual').update({ viewers }); } } catch (e) {}
-}
-
 async function carregarLive() {
+    var placeholder = document.getElementById('livePlaceholder'), player = document.getElementById('livePlayer'), status = document.getElementById('liveStatus'), warning = document.getElementById('liveLoginWarning'), controls = document.getElementById('liveControls'), chatCard = document.getElementById('liveChatCard');
     try {
         const doc = await db.collection('lives').doc('live_atual').get();
         if (doc.exists && doc.data().ativa) {
             var live = doc.data(); liveAtiva = true;
-            document.getElementById('livePlaceholder').style.display = 'none';
-            document.getElementById('liveStatus').style.display = 'block';
-            document.getElementById('liveStatusTitulo').textContent = live.titulo;
-            document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome;
-            document.getElementById('liveStatusViewers').textContent = '👥 ' + (live.viewers || 0) + ' assistindo';
+            if (placeholder) placeholder.style.display = 'none';
+            if (status) { status.style.display = 'block'; document.getElementById('liveStatusTitulo').textContent = live.titulo; document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome; document.getElementById('liveStatusViewers').textContent = '👥 ' + (live.viewers || 0) + ' assistindo'; }
             liveChatMessages = live.chat || []; atualizarChat();
             if (barbeiroLogado && barbeiroLogado.id === live.barbeiroId) {
-                document.getElementById('liveControls').style.display = 'block';
+                if (controls) controls.style.display = 'block';
+                if (player) player.style.display = 'block';
+                if (warning) warning.style.display = 'none';
+                if (chatCard) chatCard.style.display = 'block';
                 document.getElementById('liveTitulo').value = live.titulo;
-                document.getElementById('livePlayer').style.display = 'block';
-                document.getElementById('liveLoginWarning').style.display = 'none';
-                document.getElementById('liveChatCard').style.display = 'block';
+                document.getElementById('liveViewerCount').textContent = '👥 ' + (live.viewers || 0);
                 if (liveLocalStream) { document.getElementById('liveVideo').srcObject = liveLocalStream; document.getElementById('liveVideoLocal').style.display = 'block'; }
             } else if (clienteLogado) {
-                document.getElementById('liveControls').style.display = 'none';
-                document.getElementById('livePlayer').style.display = 'block';
-                document.getElementById('liveLoginWarning').style.display = 'none';
-                document.getElementById('liveChatCard').style.display = 'block';
-                assistirLive();
+                if (controls) controls.style.display = 'none';
+                if (player) player.style.display = 'block';
+                if (warning) warning.style.display = 'none';
+                if (chatCard) chatCard.style.display = 'block';
+                document.getElementById('liveViewerCount').textContent = '👥 ' + (live.viewers || 0);
+                var viewers = (live.viewers || 0) + 1;
+                await db.collection('lives').doc('live_atual').update({ viewers });
+                document.getElementById('liveStatusViewers').textContent = '👥 ' + viewers + ' assistindo';
+                document.getElementById('liveViewerCount').textContent = '👥 ' + viewers;
             } else {
-                document.getElementById('livePlayer').style.display = 'none';
-                document.getElementById('liveLoginWarning').style.display = 'block';
-                document.getElementById('liveChatCard').style.display = 'none';
+                if (player) player.style.display = 'none';
+                if (warning) warning.style.display = 'block';
+                if (chatCard) chatCard.style.display = 'none';
+                if (controls) controls.style.display = 'none';
             }
             iniciarChatListener();
         } else {
             liveAtiva = false;
-            document.getElementById('livePlaceholder').style.display = 'block';
-            document.getElementById('livePlayer').style.display = 'none';
-            document.getElementById('liveStatus').style.display = 'none';
-            document.getElementById('liveLoginWarning').style.display = 'none';
-            if (barbeiroLogado) document.getElementById('liveControls').style.display = 'block';
-            else document.getElementById('liveControls').style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+            if (player) player.style.display = 'none';
+            if (status) status.style.display = 'none';
+            if (warning) warning.style.display = 'none';
+            if (barbeiroLogado) { if (controls) controls.style.display = 'block'; } else { if (controls) controls.style.display = 'none'; }
             pararChatListener();
         }
-    } catch (e) { liveAtiva = false; }
+    } catch (e) { liveAtiva = false; if (placeholder) placeholder.style.display = 'block'; if (player) player.style.display = 'none'; }
 }
 
 async function encerrarLive() {
@@ -411,235 +382,4 @@ document.addEventListener('DOMContentLoaded', function() {
     restaurarSessao().then(r => { if (!r) document.getElementById('loginScreen').classList.add('active'); });
     verificarLiveAtiva();
     console.log('✅ Sistema pronto!');
-}
-                          // ==========================================================
-// ===== INICIAR LIVE (CORRIGIDO - ABRE CÂMERA DIRETO) =====
-// ==========================================================
-async function iniciarLive() {
-    if (!barbeiroLogado) {
-        mostrarToast('❌ Apenas barbeiros podem iniciar lives!', 'error');
-        return;
-    }
-
-    var titulo = document.getElementById('liveTitulo').value.trim();
-    if (!titulo) {
-        titulo = '🔴 Live da Barbearia RM - ' + barbeiroLogado.nome;
-    }
-    var descricao = document.getElementById('liveDescricao').value.trim();
-
-    console.log('🎥 Solicitando permissão da câmera...');
-
-    try {
-        // Solicitar câmera e microfone
-        var stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: 'user'
-            },
-            audio: true
-        });
-
-        liveLocalStream = stream;
-        console.log('✅ Câmera autorizada!');
-
-        // Mostrar preview da câmera
-        var preview = document.getElementById('previewCamera');
-        if (preview) {
-            preview.srcObject = stream;
-            preview.style.display = 'block';
-        }
-
-        // Mostrar vídeo principal
-        var videoPrincipal = document.getElementById('liveVideo');
-        if (videoPrincipal) {
-            videoPrincipal.srcObject = stream;
-        }
-
-        // Mostrar mini vídeo (picture-in-picture)
-        var videoLocal = document.getElementById('liveVideoLocal');
-        if (videoLocal) {
-            videoLocal.srcObject = stream;
-            videoLocal.style.display = 'block';
-        }
-
-        // Salvar no Firestore
-        await db.collection('lives').doc('live_atual').set({
-            id: 'live_atual',
-            barbeiroId: barbeiroLogado.id,
-            barbeiroNome: barbeiroLogado.nome,
-            titulo: titulo,
-            descricao: descricao || '',
-            ativa: true,
-            tipo: 'interna',
-            chat: [],
-            viewers: 0,
-            dataInicio: new Date().toISOString()
-        });
-
-        liveAtiva = true;
-        liveChatMessages = [];
-
-        // Esconder placeholder
-        var placeholder = document.getElementById('livePlaceholder');
-        if (placeholder) placeholder.style.display = 'none';
-
-        // Mostrar player
-        var player = document.getElementById('livePlayer');
-        if (player) player.style.display = 'block';
-
-        // Mostrar status
-        var status = document.getElementById('liveStatus');
-        if (status) status.style.display = 'block';
-        
-        var statusTitulo = document.getElementById('liveStatusTitulo');
-        if (statusTitulo) statusTitulo.textContent = titulo;
-        
-        var statusBarbeiro = document.getElementById('liveStatusBarbeiro');
-        if (statusBarbeiro) statusBarbeiro.textContent = '👤 ' + barbeiroLogado.nome;
-
-        // Esconder aviso de login
-        var warning = document.getElementById('liveLoginWarning');
-        if (warning) warning.style.display = 'none';
-
-        // Mostrar chat
-        var chatCard = document.getElementById('liveChatCard');
-        if (chatCard) chatCard.style.display = 'block';
-
-        // Atualizar chat
-        atualizarChat();
-        
-        // Iniciar listener do chat
-        iniciarChatListener();
-        
-        // Atualizar badges
-        verificarLiveAtiva();
-        
-        // Atualizar contador
-        document.getElementById('liveViewerCount').textContent = '👥 1';
-        document.getElementById('liveStatusViewers').textContent = '👥 1 assistindo';
-
-        mostrarToast('🔴 Live iniciada com sucesso!', 'success');
-        console.log('✅ Live transmitindo!');
-
-    } catch (error) {
-        console.error('❌ Erro ao acessar câmera:', error);
-        
-        if (error.name === 'NotAllowedError') {
-            mostrarToast('❌ Permissão da câmera negada! Verifique as configurações do navegador.', 'error');
-        } else if (error.name === 'NotFoundError') {
-            mostrarToast('❌ Nenhuma câmera encontrada no dispositivo!', 'error');
-        } else if (error.name === 'NotReadableError') {
-            mostrarToast('❌ Câmera já está em uso por outro aplicativo!', 'error');
-        } else {
-            mostrarToast('❌ Erro: ' + error.message, 'error');
-        }
-    }
-}
-
-// ==========================================================
-// ===== CARREGAR LIVE (CORRIGIDO) =====
-// ==========================================================
-async function carregarLive() {
-    console.log('🔍 Verificando status da live...');
-    
-    var placeholder = document.getElementById('livePlaceholder');
-    var player = document.getElementById('livePlayer');
-    var status = document.getElementById('liveStatus');
-    var warning = document.getElementById('liveLoginWarning');
-    var controls = document.getElementById('liveControls');
-    var chatCard = document.getElementById('liveChatCard');
-    
-    try {
-        const doc = await db.collection('lives').doc('live_atual').get();
-        
-        if (doc.exists && doc.data().ativa) {
-            var live = doc.data();
-            liveAtiva = true;
-            
-            console.log('✅ Live ativa encontrada:', live.titulo);
-            
-            // Esconder placeholder
-            if (placeholder) placeholder.style.display = 'none';
-            
-            // Mostrar status
-            if (status) {
-                status.style.display = 'block';
-                document.getElementById('liveStatusTitulo').textContent = live.titulo;
-                document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome;
-                document.getElementById('liveStatusViewers').textContent = '👥 ' + (live.viewers || 0) + ' assistindo';
-            }
-            
-            // Carregar chat
-            liveChatMessages = live.chat || [];
-            atualizarChat();
-            
-            // Verificar quem está acessando
-            if (barbeiroLogado && barbeiroLogado.id === live.barbeiroId) {
-                // É o barbeiro dono da live
-                if (controls) controls.style.display = 'block';
-                if (player) player.style.display = 'block';
-                if (warning) warning.style.display = 'none';
-                if (chatCard) chatCard.style.display = 'block';
-                
-                document.getElementById('liveTitulo').value = live.titulo;
-                document.getElementById('liveViewerCount').textContent = '👥 ' + (live.viewers || 0);
-                
-                // Reconectar stream se existir
-                if (liveLocalStream) {
-                    document.getElementById('liveVideo').srcObject = liveLocalStream;
-                    document.getElementById('liveVideoLocal').style.display = 'block';
-                }
-            } else if (clienteLogado) {
-                // Cliente logado - pode assistir
-                if (controls) controls.style.display = 'none';
-                if (player) player.style.display = 'block';
-                if (warning) warning.style.display = 'none';
-                if (chatCard) chatCard.style.display = 'block';
-                
-                document.getElementById('liveViewerCount').textContent = '👥 ' + (live.viewers || 0);
-                
-                // Incrementar viewer
-                var viewers = (live.viewers || 0) + 1;
-                await db.collection('lives').doc('live_atual').update({ viewers: viewers });
-                document.getElementById('liveStatusViewers').textContent = '👥 ' + viewers + ' assistindo';
-                document.getElementById('liveViewerCount').textContent = '👥 ' + viewers;
-                
-            } else {
-                // Não logado - mostrar aviso
-                if (player) player.style.display = 'none';
-                if (warning) warning.style.display = 'block';
-                if (chatCard) chatCard.style.display = 'none';
-                if (controls) controls.style.display = 'none';
-            }
-            
-            iniciarChatListener();
-            
-        } else {
-            // Live não está ativa
-            liveAtiva = false;
-            
-            if (placeholder) placeholder.style.display = 'block';
-            if (player) player.style.display = 'none';
-            if (status) status.style.display = 'none';
-            if (warning) warning.style.display = 'none';
-            
-            // Mostrar controles apenas para barbeiro
-            if (barbeiroLogado) {
-                if (controls) controls.style.display = 'block';
-            } else {
-                if (controls) controls.style.display = 'none';
-            }
-            
-            pararChatListener();
-            console.log('📭 Nenhuma live ativa');
-        }
-        
-    } catch (error) {
-        console.error('❌ Erro ao carregar live:', error);
-        liveAtiva = false;
-        if (placeholder) placeholder.style.display = 'block';
-        if (player) player.style.display = 'none';
-    }
-}
-                         );
+});
