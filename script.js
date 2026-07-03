@@ -364,6 +364,10 @@ async function carregarFeedCliente() {
 // ===== MEUS POSTS (BARBEIRO) - CORRIGIDO =====
 // ==========================================================
 
+// ==========================================================
+// ===== MEUS POSTS (BARBEIRO) - CORRIGIDO SEM ÍNDICE =====
+// ==========================================================
+
 async function carregarMeusPosts() {
     var container = document.getElementById('meusPostsContainer');
     if (!container) return;
@@ -373,8 +377,10 @@ async function carregarMeusPosts() {
         return;
     }
 
+    console.log('🔍 Buscando posts do barbeiro:', barbeiroLogado.id);
+
     try {
-        // Buscar posts sem ordenação (evita erro de índice)
+        // Buscar SEM orderBy para evitar erro de índice
         const snap = await db.collection('posts')
             .where('barbeiroId', '==', barbeiroLogado.id)
             .get();
@@ -384,7 +390,9 @@ async function carregarMeusPosts() {
             posts.push({ id: doc.id, ...doc.data() });
         });
         
-        // Ordenar manualmente
+        console.log('📸 Posts encontrados:', posts.length);
+        
+        // Ordenar manualmente por data (mais recente primeiro)
         posts.sort(function(a, b) {
             return new Date(b.dataCriacao) - new Date(a.dataCriacao);
         });
@@ -396,32 +404,61 @@ async function carregarMeusPosts() {
 
         container.innerHTML = posts.map(function(post) {
             var comentarios = post.comentarios || [];
-            return '<div class="feed-post" style="margin-bottom:12px;">' +
-                '<div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">' + post.titulo + '</div><div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + ' • R$ ' + (post.preco?post.preco.toFixed(2):'0,00') + '</div></div></div>' +
-                (post.imagem ? '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">' : '') +
-                (post.video ? '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>' : '') +
-                '<div class="feed-post-body"><div class="feed-post-desc">' + (post.descricao||'Sem descrição') + '</div><div style="font-size:12px;color:#6B7280;margin-top:4px;">❤️ ' + (post.likes||0) + ' curtidas • 💬 ' + comentarios.length + ' comentários</div></div>' +
-                (comentarios.length > 0 ? '<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);"><div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>' + comentarios.map(function(c) { return '<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;"><strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto + '<div style="font-size:10px;color:#6B7280;">' + new Date(c.data).toLocaleString('pt-BR') + '</div></div>'; }).join('') + '</div>' : '') +
-                '<div class="feed-post-actions"><button onclick="excluirMeuPost(\'' + post.id + '\')" style="color:#EF4444;">🗑 Excluir</button></div>' +
-            '</div>';
+            var html = '<div class="feed-post" style="margin-bottom:12px;">';
+            
+            // Header
+            html += '<div class="feed-post-header">';
+            html += '<div class="feed-post-avatar">✂️</div>';
+            html += '<div class="feed-post-user">';
+            html += '<div class="feed-post-user-name">' + post.titulo + '</div>';
+            html += '<div class="feed-post-user-time">' + new Date(post.dataCriacao).toLocaleDateString('pt-BR') + ' • R$ ' + (post.preco ? post.preco.toFixed(2) : '0,00') + '</div>';
+            html += '</div></div>';
+            
+            // Imagem
+            if (post.imagem) {
+                html += '<img src="' + post.imagem + '" class="feed-post-image" alt="' + post.titulo + '">';
+            }
+            
+            // Vídeo
+            if (post.video) {
+                html += '<video class="feed-post-video" controls style="width:100%;"><source src="' + post.video + '" type="video/mp4"></video>';
+            }
+            
+            // Body
+            html += '<div class="feed-post-body">';
+            html += '<div class="feed-post-desc">' + (post.descricao || 'Sem descrição') + '</div>';
+            html += '<div style="font-size:12px;color:#6B7280;margin-top:4px;">❤️ ' + (post.likes || 0) + ' curtidas • 💬 ' + comentarios.length + ' comentários</div>';
+            html += '</div>';
+            
+            // Comentários
+            if (comentarios.length > 0) {
+                html += '<div style="padding:0 14px 10px;border-top:1px solid rgba(255,255,255,0.05);">';
+                html += '<div style="font-size:11px;color:var(--primary);margin-bottom:6px;">💬 Comentários:</div>';
+                comentarios.forEach(function(c) {
+                    html += '<div style="font-size:12px;color:#B0B0B0;margin:6px 0;padding:6px;background:rgba(255,255,255,0.03);border-radius:6px;">';
+                    html += '<strong style="color:#D4A84B;">' + c.autor + ':</strong> ' + c.texto;
+                    html += '<div style="font-size:10px;color:#6B7280;">' + new Date(c.data).toLocaleString('pt-BR') + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+            
+            // Ações
+            html += '<div class="feed-post-actions">';
+            html += '<button onclick="excluirMeuPost(\'' + post.id + '\')" style="color:#EF4444;">🗑 Excluir</button>';
+            html += '</div>';
+            
+            html += '</div>';
+            return html;
         }).join('');
+        
+        console.log('✅ Posts renderizados!');
         
     } catch (error) {
         console.error('❌ Erro meus posts:', error);
-        container.innerHTML = '<p style="color:#EF4444;text-align:center;padding:20px;">Erro ao carregar posts<br><br><button class="btn btn-small btn-primary" onclick="carregarMeusPosts()">🔄 Tentar Novamente</button></p>';
+        container.innerHTML = '<p style="color:#EF4444;text-align:center;padding:20px;">Erro ao carregar posts: ' + error.message + '<br><br><button class="btn btn-small btn-primary" onclick="carregarMeusPosts()">🔄 Tentar Novamente</button></p>';
     }
 }
-
-async function excluirMeuPost(postId) {
-    if (!confirm('Excluir este post permanentemente?')) return;
-    try {
-        await db.collection('posts').doc(postId).delete();
-        mostrarToast('🗑 Post excluído!', 'success');
-        carregarMeusPosts();
-        carregarFeedCliente();
-    } catch (e) { mostrarToast('❌ Erro!', 'error'); }
-}
-
 // ==========================================================
 // ===== SISTEMA DE COMENTÁRIOS =====
 // ==========================================================
