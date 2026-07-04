@@ -3,159 +3,538 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1A0A0A">
-    <title>Barbearia RM - Portal</title>
+    <meta name="theme-color" content="#0a0a0a">
+    <title>LPX Tecnologia - Portal Multi-Lojas</title>
     
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <style>
-        @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.7;transform:scale(1.05);} }
-        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
-        @keyframes logoGlow { 0%,100%{box-shadow:0 0 20px rgba(212,168,75,0.3);} 50%{box-shadow:0 0 40px rgba(212,168,75,0.6),0 0 80px rgba(212,168,75,0.2);} }
-        .live-badge{display:inline-block;background:#F00;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;animation:livePulse 2s infinite;}
-        .live-chat-message{padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;font-size:13px;}
-        .live-chat-message .autor{color:#F00;font-weight:700;font-size:12px;}
-        .live-chat-message .texto{color:#B0B0B0;margin-top:2px;}
-        #livePlayerContainer{border:2px solid #F00;box-shadow:0 0 20px rgba(255,0,0,.3);}
-        
-        /* PORTAL */
-        .portal-container{max-width:450px;margin:0 auto;padding:0;min-height:80vh;display:flex;flex-direction:column;}
-        .portal-header{text-align:center;padding:20px 16px 10px;position:relative;}
-        .portal-logo-container{width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto 15px;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);animation:logoGlow 3s ease-in-out infinite;background:#1A1A1A;}
-        .portal-logo{width:100%;height:100%;object-fit:cover;}
-        .portal-linha-amarela{width:60px;height:3px;background:#D4A84B;margin:0 auto 10px;border-radius:2px;}
-        .portal-nome-loja{color:#FFF;font-size:22px;font-weight:800;margin:5px 0;}
-        .portal-slogan-loja{color:#D4A84B;font-size:13px;font-weight:500;letter-spacing:2px;text-transform:uppercase;}
-        .portal-stats{color:#6B7280;font-size:12px;margin-top:8px;display:flex;justify-content:center;gap:8px;}
-        .portal-divisor{display:flex;align-items:center;padding:5px 20px;position:relative;}
-        .portal-linha{flex:1;height:1px;background:linear-gradient(90deg,transparent,#D4A84B,transparent);}
-        .portal-bolinha{width:10px;height:10px;background:#D4A84B;border-radius:50%;position:absolute;left:50%;transform:translateX(-50%);}
-        .portal-lojas-container{flex:1;padding:10px 0;}
-        .portal-subtitle{text-align:center;color:#6B7280;font-size:12px;margin-bottom:12px;}
-        .portal-carrossel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:10px 16px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;}
-        .portal-carrossel::-webkit-scrollbar{display:none;}
-        .portal-loja-card{min-width:140px;background:rgba(26,26,26,0.9);border-radius:16px;padding:16px 12px;text-align:center;border:1px solid rgba(212,168,75,0.2);scroll-snap-align:center;cursor:pointer;transition:.3s;flex-shrink:0;}
-        .portal-loja-card:hover{border-color:#D4A84B;transform:translateY(-5px);box-shadow:0 0 20px rgba(212,168,75,0.3);}
-        .portal-loja-card.ativa{border-color:#D4A84B;border-width:2px;box-shadow:0 0 25px rgba(212,168,75,0.5);background:rgba(212,168,75,0.1);}
-        .portal-loja-card-logo{width:60px;height:60px;border-radius:50%;object-fit:cover;margin:0 auto 8px;border:2px solid #D4A84B;background:#1A1A1A;}
-        .portal-loja-card-icone{width:60px;height:60px;border-radius:50%;margin:0 auto 8px;background:linear-gradient(135deg,#D4A84B,#B8923A);display:flex;align-items:center;justify-content:center;font-size:28px;}
-        .portal-loja-card-nome{color:#FFF;font-size:13px;font-weight:700;margin:4px 0;}
-        .portal-loja-card-categoria{color:#D4A84B;font-size:10px;text-transform:uppercase;letter-spacing:1px;}
-        .portal-indicadores{display:flex;justify-content:center;gap:6px;margin-top:10px;}
-        .portal-indicador{width:8px;height:8px;border-radius:50%;background:rgba(212,168,75,0.3);transition:.3s;}
-        .portal-indicador.ativo{background:#D4A84B;width:20px;border-radius:4px;}
-        .portal-acoes{padding:16px;display:flex;flex-direction:column;gap:8px;}
-    </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="header-logo">
-            <div class="logo-container"><img src="logo-lpx-tecnologia.jpg" alt="lpx-tecnologia" class="logo-header"></div>
-            <div class="slogan">Inovação que transforma</div>
-        </div>
-    </header>
-
-    <!-- PORTAL DE LOJAS (LOGIN) -->
-    <section class="screen active" id="loginScreen">
-        <div class="portal-container">
-            <div class="portal-header">
-                <div class="portal-logo-container"><img src="logobarbearia-rm.png" alt="Loja" class="portal-logo" id="portalLogo"></div>
-                <div class="portal-linha-amarela"></div>
-                <h2 class="portal-nome-loja" id="portalNomeLoja">Barbearia RM</h2>
-                <p class="portal-slogan-loja" id="portalSloganLoja">Atitude, Estilo e Confiança</p>
-                <div class="portal-stats" id="portalStats">⭐ 4.8 • ✂️ 1.2k cortes • 📍 2.5km</div>
-            </div>
-            <div class="portal-divisor"><div class="portal-linha"></div><div class="portal-bolinha"></div></div>
-            <div class="portal-lojas-container">
-                <p class="portal-subtitle">👈 Deslize para ver mais lojas</p>
-                <div class="portal-carrossel" id="portalCarrossel"></div>
-                <div class="portal-indicadores" id="portalIndicadores"></div>
-            </div>
-            <div class="portal-acoes">
-                <button class="btn btn-primary" onclick="entrarNaLoja()">🔑 ENTRAR NESTA LOJA</button>
-                <button class="btn btn-outline" onclick="mostrarTela('cadastroLojaScreen')">🏪 CADASTRAR MINHA LOJA</button>
-            </div>
-            <div id="loginFormCliente" style="display:none;margin-top:10px;padding:0 16px;">
-                <div class="card">
-                    <div class="input-group"><label>📧 E-mail</label><input type="email" id="loginEmailCliente" placeholder="seu@email.com"></div>
-                    <div class="input-group"><label>🔒 Senha</label><input type="password" id="loginSenhaCliente" placeholder="Digite sua senha"></div>
-                    <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarTela('cadastroClienteScreen')">📝 Criar Conta</button>
+    <!-- ============================================================ -->
+    <!-- HEADER PROFISSIONAL -->
+    <!-- ============================================================ -->
+    <header class="header" id="mainHeader">
+        <div class="header-container">
+            <div class="header-logo-area">
+                <div class="logo-circle" id="headerLogoCircle">
+                    <img src="logobarbearia-rm.png" alt="Logo" class="logo-img" id="headerLogoImg">
+                </div>
+                <div class="header-info">
+                    <h1 class="header-title" id="headerTitle">LPX Tecnologia</h1>
+                    <p class="header-slogan" id="headerSlogan">Inovação que transforma</p>
                 </div>
             </div>
-            <div id="loginFormBarbeiro" style="display:none;margin-top:10px;padding:0 16px;">
-                <div class="card">
-                    <div class="input-group"><label>📧 E-mail</label><input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com"></div>
-                    <div class="input-group"><label>🔒 Senha</label><input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha"></div>
-                    <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarTela('cadastroBarbeiroScreen')">📝 Criar Conta Barbeiro</button>
+            <div class="header-actions">
+                <button class="header-btn" onclick="mostrarTela('loginScreen')" title="Loja">
+                    <i class="fas fa-store"></i>
+                </button>
+                <button class="header-btn" onclick="toggleModoEscuro()" title="Tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+        <div class="header-gradient-line"></div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- TELA: PORTAL DE LOJAS -->
+    <!-- ============================================================ -->
+    <section class="screen active" id="loginScreen">
+        <div class="portal-wrapper">
+            <!-- Card do Portal -->
+            <div class="portal-card">
+                <!-- Perfil da Loja -->
+                <div class="portal-profile">
+                    <div class="portal-avatar-container">
+                        <img src="logobarbearia-rm.png" alt="Loja" class="portal-avatar" id="portalLogo">
+                        <div class="portal-avatar-ring"></div>
+                    </div>
+                    <div class="portal-divider-gold"></div>
+                    <h2 class="portal-store-name" id="portalNomeLoja">LPX Tecnologia</h2>
+                    <p class="portal-store-slogan" id="portalSloganLoja">Inovação que transforma</p>
+                    <div class="portal-stats-row" id="portalStats">
+                        <span class="portal-stat"><i class="fas fa-star"></i> 5.0</span>
+                        <span class="portal-stat"><i class="fas fa-store"></i> 1.2k</span>
+                        <span class="portal-stat"><i class="fas fa-map-marker-alt"></i> 2.5km</span>
+                    </div>
+                </div>
+                
+                <!-- Carrossel de Lojas -->
+                <div class="portal-carousel-section">
+                    <div class="portal-carousel-header">
+                        <span class="portal-carousel-title">🏪 Lojas Disponíveis</span>
+                        <span class="portal-carousel-hint">← Deslize →</span>
+                    </div>
+                    <div class="portal-carousel-track" id="portalCarrossel"></div>
+                    <div class="portal-carousel-dots" id="portalIndicadores"></div>
+                </div>
+                
+                <!-- Ações -->
+                <div class="portal-actions">
+                    <button class="portal-btn portal-btn-primary" onclick="entrarNaLoja()">
+                        <i class="fas fa-sign-in-alt"></i> ENTRAR NESTA LOJA
+                    </button>
+                    <button class="portal-btn portal-btn-outline" onclick="mostrarTela('cadastroLojaScreen')">
+                        <i class="fas fa-plus-circle"></i> CADASTRAR MINHA LOJA
+                    </button>
+                </div>
+                
+                <!-- Formulários de Login -->
+                <div id="loginFormsContainer" style="display:none;">
+                    <div class="portal-login-tabs">
+                        <button class="login-tab active" onclick="switchLoginTab('cliente')">👤 Cliente</button>
+                        <button class="login-tab" onclick="switchLoginTab('barbeiro')">✂️ Profissional</button>
+                    </div>
+                    <div id="loginFormCliente" class="login-form">
+                        <div class="input-group-modern">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
+                        </div>
+                        <div class="input-group-modern">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="loginSenhaCliente" placeholder="Sua senha">
+                        </div>
+                        <button class="portal-btn portal-btn-primary" onclick="loginCliente()">
+                            <i class="fas fa-key"></i> ENTRAR
+                        </button>
+                        <button class="portal-btn portal-btn-text" onclick="mostrarTela('cadastroClienteScreen')">
+                            Criar conta de cliente
+                        </button>
+                    </div>
+                    <div id="loginFormBarbeiro" class="login-form" style="display:none;">
+                        <div class="input-group-modern">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="loginEmailBarbeiro" placeholder="profissional@email.com">
+                        </div>
+                        <div class="input-group-modern">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="loginSenhaBarbeiro" placeholder="Sua senha">
+                        </div>
+                        <button class="portal-btn portal-btn-secondary" onclick="loginBarbeiro()">
+                            <i class="fas fa-key"></i> ENTRAR
+                        </button>
+                        <button class="portal-btn portal-btn-text" onclick="mostrarTela('cadastroBarbeiroScreen')">
+                            Criar conta profissional
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- CADASTRO DE LOJA -->
+    <!-- ============================================================ -->
+    <!-- TELA: CADASTRO DE LOJA -->
+    <!-- ============================================================ -->
     <section class="screen" id="cadastroLojaScreen">
-        <h2 class="screen-title">🏪 CADASTRAR MINHA LOJA</h2>
-        <div class="card">
-            <div class="input-group"><label>🏪 Nome da Loja</label><input type="text" id="cadNomeLoja" placeholder="Ex: Barbearia RM"></div>
-            <div class="input-group"><label>📝 Slogan</label><input type="text" id="cadSloganLoja" placeholder="Ex: Atitude, Estilo e Confiança"></div>
-            <div class="input-group"><label>📋 Categoria</label><select id="cadCategoriaLoja"><option value="barbearia">💈 Barbearia</option><option value="salao">💇 Salão de Beleza</option><option value="estetica">✨ Estética</option><option value="tatuagem">🎨 Tatuagem</option><option value="petshop">🐾 Pet Shop</option><option value="outro">📦 Outro</option></select></div>
-            <div class="input-group"><label>👤 Nome do Dono</label><input type="text" id="cadDonoLoja" placeholder="Seu nome completo"></div>
-            <div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailLoja" placeholder="contato@sualoja.com"></div>
-            <div class="input-group"><label>📱 WhatsApp</label><input type="tel" id="cadWhatsappLoja" placeholder="(11) 99999-9999"></div>
-            <div class="input-group"><label>📍 Endereço</label><input type="text" id="cadEnderecoLoja" placeholder="Rua, número, bairro, cidade"></div>
-            <div class="input-group"><label>📷 Logo da Loja</label><div class="file-upload-area" onclick="document.getElementById('logoLojaInput').click()"><div class="file-upload-icon">🖼️</div><p>Clique para escolher o logo</p><input type="file" id="logoLojaInput" accept="image/*" style="display:none" onchange="previewLogoLoja(event)"></div><img id="logoLojaPreview" src="#" style="display:none;width:100px;height:100px;border-radius:50%;object-fit:cover;margin:10px auto;border:3px solid #D4A84B;"><input type="hidden" id="cadLogoLoja" value=""></div>
-            <div class="input-group"><label>🔒 Senha de Administrador</label><input type="password" id="cadSenhaLoja" placeholder="Mínimo 6 caracteres"></div>
-            <button class="btn btn-primary" onclick="cadastrarLoja()">✅ CADASTRAR LOJA</button>
-            <button class="btn btn-outline" onclick="mostrarTela('loginScreen')">← Voltar</button>
+        <div class="screen-container">
+            <div class="screen-header">
+                <h2 class="screen-title-modern">🏪 Cadastrar Minha Loja</h2>
+                <p class="screen-subtitle">Preencha os dados para criar sua loja no portal</p>
+            </div>
+            <div class="card-modern">
+                <div class="input-group-modern">
+                    <i class="fas fa-store input-icon"></i>
+                    <input type="text" id="cadNomeLoja" placeholder="Nome da Loja">
+                </div>
+                <div class="input-group-modern">
+                    <i class="fas fa-quote-right input-icon"></i>
+                    <input type="text" id="cadSloganLoja" placeholder="Slogan da Loja">
+                </div>
+                <div class="input-group-modern">
+                    <i class="fas fa-tag input-icon"></i>
+                    <select id="cadCategoriaLoja">
+                        <option value="">Selecione a Categoria</option>
+                        <option value="barbearia">💈 Barbearia</option>
+                        <option value="salao">💇 Salão de Beleza</option>
+                        <option value="estetica">✨ Estética</option>
+                        <option value="tatuagem">🎨 Tatuagem</option>
+                        <option value="petshop">🐾 Pet Shop</option>
+                        <option value="outro">📦 Outro</option>
+                    </select>
+                </div>
+                <div class="input-group-modern">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="cadDonoLoja" placeholder="Nome do Dono">
+                </div>
+                <div class="input-group-modern">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" id="cadEmailLoja" placeholder="Email da Loja">
+                </div>
+                <div class="input-group-modern">
+                    <i class="fab fa-whatsapp input-icon"></i>
+                    <input type="tel" id="cadWhatsappLoja" placeholder="WhatsApp">
+                </div>
+                <div class="input-group-modern">
+                    <i class="fas fa-map-marker-alt input-icon"></i>
+                    <input type="text" id="cadEnderecoLoja" placeholder="Endereço Completo">
+                </div>
+                <div class="upload-area-modern" onclick="document.getElementById('logoLojaInput').click()">
+                    <i class="fas fa-camera upload-icon"></i>
+                    <p>Clique para adicionar o Logo</p>
+                    <input type="file" id="logoLojaInput" accept="image/*" style="display:none" onchange="previewLogoLoja(event)">
+                </div>
+                <img id="logoLojaPreview" src="#" class="upload-preview">
+                <input type="hidden" id="cadLogoLoja" value="">
+                <div class="input-group-modern">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="cadSenhaLoja" placeholder="Senha de Administrador">
+                </div>
+                <div class="button-row">
+                    <button class="portal-btn portal-btn-primary" onclick="cadastrarLoja()">
+                        <i class="fas fa-check-circle"></i> CADASTRAR LOJA
+                    </button>
+                    <button class="portal-btn portal-btn-outline" onclick="mostrarTela('loginScreen')">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME CLIENTE -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeClienteScreen">
+        <div class="screen-container">
+            <div class="welcome-card">
+                <div class="welcome-avatar" id="clienteAvatarHeader">
+                    <img src="logobarbearia-rm.png" alt="Foto">
+                </div>
+                <div class="welcome-text">
+                    <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
+                    <p>Confira os cortes e agende seu horário</p>
+                </div>
+            </div>
+
+            <!-- Stories / Destaques -->
+            <div class="stories-row">
+                <div class="story-item active" onclick="mostrarTela('reelsScreen')">
+                    <div class="story-ring"><i class="fas fa-play"></i></div>
+                    <span>Reels</span>
+                </div>
+                <div class="story-item" onclick="mostrarTela('galeriaCortesScreen')">
+                    <div class="story-ring"><i class="fas fa-images"></i></div>
+                    <span>Galeria</span>
+                </div>
+                <div class="story-item" onclick="mostrarTela('anunciosScreen')">
+                    <div class="story-ring"><i class="fas fa-bullhorn"></i></div>
+                    <span>Anúncios</span>
+                </div>
+                <div class="story-item" onclick="mostrarTela('liveScreen')">
+                    <div class="story-ring live-pulse"><i class="fas fa-circle"></i></div>
+                    <span>Ao Vivo</span>
+                </div>
+            </div>
+
+            <!-- Feed -->
+            <div class="feed-modern" id="feedClienteContainer"></div>
+
+            <!-- Agendamentos -->
+            <div class="card-modern" id="agendaClienteCard">
+                <div class="card-header-modern">
+                    <h3><i class="fas fa-calendar-alt"></i> Meus Agendamentos</h3>
+                </div>
+                <div id="agendaClienteContainer">
+                    <p class="empty-state">Nenhum agendamento</p>
+                </div>
+            </div>
+
+            <!-- Botão Agendar -->
+            <button class="fab-button" onclick="mostrarTela('agendamentoScreen')">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: HOME BARBEIRO -->
+    <!-- ============================================================ -->
+    <section class="screen" id="homeBarbeiroScreen">
+        <div class="screen-container">
+            <div class="welcome-card barbeiro">
+                <div class="welcome-avatar" id="barbeiroAvatarHeader">
+                    <img src="logobarbearia-rm.png" alt="Foto">
+                </div>
+                <div class="welcome-text">
+                    <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
+                    <p>Gerencie sua barbearia</p>
+                </div>
+            </div>
+
+            <!-- Cards de Faturamento -->
+            <div class="stats-grid-modern">
+                <div class="stat-card-modern">
+                    <i class="fas fa-calendar-day stat-icon"></i>
+                    <span class="stat-label">Hoje</span>
+                    <strong class="stat-value" id="faturamentoHoje">R$ 0,00</strong>
+                </div>
+                <div class="stat-card-modern">
+                    <i class="fas fa-calendar-week stat-icon"></i>
+                    <span class="stat-label">Semana</span>
+                    <strong class="stat-value" id="faturamentoSemana">R$ 0,00</strong>
+                </div>
+                <div class="stat-card-modern">
+                    <i class="fas fa-calendar-alt stat-icon"></i>
+                    <span class="stat-label">Mês</span>
+                    <strong class="stat-value" id="faturamentoMes">R$ 0,00</strong>
+                </div>
+                <div class="stat-card-modern">
+                    <i class="fas fa-chart-bar stat-icon"></i>
+                    <span class="stat-label">Ano</span>
+                    <strong class="stat-value" id="faturamentoAno">R$ 0,00</strong>
+                </div>
+            </div>
+
+            <!-- Planos -->
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="fas fa-crown"></i> Planos</h3>
+                    <button class="btn-sm btn-sm-primary" onclick="mostrarTela('criarPlanoScreen')">+ Novo</button>
+                </div>
+                <div id="planosContainer"></div>
+            </div>
+
+            <!-- Agendamentos -->
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="fas fa-list-check"></i> Agendamentos</h3>
+                </div>
+                <div id="agendamentosBarbeiroContainer"></div>
+            </div>
+
+            <!-- Meus Posts -->
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <h3><i class="fas fa-image"></i> Meus Posts</h3>
+                    <button class="btn-sm btn-sm-primary" onclick="mostrarTela('criarPostScreen')">+ Novo</button>
+                </div>
+                <div id="meusPostsContainer"></div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="action-buttons-grid">
+                <button class="action-btn" onclick="mostrarTela('criarPostScreen')">
+                    <i class="fas fa-camera"></i> Postar
+                </button>
+                <button class="action-btn" onclick="mostrarTela('extratoScreen')">
+                    <i class="fas fa-chart-line"></i> Extrato
+                </button>
+                <button class="action-btn" onclick="mostrarTela('horariosTrabalhoScreen')">
+                    <i class="fas fa-clock"></i> Horários
+                </button>
+                <button class="action-btn" onclick="mostrarTela('anunciosScreen')">
+                    <i class="fas fa-bullhorn"></i> Anúncios
+                </button>
+                <button class="action-btn" onclick="mostrarTela('liveScreen')">
+                    <i class="fas fa-broadcast-tower"></i> Live
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: LIVE PROFISSIONAL -->
+    <!-- ============================================================ -->
+    <section class="screen" id="liveScreen">
+        <div class="screen-container">
+            <div class="live-studio-card">
+                <!-- Player -->
+                <div class="live-player-wrapper">
+                    <div class="live-player-inner">
+                        <!-- Tela 1 - Câmera -->
+                        <div id="liveTela1" class="live-screen active">
+                            <video id="liveVideo" autoplay playsinline muted></video>
+                            <img id="liveFrameImg" src="#" class="live-frame-overlay">
+                            <div id="livePlaceholder" class="live-placeholder">
+                                <i class="fas fa-broadcast-tower live-placeholder-icon"></i>
+                                <p>Nenhuma transmissão ativa</p>
+                                <button class="btn-sm btn-sm-primary" onclick="carregarLive()">🔄 Atualizar</button>
+                            </div>
+                            <div class="live-screen-badge">🎥 CÂMERA</div>
+                        </div>
+                        
+                        <!-- Tela 2 - Comercial -->
+                        <div id="liveTela2" class="live-screen">
+                            <video id="liveVideoComercial" loop muted playsinline></video>
+                            <img id="liveImagemComercial" src="#" class="live-frame-overlay">
+                            <div id="liveTela2Placeholder" class="live-placeholder">
+                                <i class="fas fa-tv"></i>
+                                <p>Adicione um vídeo comercial</p>
+                            </div>
+                            <div class="live-screen-badge secondary">📺 COMERCIAL</div>
+                        </div>
+                        
+                        <!-- Anúncio Overlay -->
+                        <div id="liveAnuncioOverlay" class="live-anuncio-overlay">
+                            <img id="liveAnuncioImg" src="#">
+                            <button class="live-anuncio-close" onclick="fecharAnuncioLive()">✕</button>
+                        </div>
+                        
+                        <!-- Mini câmera -->
+                        <video id="liveVideoLocal" autoplay playsinline muted class="live-pip"></video>
+                    </div>
+                    
+                    <!-- Barra de Status -->
+                    <div class="live-status-bar">
+                        <div class="live-status-indicator">
+                            <span class="live-dot"></span>
+                            <span>AO VIVO</span>
+                        </div>
+                        <span id="liveViewerCount" class="live-viewer-count">👥 0</span>
+                    </div>
+                </div>
+
+                <!-- Informações da Live -->
+                <div id="liveStatus" class="live-info-card" style="display:none;">
+                    <div class="live-info-row">
+                        <span class="live-dot"></span>
+                        <span class="live-info-text" id="liveStatusTitulo"></span>
+                    </div>
+                    <div class="live-info-stats" id="liveStatusViewers"></div>
+                </div>
+
+                <!-- Ações da Live -->
+                <div class="live-actions-row">
+                    <button class="live-action-btn" onclick="likeLive()"><i class="fas fa-heart"></i> Curtir</button>
+                    <button class="live-action-btn" onclick="compartilharLive()"><i class="fas fa-share"></i> Compartilhar</button>
+                    <button class="live-action-btn" onclick="alternarParaTela2()"><i class="fas fa-exchange-alt"></i> Tela 2</button>
+                </div>
+
+                <!-- Chat -->
+                <div class="live-chat-card">
+                    <div class="live-chat-header">💬 Chat ao Vivo</div>
+                    <div id="liveChatContainer" class="live-chat-messages"></div>
+                    <div class="live-chat-input-row">
+                        <input type="text" id="liveChatInput" placeholder="Envie uma mensagem..." class="live-chat-input">
+                        <button class="live-chat-send" onclick="enviarMensagemLive()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+
+                <!-- Controles (Barbeiro) -->
+                <div id="liveControls" class="live-controls-card" style="display:none;">
+                    <h3><i class="fas fa-sliders-h"></i> Controles do Estúdio</h3>
+                    <div class="input-group-modern">
+                        <input type="text" id="liveTitulo" placeholder="Título da Live">
+                    </div>
+                    <div class="live-controls-buttons">
+                        <button class="portal-btn portal-btn-primary" onclick="iniciarLive()">
+                            <i class="fas fa-play-circle"></i> INICIAR LIVE
+                        </button>
+                        <button class="portal-btn portal-btn-danger" onclick="encerrarLive()">
+                            <i class="fas fa-stop-circle"></i> ENCERRAR
+                        </button>
+                    </div>
+                    <div class="live-tools-row">
+                        <button class="live-tool-btn" onclick="document.getElementById('comercialVideoInput').click()">
+                            <i class="fas fa-video"></i> Vídeo
+                        </button>
+                        <button class="live-tool-btn" onclick="document.getElementById('comercialImagemInput').click()">
+                            <i class="fas fa-image"></i> Imagem
+                        </button>
+                        <button class="live-tool-btn" onclick="adicionarLinkComercial()">
+                            <i class="fas fa-link"></i> Link
+                        </button>
+                        <button class="live-tool-btn" onclick="document.getElementById('anuncioLiveInput').click()">
+                            <i class="fas fa-ad"></i> Anúncio
+                        </button>
+                        <input type="file" id="comercialVideoInput" accept="video/*" style="display:none" onchange="carregarVideoComercial(event)">
+                        <input type="file" id="comercialImagemInput" accept="image/*" style="display:none" onchange="carregarImagemComercial(event)">
+                        <input type="file" id="anuncioLiveInput" accept="image/*" style="display:none" onchange="carregarAnuncioLive(event)">
+                    </div>
+                </div>
+
+                <div id="liveLoginWarning" class="live-login-warning" style="display:none;">
+                    <i class="fas fa-lock"></i>
+                    <h3>Conteúdo Exclusivo</h3>
+                    <p>Faça login como cliente para assistir</p>
+                    <button class="portal-btn portal-btn-primary" onclick="mostrarTela('loginScreen')">🔑 FAZER LOGIN</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TELA: REELS PROFISSIONAL -->
+    <!-- ============================================================ -->
+    <section class="screen" id="reelsScreen">
+        <div class="reels-fullscreen">
+            <div class="reels-header">
+                <h2><i class="fas fa-film"></i> Reels</h2>
+                <button class="reels-close-btn" onclick="mostrarTela('homeClienteScreen')">✕</button>
+            </div>
+            <div class="reels-swiper" id="reelsContainer"></div>
+            <div class="reels-nav">
+                <button class="reels-nav-btn" onclick="reelAnterior()"><i class="fas fa-chevron-up"></i></button>
+                <button class="reels-nav-btn" onclick="reelProximo()"><i class="fas fa-chevron-down"></i></button>
+            </div>
         </div>
     </section>
 
     <!-- DEMAIS TELAS (MANTIDAS) -->
-    <section class="screen" id="cadastroClienteScreen"><h2 class="screen-title">📝 CADASTRO CLIENTE</h2><div class="card"><div class="input-group"><label>👤 Nome</label><input type="text" id="cadNomeCliente" placeholder="Seu nome completo"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailCliente" placeholder="seu@email.com"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999"></div><div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres"></div><button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR</button><button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button></div></section>
-    <section class="screen" id="cadastroBarbeiroScreen"><h2 class="screen-title">✂️ CADASTRO BARBEIRO</h2><div class="card"><div class="input-group"><label>👤 Nome</label><input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999"></div><div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres"></div><button class="btn btn-primary" onclick="cadastrarBarbeiro()">✅ FINALIZAR</button><button class="btn btn-outline" onclick="voltarParaLogin()">← Voltar</button></div></section>
-    <section class="screen" id="homeClienteScreen"><div class="welcome-banner"><h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2><p>Confira os cortes e agende seu horário</p></div><div class="feed-container" id="feedClienteContainer"></div><div class="card" id="agendaClienteCard"><h3>📅 Meus Agendamentos</h3><div id="agendaClienteContainer"><p style="color:#6B7280;text-align:center;">Nenhum agendamento</p></div></div><button class="btn btn-primary" onclick="mostrarTela('agendamentoScreen')">✂️ AGENDAR CORTE</button><div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;"><button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('galeriaCortesScreen')">💇 GALERIA</button><button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('reelsScreen')">🎬 REELS</button></div><div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;"><button class="btn" style="flex:1;background:linear-gradient(135deg,#FF6B6B,#FF4757);color:white;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;" onclick="mostrarTela('anunciosScreen')">📢 ANÚNCIOS</button><button class="btn" style="flex:1;background:linear-gradient(135deg,#FF0000,#CC0000);color:white;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;" onclick="mostrarTela('liveScreen')">🔴 AO VIVO <span id="liveBadgeCliente" class="live-badge" style="display:none;">ON</span></button></div></section>
-    <section class="screen" id="homeBarbeiroScreen"><div class="welcome-banner barbeiro"><h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2><p>Gerencie sua barbearia</p></div><div class="card"><h3>💰 FATURAMENTO</h3><div class="financeiro-resumo"><div class="financeiro-item"><span>📅 Hoje</span><strong id="faturamentoHoje">R$ 0,00</strong></div><div class="financeiro-item"><span>📆 Semana</span><strong id="faturamentoSemana">R$ 0,00</strong></div><div class="financeiro-item"><span>📊 Mês</span><strong id="faturamentoMes">R$ 0,00</strong></div><div class="financeiro-item"><span>📈 Ano</span><strong id="faturamentoAno">R$ 0,00</strong></div></div></div><div class="card"><h3>📋 PLANOS</h3><div id="planosContainer"></div><button class="btn btn-outline" onclick="mostrarTela('criarPlanoScreen')">➕ CRIAR PLANO</button></div><div class="card"><h3>📅 AGENDAMENTOS</h3><div id="agendamentosBarbeiroContainer"></div></div><div class="card"><h3>📸 MEUS POSTS</h3><div id="meusPostsContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div></div><div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPostScreen')">📸 NOVO POST</button><button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extratoScreen')">📊 EXTRATO</button></div><div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;"><button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('horariosTrabalhoScreen')">⏰ HORÁRIOS</button><button class="btn" style="flex:1;background:linear-gradient(135deg,#FF6B6B,#FF4757);color:white;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;" onclick="mostrarTela('anunciosScreen');setTimeout(function(){document.getElementById('formAnuncio').style.display='block';},300);">📢 ANÚNCIOS</button></div><div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;"><button class="btn" style="flex:1;background:linear-gradient(135deg,#FF0000,#CC0000);color:white;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;" onclick="mostrarTela('liveScreen')">🔴 AO VIVO <span id="liveBadgeBarbeiro" class="live-badge" style="display:none;">ON</span></button></div></section>
-    <section class="screen" id="agendamentoScreen"><h2 class="screen-title">✂️ AGENDAR CORTE</h2><div class="card"><div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div><div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"><option value="09:00">09:00</option><option value="09:30">09:30</option><option value="10:00">10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option><option value="17:30">17:30</option><option value="18:00">18:00</option></select></div><div class="input-group"><label>✂️ Tipo de Corte</label><select id="agendamentoTipo"><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div><button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button><button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button></div></section>
-
-    <!-- LIVE / GALERIA / REELS / EXTRATO / ETC... (RESUMIDO PARA CABER) -->
-    <section class="screen" id="liveScreen">
-        <h2 class="screen-title">🔴 ESTÚDIO AO VIVO</h2>
-        <div class="card" id="livePlayerContainer" style="padding:0;overflow:hidden;background:#000;">
-            <div style="position:relative;width:100%;padding-bottom:56.25%;background:#000;">
-                <div id="liveTela1" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"><video id="liveVideo" autoplay playsinline muted style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#111;display:block;"></video><img id="liveFrameImg" src="#" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;"><div id="livePlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:2;"><div style="text-align:center;color:white;"><div style="font-size:50px;">🔴</div><p style="margin-top:8px;color:#B0B0B0;">Nenhuma transmissão ativa</p><button class="btn btn-small btn-primary" onclick="carregarLive()" style="margin-top:8px;">🔄 Atualizar</button></div></div></div>
-                <div id="liveTela2" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;background:#111;"><video id="liveVideoComercial" loop muted playsinline style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"></video><img id="liveImagemComercial" src="#" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;"><div id="liveTela2Placeholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;"><div style="text-align:center;color:white;"><div style="font-size:40px;">📺</div><p style="color:#B0B0B0;font-size:13px;">Adicione um vídeo ou link comercial</p></div></div></div>
-                <div id="liveAnuncioOverlay" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;"><img id="liveAnuncioImg" src="#" style="max-width:80%;max-height:80%;object-fit:contain;border-radius:10px;border:3px solid #FFD700;"><button onclick="fecharAnuncioLive()" style="position:absolute;top:10px;right:10px;background:rgba(255,0,0,0.9);color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;">✕</button></div>
-                <video id="liveVideoLocal" autoplay playsinline muted style="position:absolute;bottom:8px;right:8px;width:100px;height:65px;object-fit:cover;border-radius:6px;border:2px solid #F00;display:none;z-index:10;"></video>
+    <section class="screen" id="cadastroClienteScreen">
+        <div class="screen-container">
+            <div class="screen-header"><h2 class="screen-title-modern">📝 Cadastro Cliente</h2></div>
+            <div class="card-modern">
+                <div class="input-group-modern"><i class="fas fa-user input-icon"></i><input type="text" id="cadNomeCliente" placeholder="Nome completo"></div>
+                <div class="input-group-modern"><i class="fas fa-envelope input-icon"></i><input type="email" id="cadEmailCliente" placeholder="seu@email.com"></div>
+                <div class="input-group-modern"><i class="fas fa-phone input-icon"></i><input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999"></div>
+                <div class="input-group-modern"><i class="fas fa-lock input-icon"></i><input type="password" id="cadSenhaCliente" placeholder="Senha (mínimo 6)"></div>
+                <button class="portal-btn portal-btn-primary" onclick="cadastrarCliente()"><i class="fas fa-check"></i> FINALIZAR</button>
+                <button class="portal-btn portal-btn-outline" onclick="voltarParaLogin()"><i class="fas fa-arrow-left"></i> Voltar</button>
             </div>
-            <div style="padding:10px;background:linear-gradient(135deg,#FF0000,#CC0000);display:flex;justify-content:space-between;align-items:center;"><span style="color:white;font-weight:700;">🔴 AO VIVO</span><span id="liveViewerCount" style="color:rgba(255,255,255,0.8);font-size:11px;"></span></div>
         </div>
-        <div id="liveStatus" class="card" style="text-align:center;display:none;"><div style="display:flex;align-items:center;justify-content:center;gap:8px;"><span style="width:10px;height:10px;background:#F00;border-radius:50%;animation:pulse 2s infinite;"></span><span style="color:#F00;font-weight:700;">AO VIVO</span><span id="liveStatusViewers" style="color:#6B7280;font-size:11px;"></span></div><p id="liveStatusTitulo" style="color:white;margin-top:6px;font-weight:700;"></p><p id="liveStatusBarbeiro" style="color:#B0B0B0;font-size:12px;"></p></div>
-        <div class="card" style="text-align:center;padding:8px;"><button class="btn btn-small btn-primary" onclick="likeLive()">❤️ Curtir</button><button class="btn btn-small btn-outline" onclick="compartilharLive()">📤 Compartilhar</button></div>
-        <div class="card" id="liveChatCard"><h3>💬 CHAT</h3><div id="liveChatContainer" style="max-height:180px;min-height:70px;overflow-y:auto;margin-bottom:8px;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;"><p style="color:#6B7280;text-align:center;">Chat...</p></div><div style="display:flex;gap:6px;"><input type="text" id="liveChatInput" placeholder="Mensagem..." style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:13px;"><button class="btn btn-primary" onclick="enviarMensagemLive()" style="width:auto;padding:10px 14px;">📤</button></div></div>
-        <div class="card" id="liveControls" style="display:none;"><h3>🎥 CONTROLES</h3><div class="input-group"><label>📝 Título</label><input type="text" id="liveTitulo" placeholder="Live..."></div><button class="btn btn-primary" onclick="iniciarLive()" style="background:linear-gradient(135deg,#F00,#C00);">🔴 INICIAR LIVE</button><button class="btn btn-danger" onclick="encerrarLive()">⏹ ENCERRAR</button></div>
-        <div id="liveLoginWarning" class="card" style="text-align:center;display:none;"><div style="font-size:30px;">🔒</div><h3 style="color:#FF6B6B;">Exclusivo</h3><p style="color:#B0B0B0;">Faça login para assistir</p><button class="btn btn-primary" onclick="mostrarTela('loginScreen')">🔑 LOGIN</button></div>
-        <button class="btn btn-outline" onclick="pararTransmissao();mostrarTela('homeClienteScreen')">← Voltar</button>
     </section>
-    <section class="screen" id="galeriaCortesScreen"><h2 class="screen-title">💇 GALERIA</h2><div class="filtro-cortes"><select id="filtroCategoria" onchange="filtrarGaleria()"><option value="todos">Todos</option><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option><option value="Corte Navalhado">Corte Navalhado</option><option value="Corte Máquina">Corte Máquina</option><option value="Barba">Barba</option><option value="Barba + Corte">Barba + Corte</option><option value="Pintura">Pintura</option><option value="Luzes">Luzes</option><option value="Platinado">Platinado</option><option value="Selagem">Selagem</option><option value="Progressiva">Progressiva</option></select></div><div id="galeriaContainer" class="galeria-grid"></div><button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button></section>
-    <section class="screen" id="reelsScreen"><h2 class="screen-title">🎬 REELS</h2><div class="reels-container" id="reelsContainer"></div><div class="reels-controls"><button class="btn btn-small btn-primary" onclick="reelAnterior()">⬅️</button><button class="btn btn-small btn-primary" onclick="reelProximo()">➡️</button></div><button class="btn btn-outline" onclick="mostrarTela('homeClienteScreen')">← Voltar</button></section>
-    <section class="screen" id="extratoScreen"><h2 class="screen-title">📊 EXTRATO</h2><div class="card"><div class="filtro-extrato"><button class="btn btn-small btn-outline" onclick="filtrarExtrato('dia')">📅 Dia</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('semana')">📆 Semana</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('mes')">📊 Mês</button><button class="btn btn-small btn-outline" onclick="filtrarExtrato('ano')">📈 Ano</button></div><div id="extratoContainer"></div><button class="btn btn-outline" onclick="mostrarTela('homeBarbeiroScreen')">← Voltar</button></div></section>
-    <section class="screen" id="detalhePostScreen"><div id="detalhePostConteudo"></div></section>
-    <section class="screen" id="perfilClienteScreen"><div class="profile-header"><div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)"><h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail"></p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button></div><button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button></section>
-    <section class="screen" id="perfilBarbeiroScreen"><div class="profile-header"><div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)"><h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail"></p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button></div><button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button></section>
+    <section class="screen" id="cadastroBarbeiroScreen">
+        <div class="screen-container">
+            <div class="screen-header"><h2 class="screen-title-modern">✂️ Cadastro Profissional</h2></div>
+            <div class="card-modern">
+                <div class="input-group-modern"><i class="fas fa-user input-icon"></i><input type="text" id="cadNomeBarbeiro" placeholder="Nome completo"></div>
+                <div class="input-group-modern"><i class="fas fa-envelope input-icon"></i><input type="email" id="cadEmailBarbeiro" placeholder="profissional@email.com"></div>
+                <div class="input-group-modern"><i class="fas fa-phone input-icon"></i><input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999"></div>
+                <div class="input-group-modern"><i class="fas fa-lock input-icon"></i><input type="password" id="cadSenhaBarbeiro" placeholder="Senha (mínimo 6)"></div>
+                <button class="portal-btn portal-btn-primary" onclick="cadastrarBarbeiro()"><i class="fas fa-check"></i> FINALIZAR</button>
+                <button class="portal-btn portal-btn-outline" onclick="voltarParaLogin()"><i class="fas fa-arrow-left"></i> Voltar</button>
+            </div>
+        </div>
+    </section>
 
-    <div class="modal" id="modalComentario"><div class="modal-content"><h3>💬 Comentários</h3><div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div><div class="input-group"><textarea id="novoComentario" rows="2" placeholder="Escreva..."></textarea></div><button class="btn btn-primary" onclick="adicionarComentario()">📤 COMENTAR</button><button class="btn btn-outline" onclick="fecharModalComentario()">Fechar</button></div></div>
-    <div class="toast" id="toast" style="display:none;"></div>
-    <nav class="bottom-nav" id="bottomNavCliente" style="display:none;"><button class="nav-item active" onclick="mostrarTela('homeClienteScreen')"><span class="nav-icon">🏠</span> Início</button><button class="nav-item" onclick="mostrarTela('agendamentoScreen')"><span class="nav-icon">✂️</span> Agendar</button><button class="nav-item" onclick="mostrarTela('galeriaCortesScreen')"><span class="nav-icon">💇</span> Galeria</button><button class="nav-item" onclick="mostrarTela('liveScreen')"><span class="nav-icon">🔴</span> Live</button><button class="nav-item" onclick="mostrarTela('perfilClienteScreen')"><span class="nav-icon">👤</span> Perfil</button></nav>
-    <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;"><button class="nav-item active" onclick="mostrarTela('homeBarbeiroScreen')"><span class="nav-icon">🏠</span> Início</button><button class="nav-item" onclick="mostrarTela('criarPostScreen')"><span class="nav-icon">📸</span> Postar</button><button class="nav-item" onclick="mostrarTela('extratoScreen')"><span class="nav-icon">📊</span> Extrato</button><button class="nav-item" onclick="mostrarTela('liveScreen')"><span class="nav-icon">🔴</span> Live</button><button class="nav-item" onclick="mostrarTela('perfilBarbeiroScreen')"><span class="nav-icon">👤</span> Perfil</button></nav>
+    <!-- BOTTOM NAVS -->
+    <nav class="bottom-nav-modern" id="bottomNavCliente" style="display:none;">
+        <button class="nav-item-modern active" onclick="mostrarTela('homeClienteScreen')"><i class="fas fa-home"></i><span>Início</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('agendamentoScreen')"><i class="fas fa-cut"></i><span>Agendar</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('reelsScreen')"><i class="fas fa-film"></i><span>Reels</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('liveScreen')"><i class="fas fa-circle"></i><span>Live</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('perfilClienteScreen')"><i class="fas fa-user"></i><span>Perfil</span></button>
+    </nav>
+    <nav class="bottom-nav-modern" id="bottomNavBarbeiro" style="display:none;">
+        <button class="nav-item-modern active" onclick="mostrarTela('homeBarbeiroScreen')"><i class="fas fa-home"></i><span>Início</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('criarPostScreen')"><i class="fas fa-camera"></i><span>Postar</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('extratoScreen')"><i class="fas fa-chart-bar"></i><span>Extrato</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('liveScreen')"><i class="fas fa-circle"></i><span>Live</span></button>
+        <button class="nav-item-modern" onclick="mostrarTela('perfilBarbeiroScreen')"><i class="fas fa-user"></i><span>Perfil</span></button>
+    </nav>
+
+    <!-- TOAST / MODAL -->
+    <div class="toast-modern" id="toast" style="display:none;"></div>
+    <div class="modal-modern" id="modalComentario">
+        <div class="modal-content-modern">
+            <div class="modal-header-modern">
+                <h3>💬 Comentários</h3>
+                <button onclick="fecharModalComentario()">✕</button>
+            </div>
+            <div id="comentariosContainer" class="modal-body-modern"></div>
+            <div class="modal-footer-modern">
+                <textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea>
+                <button class="portal-btn portal-btn-primary" onclick="adicionarComentario()">📤 Comentar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
