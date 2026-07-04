@@ -247,6 +247,74 @@ function mostrarTela(id) {
 }
 
 // ==========================================================
+// ===== EFEITOS DE ÁUDIO =====
+// ==========================================================
+function playSound(type) {
+    var sounds = {
+        click: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B',
+        success: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B',
+        notification: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B',
+        like: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B'
+    };
+    try {
+        var audio = new Audio(sounds[type] || sounds.click);
+        audio.volume = 0.3;
+        audio.play().catch(function() {});
+    } catch (e) {}
+}
+
+// ==========================================================
+// ===== ATUALIZAR HEADER COM PERFIL DA LOJA =====
+// ==========================================================
+function atualizarHeaderLoja() {
+    var lojaSalva = localStorage.getItem('barbeariaRM_loja');
+    if (lojaSalva) {
+        try {
+            var loja = JSON.parse(lojaSalva);
+            document.getElementById('headerLogoImg').src = loja.logo || 'logobarbearia-rm.png';
+            document.getElementById('headerTitle').textContent = loja.nome || 'LPX Tecnologia';
+            document.getElementById('headerSlogan').textContent = 'Portal Multi-Lojas';
+        } catch (e) {}
+    }
+    // Atualizar avatar do cliente
+    if (clienteLogado && clienteLogado.fotoPerfil) {
+        var av = document.getElementById('clienteAvatarHeader');
+        if (av) av.querySelector('img').src = clienteLogado.fotoPerfil;
+    }
+    if (barbeiroLogado && barbeiroLogado.fotoPerfil) {
+        var av = document.getElementById('barbeiroAvatarHeader');
+        if (av) av.querySelector('img').src = barbeiroLogado.fotoPerfil;
+    }
+}
+
+// ==========================================================
+// ===== TOGGLE MODO ESCURO (BÔNUS) =====
+// ==========================================================
+function toggleModoEscuro() {
+    document.body.classList.toggle('light-mode');
+    var isLight = document.body.classList.contains('light-mode');
+    localStorage.setItem('barbeariaRM_tema', isLight ? 'light' : 'dark');
+}
+
+// ==========================================================
+// ===== SWITCH LOGIN TAB =====
+// ==========================================================
+function switchLoginTab(tipo) {
+    document.querySelectorAll('.login-tab').forEach(function(t) { t.classList.remove('active'); });
+    event.target.classList.add('active');
+    document.getElementById('loginFormCliente').style.display = tipo === 'cliente' ? 'block' : 'none';
+    document.getElementById('loginFormBarbeiro').style.display = tipo === 'barbeiro' ? 'block' : 'none';
+}
+
+// ==========================================================
+// ===== INICIALIZAÇÃO (ADICIONE NO DOMContentLoaded) =====
+// ==========================================================
+// Adicione estas linhas dentro do DOMContentLoaded:
+// atualizarHeaderLoja();
+// var tema = localStorage.getItem('barbeariaRM_tema');
+// if (tema === 'light') document.body.classList.add('light-mode');
+
+// ==========================================================
 // ===== INICIALIZAÇÃO =====
 // ==========================================================
 document.addEventListener('DOMContentLoaded', function() {
