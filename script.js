@@ -386,6 +386,76 @@ function enviarChatLive(){
     c.scrollTop=c.scrollHeight;input.value='';
 }
 
+// ADICIONE NO SEU SCRIPT - SORTEIO NA LIVE
+
+let sorteioAtivo = false;
+let participantesSorteio = [];
+let premioSorteio = '';
+
+function iniciarSorteio(premio) {
+    participantesSorteio = [];
+    premioSorteio = premio;
+    sorteioAtivo = true;
+    
+    // Mostrar no chat
+    const chatContainer = document.getElementById('liveChatMessages');
+    chatContainer.innerHTML += `
+        <div style="background:rgba(255,215,0,0.15);padding:12px;border-radius:8px;margin:8px 0;border:2px solid #FFD700;text-align:center;">
+            <div style="font-size:20px;">🎉</div>
+            <strong style="color:#FFD700;">SORTEIO INICIADO!</strong><br>
+            <span style="color:white;">Prêmio: ${premio}</span><br>
+            <span style="font-size:11px;color:#aaa;">Digite !PARTICIPAR no chat</span>
+        </div>
+    `;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    mostrarToast('🎉 Sorteio iniciado! Digite !PARTICIPAR', 'success');
+}
+
+function participarSorteio(nome) {
+    if (!sorteioAtivo) return;
+    if (participantesSorteio.includes(nome)) {
+        mostrarToast('⚠️ Você já está participando!', 'info');
+        return;
+    }
+    participantesSorteio.push(nome);
+    mostrarToast('✅ ' + nome + ' entrou no sorteio!', 'success');
+    
+    // Atualizar contador no chat
+    const chatContainer = document.getElementById('liveChatMessages');
+    chatContainer.innerHTML += `
+        <div style="font-size:10px;color:#FFD700;text-align:center;">
+            🎯 ${participantesSorteio.length} participante(s)
+        </div>
+    `;
+}
+
+function realizarSorteio() {
+    if (participantesSorteio.length === 0) {
+        mostrarToast('❌ Ninguém participou!', 'error');
+        return;
+    }
+    
+    const vencedor = participantesSorteio[Math.floor(Math.random() * participantesSorteio.length)];
+    sorteioAtivo = false;
+    
+    // Anunciar vencedor com destaque
+    const chatContainer = document.getElementById('liveChatMessages');
+    chatContainer.innerHTML += `
+        <div style="background:rgba(0,200,100,0.2);padding:16px;border-radius:12px;margin:8px 0;border:3px solid #00cc66;text-align:center;animation:anuncioEntrada 0.6s ease-out;">
+            <div style="font-size:30px;">🏆</div>
+            <strong style="color:#00cc66;font-size:18px;">VENCEDOR!</strong><br>
+            <span style="color:white;font-size:16px;">🎉 ${vencedor} 🎉</span><br>
+            <span style="color:#FFD700;">Ganhou: ${premioSorteio}</span><br>
+            <span style="font-size:11px;color:#aaa;">Entre em contato para resgatar!</span>
+        </div>
+    `;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    
+    mostrarToast('🏆 ' + vencedor + ' venceu!', 'success');
+    participantesSorteio = [];
+}
+
 // ==================== ANÚNCIO AUTOMÁTICO ====================
 function carregarAnuncioAuto(event){
     let f=event.target.files[0];if(!f)return;
