@@ -1,14 +1,11 @@
 /* ==========================================================
-   BARBEARIA RM - SCRIPT PRINCIPAL (REFRATORADO)
-   Autor: Barbearia RM
-   Versão: 2.0
+   BARBEARIA RM - SCRIPT PRINCIPAL COMPLETO
    ========================================================== */
 
 // ==========================================================
-// CONFIGURAÇÃO SEGURA DO FIREBASE
-// (Em produção, carregue isso de um arquivo .env ou backend)
+// CONFIGURAÇÃO FIREBASE
 // ==========================================================
-const FIREBASE_CONFIG = {
+const firebaseConfig = {
     apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
     authDomain: "barbearia-rm.firebaseapp.com",
     projectId: "barbearia-rm",
@@ -18,1324 +15,1451 @@ const FIREBASE_CONFIG = {
     measurementId: "G-TKVLVLPBJH"
 };
 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+db.settings({ ignoreUndefinedProperties: true });
+console.log('🔥 Firebase conectado');
+
 // ==========================================================
-// CONSTANTES E CONFIGURAÇÕES GLOBAIS
+// VARIÁVEIS GLOBAIS
 // ==========================================================
-const APP_CONFIG = {
-    nome: 'Barbearia RM',
-    slogan: 'Atitude, Estilo e Confiança',
-    moeda: 'BRL',
-    locale: 'pt-BR',
-    sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 dias
-    cacheTimeout: 5 * 60 * 1000, // 5 minutos
-    maxImageWidth: 800,
-    imageQuality: 0.7,
-    tiposCorte: [
-        'Corte Social', 'Corte Degradê', 'Corte Navalhado',
-        'Corte Máquina', 'Barba', 'Barba + Corte',
-        'Pintura', 'Luzes', 'Platinado', 'Selagem', 'Progressiva'
-    ],
-    horariosDisponiveis: gerarHorarios('09:00', '18:00', 30)
+let clienteLogado = null;
+let barbeiroLogado = null;
+let imagemBase64 = '';
+let videoBase64 = '';
+let imagemPlanoBase64 = '';
+let anuncioImagemBase64 = '';
+let todosPosts = [];
+let todosReels = [];
+let reelsAtual = 0;
+let postSelecionadoId = null;
+let horariosTrabalho = {
+    diasTrabalho: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
+    horarioInicio: '09:00',
+    horarioFim: '18:00',
+    intervaloCortes: 30,
+    folgas: []
 };
 
 // ==========================================================
-// UTILITÁRIOS (Utils)
+// FUNÇÕES DE NAVEGAÇÃO
 // ==========================================================
-const Utils = {
-    // Hash simples (apenas para demonstração - use bcrypt em produção!)
-    hashPassword: (senha) => {
-        let hash = 0;
-        for (let i = 0; i < senha.length; i++) {
-            const char = senha.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        return Math.abs(hash).toString(16);
-    },
-
-    // Validadores
-    isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
-    isValidPassword: (senha) => senha && senha.length >= 6,
-    isValidPhone: (fone) => {
-        const limpo = fone.replace(/\D/g, '');
-        return limpo.length >= 10 && limpo.length <= 11;
-    },
-    isValidPrice: (preco) => !isNaN(preco) && preco > 0,
-    isValidDate: (data) => {
-        const d = new Date(data);
-        return d instanceof Date && !isNaN(d);
-    },
-
-    // Formatadores
-    formatPhone: (valor) => {
-        const limpo = valor.replace(/\D/g, '');
-        if (limpo.length === 11) return `(${limpo.slice(0,2)}) ${limpo.slice(2,7)}-${limpo.slice(7)}`;
-        if (limpo.length === 10) return `(${limpo.slice(0,2)}) ${limpo.slice(2,6)}-${limpo.slice(6)}`;
-        return valor;
-    },
-
-    formatCurrency: (valor) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(valor || 0);
-    },
-
-    formatDate: (data) => {
-        if (!data) return 'N/A';
-        return new Intl.DateTimeFormat('pt-BR').format(new Date(data));
-    },
-
-    formatDateTime: (data) => {
-        if (!data) return 'N/A';
-        return new Intl.DateTimeFormat('pt-BR', {
-            dateStyle: 'short',
-            timeStyle: 'short'
-        }).format(new Date(data));
-    },
-
-    formatTimeAgo: (dataString) => {
-        const data = new Date(dataString);
-        const agora = new Date();
-        const segundos = Math.floor((agora - data) / 1000);
-        
-        if (segundos < 60) return 'Agora mesmo';
-        const minutos = Math.floor(segundos / 60);
-        if (minutos < 60) return `Há ${minutos} min`;
-        const horas = Math.floor(minutos / 60);
-        if (horas < 24) return `Há ${horas}h`;
-        const dias = Math.floor(horas / 24);
-        if (dias < 7) return `Há ${dias} dias`;
-        return Utils.formatDate(dataString);
-    },
-
-    truncateText: (texto, max = 100) => {
-        if (!texto) return '';
-        return texto.length > max ? texto.slice(0, max) + '...' : texto;
-    },
-
-    slugify: (texto) => {
-        return texto.toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-    },
-
-    generateId: () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-
-    // Compressão de imagem
-    compressImage: (base64, larguraMax = 800) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let largura = img.width;
-                let altura = img.height;
-                
-                if (largura > larguraMax) {
-                    altura = (larguraMax / largura) * altura;
-                    largura = larguraMax;
-                }
-                
-                canvas.width = largura;
-                canvas.height = altura;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, largura, altura);
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
-            };
-            img.src = base64;
-        });
-    },
-
-    // Debounce para limitar chamadas
-    debounce: (func, wait = 300) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-};
-
-// Função auxiliar para gerar horários
-function gerarHorarios(inicio, fim, intervaloMinutos) {
-    const horarios = [];
-    const [hInicio, mInicio] = inicio.split(':').map(Number);
-    const [hFim, mFim] = fim.split(':').map(Number);
+function mostrarTela(nomeTela) {
+    console.log('📱 Navegando para:', nomeTela);
     
-    let hora = hInicio;
-    let minuto = mInicio;
+    document.querySelectorAll('.screen').forEach(tela => {
+        tela.classList.remove('active');
+    });
     
-    while (hora < hFim || (hora === hFim && minuto <= mFim)) {
-        const h = String(hora).padStart(2, '0');
-        const m = String(minuto).padStart(2, '0');
-        horarios.push(`${h}:${m}`);
-        
-        minuto += intervaloMinutos;
-        if (minuto >= 60) {
-            hora++;
-            minuto -= 60;
-        }
+    let idTela;
+    if (nomeTela === 'login') {
+        idTela = 'loginScreen';
+    } else {
+        idTela = nomeTela + 'Screen';
     }
     
-    return horarios;
+    const tela = document.getElementById(idTela);
+    if (tela) {
+        tela.classList.add('active');
+    }
+    
+    atualizarBottomNav(nomeTela);
+    carregarDadosTela(nomeTela);
+    window.scrollTo(0, 0);
+}
+
+function atualizarBottomNav(nomeTela) {
+    const navCliente = document.getElementById('bottomNavCliente');
+    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
+    
+    if (navCliente) navCliente.style.display = 'none';
+    if (navBarbeiro) navBarbeiro.style.display = 'none';
+    
+    const telasCliente = ['homeCliente', 'agendamento', 'galeriaCortes', 'reels', 'anuncios', 'live', 'perfilCliente', 'detalhePost', 'pagamento'];
+    const telasBarbeiro = ['homeBarbeiro', 'criarPost', 'extrato', 'criarPlano', 'editarPlano', 'horariosTrabalho', 'perfilBarbeiro'];
+    
+    if (telasCliente.includes(nomeTela) && clienteLogado) {
+        if (navCliente) navCliente.style.display = 'flex';
+    } else if (telasBarbeiro.includes(nomeTela) && barbeiroLogado) {
+        if (navBarbeiro) navBarbeiro.style.display = 'flex';
+    }
+}
+
+function carregarDadosTela(nomeTela) {
+    switch(nomeTela) {
+        case 'homeCliente':
+            carregarFeedCliente();
+            carregarAgendaCliente();
+            verificarLiveAtiva();
+            break;
+        case 'homeBarbeiro':
+            carregarAgendamentosBarbeiro();
+            carregarPlanos();
+            calcularFaturamento();
+            carregarMeusPosts();
+            verificarLiveAtiva();
+            break;
+        case 'agendamento':
+            carregarOpcoesAgendamento();
+            break;
+        case 'anuncios':
+            carregarAnuncios();
+            if (barbeiroLogado && document.getElementById('formAnuncio')) {
+                document.getElementById('formAnuncio').style.display = 'block';
+            }
+            break;
+        case 'live':
+            carregarLive();
+            break;
+        case 'perfilCliente':
+            carregarPerfilCliente();
+            break;
+        case 'perfilBarbeiro':
+            carregarPerfilBarbeiro();
+            break;
+        case 'galeriaCortes':
+            carregarGaleria();
+            break;
+        case 'reels':
+            carregarReels();
+            break;
+        case 'horariosTrabalho':
+            carregarHorarios();
+            break;
+    }
 }
 
 // ==========================================================
-// SERVIÇO DO FIREBASE
+// TOAST
 // ==========================================================
-const FirebaseDB = {
-    db: null,
-    cache: new Map(),
+function mostrarToast(mensagem, tipo = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    
+    toast.textContent = mensagem;
+    toast.className = 'toast ' + tipo;
+    toast.style.display = 'block';
+    
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
 
-    inicializar() {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(FIREBASE_CONFIG);
-        }
-        this.db = firebase.firestore();
-        this.db.settings({ ignoreUndefinedProperties: true });
-        console.log('✅ Firebase conectado');
-    },
+// ==========================================================
+// FUNÇÕES DE LOGIN
+// ==========================================================
+function mostrarFormularioLogin(tipo) {
+    document.getElementById('loginFormCliente').classList.remove('visible');
+    document.getElementById('loginFormBarbeiro').classList.remove('visible');
+    
+    if (tipo === 'cliente') {
+        document.getElementById('loginFormCliente').classList.add('visible');
+    } else if (tipo === 'barbeiro') {
+        document.getElementById('loginFormBarbeiro').classList.add('visible');
+    }
+}
 
-    // CRUD genérico
-    async criar(colecao, dados) {
-        try {
-            const docRef = this.db.collection(colecao).doc(dados.id || Utils.generateId());
-            const dadosCompletos = {
-                ...dados,
-                id: docRef.id,
-                dataCriacao: dados.dataCriacao || new Date().toISOString(),
-                dataAtualizacao: new Date().toISOString()
-            };
-            await docRef.set(dadosCompletos);
-            return dadosCompletos;
-        } catch (erro) {
-            console.error(`Erro ao criar em ${colecao}:`, erro);
-            throw erro;
-        }
-    },
+function fecharFormulariosLogin() {
+    const formCliente = document.getElementById('loginFormCliente');
+    const formBarbeiro = document.getElementById('loginFormBarbeiro');
+    if (formCliente) formCliente.classList.remove('visible');
+    if (formBarbeiro) formBarbeiro.classList.remove('visible');
+}
 
-    async atualizar(colecao, id, dados) {
-        try {
-            await this.db.collection(colecao).doc(id).update({
-                ...dados,
-                dataAtualizacao: new Date().toISOString()
-            });
-            return true;
-        } catch (erro) {
-            console.error(`Erro ao atualizar ${colecao}/${id}:`, erro);
-            throw erro;
-        }
-    },
+function voltarParaLogin() {
+    fecharFormulariosLogin();
+    mostrarTela('login');
+}
 
-    async deletar(colecao, id) {
-        try {
-            await this.db.collection(colecao).doc(id).delete();
-            return true;
-        } catch (erro) {
-            console.error(`Erro ao deletar ${colecao}/${id}:`, erro);
-            throw erro;
-        }
-    },
+// ==========================================================
+// SESSÃO
+// ==========================================================
+function salvarSessao(tipo, dados) {
+    const sessao = {
+        tipo: tipo,
+        id: dados.id,
+        nome: dados.nome,
+        email: dados.email,
+        celular: dados.celular || '',
+        senha: dados.senha || '',
+        fotoPerfil: dados.fotoPerfil || '',
+        timestamp: Date.now()
+    };
+    localStorage.setItem('barbeariaRM_sessao', JSON.stringify(sessao));
+}
 
-    async buscar(colecao, id) {
-        try {
-            const doc = await this.db.collection(colecao).doc(id).get();
-            return doc.exists ? { id: doc.id, ...doc.data() } : null;
-        } catch (erro) {
-            console.error(`Erro ao buscar ${colecao}/${id}:`, erro);
+function carregarSessao() {
+    const dados = localStorage.getItem('barbeariaRM_sessao');
+    if (!dados) return null;
+    
+    try {
+        const sessao = JSON.parse(dados);
+        if ((Date.now() - sessao.timestamp) / 86400000 > 30) {
+            localStorage.removeItem('barbeariaRM_sessao');
             return null;
         }
-    },
+        return sessao;
+    } catch (e) {
+        localStorage.removeItem('barbeariaRM_sessao');
+        return null;
+    }
+}
 
-    async listar(colecao, ordenarPor = 'dataCriacao', direcao = 'desc', limite = 50) {
-        const cacheKey = `${colecao}_${ordenarPor}_${direcao}_${limite}`;
-        
-        // Verificar cache
-        if (this.cache.has(cacheKey)) {
-            const cached = this.cache.get(cacheKey);
-            if (Date.now() - cached.timestamp < APP_CONFIG.cacheTimeout) {
-                return cached.data;
+function limparSessao() {
+    localStorage.removeItem('barbeariaRM_sessao');
+}
+
+async function restaurarSessao() {
+    const sessao = carregarSessao();
+    if (!sessao) return false;
+    
+    try {
+        if (sessao.tipo === 'cliente') {
+            const snapshot = await db.collection('clientes')
+                .where('email', '==', sessao.email)
+                .where('senha', '==', sessao.senha)
+                .get();
+            
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                clienteLogado = { id: doc.id, ...doc.data() };
+                document.getElementById('welcomeClienteNome').textContent = clienteLogado.nome;
+                mostrarTela('homeCliente');
+                return true;
+            }
+        } else {
+            const snapshot = await db.collection('barbeiros')
+                .where('email', '==', sessao.email)
+                .where('senha', '==', sessao.senha)
+                .get();
+            
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                barbeiroLogado = { id: doc.id, ...doc.data() };
+                document.getElementById('welcomeBarbeiroNome').textContent = barbeiroLogado.nome;
+                mostrarTela('homeBarbeiro');
+                return true;
             }
         }
-
-        try {
-            const snapshot = await this.db.collection(colecao)
-                .orderBy(ordenarPor, direcao)
-                .limit(limite)
-                .get();
-
-            const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Atualizar cache
-            this.cache.set(cacheKey, { data: dados, timestamp: Date.now() });
-            
-            return dados;
-        } catch (erro) {
-            console.error(`Erro ao listar ${colecao}:`, erro);
-            return [];
-        }
-    },
-
-    async buscarPorFiltro(colecao, campo, operador, valor) {
-        try {
-            const snapshot = await this.db.collection(colecao)
-                .where(campo, operador, valor)
-                .get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (erro) {
-            console.error(`Erro ao filtrar ${colecao}:`, erro);
-            return [];
-        }
-    },
-
-    limparCache() {
-        this.cache.clear();
+    } catch (e) {
+        console.error('Erro ao restaurar sessão:', e);
     }
-};
+    
+    limparSessao();
+    return false;
+}
 
 // ==========================================================
-// SERVIÇO DE AUTENTICAÇÃO
+// LOGIN / CADASTRO
 // ==========================================================
-const AuthService = {
-    usuarioAtual: null,
-    tipoUsuario: null, // 'cliente' ou 'barbeiro'
-
-    async cadastrar(dados, tipo) {
-        // Validar
-        if (!dados.nome || dados.nome.trim().length < 3) {
-            throw new Error('Nome deve ter pelo menos 3 caracteres');
-        }
-        if (!Utils.isValidEmail(dados.email)) {
-            throw new Error('E-mail inválido');
-        }
-        if (!Utils.isValidPassword(dados.senha)) {
-            throw new Error('Senha deve ter pelo menos 6 caracteres');
-        }
-        if (!Utils.isValidPhone(dados.celular)) {
-            throw new Error('Celular inválido');
-        }
-
-        const colecao = tipo === 'cliente' ? 'clientes' : 'barbeiros';
-        
-        // Verificar duplicidade
-        const existentes = await FirebaseDB.buscarPorFiltro(
-            colecao, 'email', '==', dados.email.toLowerCase().trim()
-        );
-        
-        if (existentes.length > 0) {
-            throw new Error('E-mail já cadastrado');
-        }
-
-        // Criar usuário
-        const novoUsuario = await FirebaseDB.criar(colecao, {
-            nome: dados.nome.trim(),
-            email: dados.email.toLowerCase().trim(),
-            celular: dados.celular.replace(/\D/g, ''),
-            senha: Utils.hashPassword(dados.senha),
-            fotoPerfil: '',
-            ultimoAcesso: new Date().toISOString()
-        });
-
-        // Login automático
-        await this.login(dados.email, dados.senha, tipo);
-        
-        return novoUsuario;
-    },
-
-    async login(email, senha, tipo) {
-        const colecao = tipo === 'cliente' ? 'clientes' : 'barbeiros';
-        const hashSenha = Utils.hashPassword(senha);
-        
-        const usuarios = await FirebaseDB.buscarPorFiltro(
-            colecao, 'email', '==', email.toLowerCase().trim()
-        );
-
-        if (usuarios.length === 0 || usuarios[0].senha !== hashSenha) {
-            throw new Error('E-mail ou senha inválidos');
-        }
-
-        const usuario = usuarios[0];
-        
-        // Atualizar último acesso
-        await FirebaseDB.atualizar(colecao, usuario.id, {
-            ultimoAcesso: new Date().toISOString()
-        });
-
-        this.usuarioAtual = usuario;
-        this.tipoUsuario = tipo;
-        this.salvarSessao();
-
-        return usuario;
-    },
-
-    salvarSessao() {
-        const sessao = {
-            usuario: this.usuarioAtual,
-            tipo: this.tipoUsuario,
-            timestamp: Date.now()
-        };
-        localStorage.setItem('barbearia_session', btoa(JSON.stringify(sessao)));
-    },
-
-    carregarSessao() {
-        try {
-            const dados = localStorage.getItem('barbearia_session');
-            if (!dados) return false;
-            
-            const sessao = JSON.parse(atob(dados));
-            
-            if (Date.now() - sessao.timestamp > APP_CONFIG.sessionDuration) {
-                this.logout();
-                return false;
-            }
-            
-            this.usuarioAtual = sessao.usuario;
-            this.tipoUsuario = sessao.tipo;
-            return true;
-        } catch (erro) {
-            this.logout();
-            return false;
-        }
-    },
-
-    async restaurarSessao() {
-        if (!this.carregarSessao()) return false;
-        
-        // Verificar se usuário ainda existe no banco
-        const colecao = this.tipoUsuario === 'cliente' ? 'clientes' : 'barbeiros';
-        const usuario = await FirebaseDB.buscar(colecao, this.usuarioAtual.id);
-        
-        if (!usuario) {
-            this.logout();
-            return false;
-        }
-        
-        this.usuarioAtual = usuario;
-        return true;
-    },
-
-    logout() {
-        this.usuarioAtual = null;
-        this.tipoUsuario = null;
-        localStorage.removeItem('barbearia_session');
-    },
-
-    isAuthenticated() {
-        return this.usuarioAtual !== null;
-    },
-
-    isCliente() {
-        return this.tipoUsuario === 'cliente';
-    },
-
-    isBarbeiro() {
-        return this.tipoUsuario === 'barbeiro';
+async function loginCliente() {
+    const email = document.getElementById('loginEmailCliente').value.trim();
+    const senha = document.getElementById('loginSenhaCliente').value;
+    
+    if (!email || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
     }
-};
-
-// ==========================================================
-// GERENCIADOR DE UI (Telas e Navegação)
-// ==========================================================
-const UIManager = {
-    telaAtual: null,
-
-    // Cache de elementos DOM
-    elementos: {},
-
-    init() {
-        // Cache de elementos frequentemente usados
-        this.elementos = {
-            screens: document.querySelectorAll('.screen'),
-            bottomNavCliente: document.getElementById('bottomNavCliente'),
-            bottomNavBarbeiro: document.getElementById('bottomNavBarbeiro'),
-            toast: document.getElementById('toast'),
-            modalComentario: document.getElementById('modalComentario')
-        };
-    },
-
-    navegarPara(nomeTela) {
-        // Esconder todas as telas
-        this.elementos.screens.forEach(tela => tela.classList.remove('active'));
+    
+    try {
+        const snapshot = await db.collection('clientes')
+            .where('email', '==', email)
+            .where('senha', '==', senha)
+            .get();
         
-        // Mostrar tela alvo
-        const tela = document.getElementById(nomeTela + 'Screen') || 
-                     document.getElementById(nomeTela);
-        
-        if (tela) {
-            tela.classList.add('active');
-            this.telaAtual = nomeTela;
-            
-            // Atualizar navegação inferior
-            this.atualizarBottomNav();
-            
-            // Carregar dados da tela
-            ScreenLoader.carregar(nomeTela);
-        }
-        
-        window.scrollTo(0, 0);
-    },
-
-    atualizarBottomNav() {
-        if (!AuthService.isAuthenticated()) {
-            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'none';
-            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'none';
+        if (snapshot.empty) {
+            mostrarToast('❌ E-mail ou senha inválidos!', 'error');
             return;
         }
-
-        if (AuthService.isCliente()) {
-            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'flex';
-            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'none';
-        } else {
-            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'none';
-            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'flex';
-        }
-    },
-
-    mostrarToast(mensagem, tipo = 'info') {
-        const toast = this.elementos.toast;
-        if (!toast) return;
         
-        toast.textContent = mensagem;
-        toast.className = `toast ${tipo}`;
-        toast.style.display = 'block';
+        const doc = snapshot.docs[0];
+        clienteLogado = { id: doc.id, ...doc.data() };
+        salvarSessao('cliente', clienteLogado);
         
-        clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => {
-            toast.style.display = 'none';
-        }, 3000);
-    },
-
-    mostrarLoading(containerId) {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.innerHTML = `
-                <div class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Carregando...</p>
-                </div>
-            `;
-        }
-    },
-
-    mostrarVazio(containerId, mensagem = 'Nenhum item encontrado') {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📭</div>
-                    <p>${mensagem}</p>
-                </div>
-            `;
-        }
-    },
-
-    mostrarErro(containerId, mensagem = 'Erro ao carregar') {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.innerHTML = `
-                <div class="error-state">
-                    <div class="error-icon">⚠️</div>
-                    <p>${mensagem}</p>
-                    <button class="btn btn-small btn-outline" onclick="location.reload()">
-                        🔄 Tentar novamente
-                    </button>
-                </div>
-            `;
-        }
+        document.getElementById('loginEmailCliente').value = '';
+        document.getElementById('loginSenhaCliente').value = '';
+        fecharFormulariosLogin();
+        
+        document.getElementById('welcomeClienteNome').textContent = clienteLogado.nome;
+        mostrarToast('✅ Bem-vindo, ' + clienteLogado.nome + '!', 'success');
+        mostrarTela('homeCliente');
+        
+    } catch (erro) {
+        console.error('Erro no login:', erro);
+        mostrarToast('❌ Erro ao fazer login!', 'error');
     }
-};
+}
 
-// ==========================================================
-// CARREGADOR DE TELAS
-// ==========================================================
-const ScreenLoader = {
-    async carregar(nomeTela) {
-        switch(nomeTela) {
-            case 'homeCliente':
-                await this.carregarHomeCliente();
-                break;
-            case 'homeBarbeiro':
-                await this.carregarHomeBarbeiro();
-                break;
-            case 'agendamento':
-                this.carregarAgendamento();
-                break;
-            case 'anuncios':
-                await this.carregarAnuncios();
-                break;
-            case 'live':
-                await LiveManager.carregar();
-                break;
-            case 'perfilCliente':
-                this.carregarPerfilCliente();
-                break;
-            case 'perfilBarbeiro':
-                this.carregarPerfilBarbeiro();
-                break;
-            case 'galeriaCortes':
-                await this.carregarGaleria();
-                break;
-            case 'reels':
-                await this.carregarReels();
-                break;
-            case 'horariosTrabalho':
-                await this.carregarHorarios();
-                break;
-        }
-    },
-
-    async carregarHomeCliente() {
-        if (!AuthService.isAuthenticated()) return;
-        
-        // Atualizar nome
-        const nomeEl = document.getElementById('welcomeClienteNome');
-        if (nomeEl) nomeEl.textContent = AuthService.usuarioAtual.nome;
-        
-        // Carregar feed
-        UIManager.mostrarLoading('feedClienteContainer');
-        
-        try {
-            const posts = await PostService.listar();
-            
-            if (posts.length === 0) {
-                UIManager.mostrarVazio('feedClienteContainer', 'Nenhum post ainda');
-            } else {
-                const html = posts.map(post => PostService.renderizarCard(post)).join('');
-                document.getElementById('feedClienteContainer').innerHTML = html;
-            }
-        } catch (erro) {
-            UIManager.mostrarErro('feedClienteContainer');
-        }
-        
-        // Carregar agendamentos
-        await AgendamentoService.carregarAgendaCliente();
-    },
-
-    async carregarHomeBarbeiro() {
-        if (!AuthService.isAuthenticated()) return;
-        
-        // Atualizar nome
-        const nomeEl = document.getElementById('welcomeBarbeiroNome');
-        if (nomeEl) nomeEl.textContent = AuthService.usuarioAtual.nome;
-        
-        // Carregar dados
-        await Promise.all([
-            AgendamentoService.carregarAgendamentosBarbeiro(),
-            PlanoService.carregarPlanos(),
-            PostService.carregarMeusPosts(),
-            FinanceiroService.calcularFaturamento()
-        ]);
-    },
-
-    carregarAgendamento() {
-        // Popular horários
-        const selectHorario = document.getElementById('agendamentoHorario');
-        if (selectHorario) {
-            selectHorario.innerHTML = APP_CONFIG.horariosDisponiveis
-                .map(h => `<option value="${h}">${h}</option>`)
-                .join('');
-        }
-        
-        // Popular tipos de corte
-        const selectTipo = document.getElementById('agendamentoTipo');
-        if (selectTipo) {
-            selectTipo.innerHTML = APP_CONFIG.tiposCorte
-                .map(t => `<option value="${t}">${t}</option>`)
-                .join('');
-        }
-        
-        // Setar data mínima como hoje
-        const inputData = document.getElementById('agendamentoData');
-        if (inputData) {
-            inputData.min = new Date().toISOString().split('T')[0];
-        }
-    },
-
-    async carregarAnuncios() {
-        UIManager.mostrarLoading('anunciosContainer');
-        
-        try {
-            const hoje = new Date().toISOString();
-            const anuncios = await FirebaseDB.listar('anuncios');
-            
-            const ativos = anuncios.filter(a => a.dataExpiracao > hoje);
-            
-            if (ativos.length === 0) {
-                UIManager.mostrarVazio('anunciosContainer', 'Nenhum anúncio ativo');
-            } else {
-                const html = ativos.map(anuncio => `
-                    <div class="card anuncio-card">
-                        <span class="badge badge-anuncio">📢 ANÚNCIO</span>
-                        ${anuncio.imagem ? `
-                            <img src="${anuncio.imagem}" alt="${anuncio.titulo}" 
-                                 class="anuncio-imagem" loading="lazy">
-                        ` : ''}
-                        <h3 class="anuncio-titulo">${anuncio.titulo}</h3>
-                        <p class="anuncio-descricao">${anuncio.descricao}</p>
-                        ${anuncio.link ? `
-                            <a href="${anuncio.link}" target="_blank" rel="noopener" 
-                               class="btn btn-small btn-anuncio">
-                                🔗 Saiba Mais
-                            </a>
-                        ` : ''}
-                        ${AuthService.isBarbeiro() ? `
-                            <button class="btn btn-small btn-danger" 
-                                    onclick="AnuncioService.excluir('${anuncio.id}')">
-                                🗑 Excluir
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('');
-                
-                document.getElementById('anunciosContainer').innerHTML = html;
-            }
-        } catch (erro) {
-            UIManager.mostrarErro('anunciosContainer');
-        }
-    },
-
-    carregarPerfilCliente() {
-        if (!AuthService.isAuthenticated()) return;
-        
-        const user = AuthService.usuarioAtual;
-        document.getElementById('perfilClienteNome').textContent = user.nome;
-        document.getElementById('perfilClienteEmail').textContent = user.email;
-        document.getElementById('editClienteNome').value = user.nome || '';
-        document.getElementById('editClienteCelular').value = user.celular || '';
-        
-        // Atualizar avatar
-        const avatar = document.getElementById('perfilClienteAvatar');
-        if (avatar && user.fotoPerfil) {
-            avatar.querySelector('img').src = user.fotoPerfil;
-        }
-    },
-
-    carregarPerfilBarbeiro() {
-        if (!AuthService.isAuthenticated()) return;
-        
-        const user = AuthService.usuarioAtual;
-        document.getElementById('perfilBarbeiroNome').textContent = user.nome;
-        document.getElementById('perfilBarbeiroEmail').textContent = user.email;
-        document.getElementById('editBarbeiroNome').value = user.nome || '';
-        document.getElementById('editBarbeiroCelular').value = user.celular || '';
-        document.getElementById('editBarbeiroEmail').value = user.email || '';
-        
-        // Atualizar avatar
-        const avatar = document.getElementById('perfilBarbeiroAvatar');
-        if (avatar && user.fotoPerfil) {
-            avatar.querySelector('img').src = user.fotoPerfil;
-        }
-    },
-
-    async carregarGaleria() {
-        UIManager.mostrarLoading('galeriaContainer');
-        
-        try {
-            const posts = await PostService.listar();
-            
-            if (posts.length === 0) {
-                UIManager.mostrarVazio('galeriaContainer', 'Nenhum corte na galeria');
-            } else {
-                const html = posts.map(post => `
-                    <div class="galeria-item" onclick="PostService.verDetalhe('${post.id}')">
-                        ${post.imagem ? 
-                            `<img src="${post.imagem}" alt="${post.titulo}" loading="lazy">` :
-                            `<div class="galeria-placeholder">✂️</div>`
-                        }
-                        <div class="galeria-info">
-                            <h4>${post.titulo}</h4>
-                            <span class="preco">${Utils.formatCurrency(post.preco)}</span>
-                        </div>
-                    </div>
-                `).join('');
-                
-                document.getElementById('galeriaContainer').innerHTML = html;
-            }
-        } catch (erro) {
-            UIManager.mostrarErro('galeriaContainer');
-        }
-    },
-
-    async carregarReels() {
-        UIManager.mostrarLoading('reelsContainer');
-        
-        try {
-            const posts = await PostService.listar();
-            
-            if (posts.length === 0) {
-                UIManager.mostrarVazio('reelsContainer', 'Nenhum reel disponível');
-            } else {
-                window.reelsData = posts;
-                window.reelsIndex = 0;
-                ReelsManager.exibir(0);
-            }
-        } catch (erro) {
-            UIManager.mostrarErro('reelsContainer');
-        }
-    },
-
-    async carregarHorarios() {
-        if (!AuthService.isBarbeiro()) return;
-        
-        const config = await FirebaseDB.buscar('configuracoes', 'horarios_' + AuthService.usuarioAtual.id);
-        
-        if (config) {
-            // Popular checkboxes de dias
-            const dias = config.diasTrabalho || [];
-            ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
-                const cb = document.getElementById('dia' + dia);
-                if (cb) cb.checked = dias.includes(dia.toLowerCase());
-            });
-            
-            document.getElementById('horarioInicio').value = config.horarioInicio || '09:00';
-            document.getElementById('horarioFim').value = config.horarioFim || '18:00';
-            document.getElementById('intervaloCortes').value = config.intervaloCortes || '30';
-        }
+async function loginBarbeiro() {
+    const email = document.getElementById('loginEmailBarbeiro').value.trim();
+    const senha = document.getElementById('loginSenhaBarbeiro').value;
+    
+    if (!email || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
     }
-};
-
-// ==========================================================
-// SERVIÇO DE POSTS
-// ==========================================================
-const PostService = {
-    async criar(dados) {
-        if (!AuthService.isBarbeiro()) throw new Error('Apenas barbeiros podem postar');
+    
+    try {
+        const snapshot = await db.collection('barbeiros')
+            .where('email', '==', email)
+            .where('senha', '==', senha)
+            .get();
         
-        const { titulo, preco, descricao, imagem, video } = dados;
-        
-        if (!titulo || titulo.trim().length < 3) {
-            throw new Error('Título deve ter pelo menos 3 caracteres');
-        }
-        if (!Utils.isValidPrice(preco)) {
-            throw new Error('Preço inválido');
+        if (snapshot.empty) {
+            mostrarToast('❌ E-mail ou senha inválidos!', 'error');
+            return;
         }
         
-        // Comprimir imagem se existir
-        let imagemFinal = imagem;
-        if (imagem && imagem.startsWith('data:image')) {
-            imagemFinal = await Utils.compressImage(imagem);
+        const doc = snapshot.docs[0];
+        barbeiroLogado = { id: doc.id, ...doc.data() };
+        salvarSessao('barbeiro', barbeiroLogado);
+        
+        document.getElementById('loginEmailBarbeiro').value = '';
+        document.getElementById('loginSenhaBarbeiro').value = '';
+        fecharFormulariosLogin();
+        
+        document.getElementById('welcomeBarbeiroNome').textContent = barbeiroLogado.nome;
+        mostrarToast('✅ Bem-vindo, ' + barbeiroLogado.nome + '!', 'success');
+        mostrarTela('homeBarbeiro');
+        
+    } catch (erro) {
+        console.error('Erro no login:', erro);
+        mostrarToast('❌ Erro ao fazer login!', 'error');
+    }
+}
+
+async function cadastrarCliente() {
+    const nome = document.getElementById('cadNomeCliente').value.trim();
+    const email = document.getElementById('cadEmailCliente').value.trim();
+    const celular = document.getElementById('cadCelularCliente').value.trim();
+    const senha = document.getElementById('cadSenhaCliente').value;
+    
+    if (!nome || !email || !celular || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
+    }
+    
+    if (senha.length < 6) {
+        mostrarToast('❌ Senha deve ter no mínimo 6 caracteres!', 'error');
+        return;
+    }
+    
+    try {
+        const snapshot = await db.collection('clientes').where('email', '==', email).get();
+        if (!snapshot.empty) {
+            mostrarToast('❌ E-mail já cadastrado!', 'error');
+            return;
         }
         
-        const post = await FirebaseDB.criar('posts', {
-            barbeiroId: AuthService.usuarioAtual.id,
-            barbeiroNome: AuthService.usuarioAtual.nome,
-            titulo: titulo.trim(),
-            preco: Number(preco),
-            descricao: descricao?.trim() || '',
-            imagem: imagemFinal,
-            video: video || '',
-            likes: 0,
-            likedBy: [],
-            comentarios: []
-        });
-        
-        FirebaseDB.limparCache();
-        return post;
-    },
-
-    async listar(limite = 20) {
-        return await FirebaseDB.listar('posts', 'dataCriacao', 'desc', limite);
-    },
-
-    async listarPorBarbeiro(barbeiroId) {
-        return await FirebaseDB.buscarPorFiltro('posts', 'barbeiroId', '==', barbeiroId);
-    },
-
-    async curtir(postId) {
-        if (!AuthService.isAuthenticated()) {
-            throw new Error('Faça login para curtir');
-        }
-        
-        const userId = AuthService.usuarioAtual.id;
-        const postRef = FirebaseDB.db.collection('posts').doc(postId);
-        
-        await FirebaseDB.db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(postRef);
-            if (!doc.exists) throw new Error('Post não encontrado');
-            
-            const data = doc.data();
-            const likedBy = data.likedBy || [];
-            
-            if (likedBy.includes(userId)) {
-                transaction.update(postRef, {
-                    likes: firebase.firestore.FieldValue.increment(-1),
-                    likedBy: firebase.firestore.FieldValue.arrayRemove(userId)
-                });
-                return false; // descurtiu
-            } else {
-                transaction.update(postRef, {
-                    likes: firebase.firestore.FieldValue.increment(1),
-                    likedBy: firebase.firestore.FieldValue.arrayUnion(userId)
-                });
-                return true; // curtiu
-            }
-        });
-        
-        FirebaseDB.limparCache();
-    },
-
-    async comentar(postId, texto) {
-        if (!AuthService.isAuthenticated()) throw new Error('Faça login para comentar');
-        if (!texto || texto.trim().length === 0) throw new Error('Comentário vazio');
-        
-        const comentario = {
-            autor: AuthService.usuarioAtual.nome,
-            autorId: AuthService.usuarioAtual.id,
-            texto: texto.trim(),
-            data: new Date().toISOString()
+        const id = Date.now().toString();
+        const cliente = {
+            id,
+            nome,
+            email,
+            celular,
+            senha,
+            fotoPerfil: '',
+            dataCriacao: new Date().toISOString()
         };
         
-        await FirebaseDB.db.collection('posts').doc(postId).update({
-            comentarios: firebase.firestore.FieldValue.arrayUnion(comentario)
+        await db.collection('clientes').doc(id).set(cliente);
+        clienteLogado = cliente;
+        salvarSessao('cliente', cliente);
+        
+        document.getElementById('cadNomeCliente').value = '';
+        document.getElementById('cadEmailCliente').value = '';
+        document.getElementById('cadCelularCliente').value = '';
+        document.getElementById('cadSenhaCliente').value = '';
+        
+        document.getElementById('welcomeClienteNome').textContent = nome;
+        mostrarToast('✅ Cadastro realizado!', 'success');
+        mostrarTela('homeCliente');
+        
+    } catch (erro) {
+        console.error('Erro ao cadastrar:', erro);
+        mostrarToast('❌ Erro ao cadastrar!', 'error');
+    }
+}
+
+async function cadastrarBarbeiro() {
+    const nome = document.getElementById('cadNomeBarbeiro').value.trim();
+    const email = document.getElementById('cadEmailBarbeiro').value.trim();
+    const celular = document.getElementById('cadCelularBarbeiro').value.trim();
+    const senha = document.getElementById('cadSenhaBarbeiro').value;
+    
+    if (!nome || !email || !celular || !senha) {
+        mostrarToast('❌ Preencha todos os campos!', 'error');
+        return;
+    }
+    
+    if (senha.length < 6) {
+        mostrarToast('❌ Senha deve ter no mínimo 6 caracteres!', 'error');
+        return;
+    }
+    
+    try {
+        const snapshot = await db.collection('barbeiros').where('email', '==', email).get();
+        if (!snapshot.empty) {
+            mostrarToast('❌ E-mail já cadastrado!', 'error');
+            return;
+        }
+        
+        const id = Date.now().toString();
+        const barbeiro = {
+            id,
+            nome,
+            email,
+            celular,
+            senha,
+            fotoPerfil: '',
+            dataCriacao: new Date().toISOString()
+        };
+        
+        await db.collection('barbeiros').doc(id).set(barbeiro);
+        barbeiroLogado = barbeiro;
+        salvarSessao('barbeiro', barbeiro);
+        
+        document.getElementById('cadNomeBarbeiro').value = '';
+        document.getElementById('cadEmailBarbeiro').value = '';
+        document.getElementById('cadCelularBarbeiro').value = '';
+        document.getElementById('cadSenhaBarbeiro').value = '';
+        
+        document.getElementById('welcomeBarbeiroNome').textContent = nome;
+        mostrarToast('✅ Cadastro realizado!', 'success');
+        mostrarTela('homeBarbeiro');
+        
+    } catch (erro) {
+        console.error('Erro ao cadastrar:', erro);
+        mostrarToast('❌ Erro ao cadastrar!', 'error');
+    }
+}
+
+function sairCliente() {
+    clienteLogado = null;
+    limparSessao();
+    fecharFormulariosLogin();
+    mostrarTela('login');
+    mostrarToast('👋 Até logo!', 'info');
+}
+
+function sairBarbeiro() {
+    barbeiroLogado = null;
+    limparSessao();
+    fecharFormulariosLogin();
+    mostrarTela('login');
+    mostrarToast('👋 Até logo!', 'info');
+}
+
+// ==========================================================
+// FEED / POSTS
+// ==========================================================
+async function carregarFeedCliente() {
+    const container = document.getElementById('feedClienteContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
+        const posts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        todosPosts = posts;
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3></div>';
+            return;
+        }
+        
+        container.innerHTML = posts.map(post => {
+            const comentarios = post.comentarios || [];
+            return `
+                <div class="feed-post">
+                    <div class="feed-post-header">
+                        <div class="feed-post-avatar">✂️</div>
+                        <div class="feed-post-user">
+                            <div class="feed-post-user-name">${post.barbeiroNome || 'Barbearia RM'}</div>
+                            <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
+                        </div>
+                    </div>
+                    ${post.video ? `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>` : ''}
+                    ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image">` : ''}
+                    <div class="feed-post-body">
+                        <div class="feed-post-title">${post.titulo}</div>
+                        <div class="feed-post-price">R$ ${(post.preco || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="feed-post-actions">
+                        <button onclick="likePost('${post.id}', this)">❤️ ${post.likes || 0}</button>
+                        <button onclick="abrirComentarios('${post.id}')">💬 ${comentarios.length}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Erro ao carregar</p>';
+    }
+}
+
+async function carregarMeusPosts() {
+    const container = document.getElementById('meusPostsContainer');
+    if (!container || !barbeiroLogado) return;
+    
+    try {
+        const snapshot = await db.collection('posts')
+            .where('barbeiroId', '==', barbeiroLogado.id)
+            .get();
+        
+        const posts = [];
+        snapshot.forEach(d => posts.push({ id: d.id, ...d.data() }));
+        posts.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+        
+        if (posts.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum post</p>';
+            return;
+        }
+        
+        container.innerHTML = posts.map(post => {
+            const comentarios = post.comentarios || [];
+            let html = `
+                <div class="feed-post" style="margin-bottom:12px;">
+                    <div class="feed-post-header">
+                        <div class="feed-post-avatar">✂️</div>
+                        <div class="feed-post-user">
+                            <div class="feed-post-user-name">${post.titulo}</div>
+                            <div class="feed-post-user-time">R$ ${(post.preco || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+            `;
+            
+            if (post.imagem) html += `<img src="${post.imagem}" class="feed-post-image">`;
+            if (post.video) html += `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>`;
+            
+            html += `
+                    <div class="feed-post-body">
+                        <p>${post.descricao || ''}</p>
+                        <p style="font-size:11px;color:#6B7280;">❤️ ${post.likes || 0} • 💬 ${comentarios.length}</p>
+                    </div>
+                    <button class="btn btn-small btn-danger" onclick="excluirMeuPost('${post.id}')">🗑 Excluir</button>
+                </div>
+            `;
+            
+            return html;
+        }).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Erro ao carregar</p>';
+    }
+}
+
+async function criarPost() {
+    if (!barbeiroLogado) return;
+    
+    const titulo = document.getElementById('postTitulo').value.trim();
+    const preco = parseFloat(document.getElementById('postPreco').value);
+    const descricao = document.getElementById('postDescricao').value.trim();
+    const imagem = document.getElementById('postImagem').value || '';
+    const video = document.getElementById('postVideo').value || '';
+    
+    if (!titulo || !preco || preco <= 0) {
+        mostrarToast('❌ Título e preço são obrigatórios!', 'error');
+        return;
+    }
+    
+    try {
+        const id = Date.now().toString();
+        await db.collection('posts').doc(id).set({
+            id,
+            barbeiroId: barbeiroLogado.id,
+            barbeiroNome: barbeiroLogado.nome,
+            titulo,
+            preco,
+            imagem,
+            video,
+            descricao,
+            likes: 0,
+            comentarios: [],
+            dataCriacao: new Date().toISOString()
         });
         
-        return comentario;
-    },
-
-    async excluir(postId) {
-        await FirebaseDB.deletar('posts', postId);
-        FirebaseDB.limparCache();
-    },
-
-    async carregarMeusPosts() {
-        if (!AuthService.isBarbeiro()) return;
+        mostrarToast('✅ Publicado!', 'success');
+        document.getElementById('postTitulo').value = '';
+        document.getElementById('postPreco').value = '';
+        document.getElementById('postDescricao').value = '';
+        removerImagem();
+        removerVideo();
+        mostrarTela('homeBarbeiro');
         
-        const container = document.getElementById('meusPostsContainer');
-        if (!container) return;
-        
-        UIManager.mostrarLoading('meusPostsContainer');
-        
-        try {
-            const posts = await this.listarPorBarbeiro(AuthService.usuarioAtual.id);
-            
-            if (posts.length === 0) {
-                UIManager.mostrarVazio('meusPostsContainer', 'Você ainda não publicou');
-            } else {
-                container.innerHTML = posts.map(post => `
-                    <div class="meu-post">
-                        <div class="post-header">
-                            <h4>${post.titulo}</h4>
-                            <span class="preco">${Utils.formatCurrency(post.preco)}</span>
-                        </div>
-                        ${post.imagem ? `<img src="${post.imagem}" alt="${post.titulo}">` : ''}
-                        <div class="post-stats">
-                            ❤️ ${post.likes || 0} • 💬 ${post.comentarios?.length || 0}
-                        </div>
-                        <button class="btn btn-small btn-danger" 
-                                onclick="PostService.excluir('${post.id}')">
-                            🗑 Excluir
-                        </button>
-                    </div>
-                `).join('');
-            }
-        } catch (erro) {
-            UIManager.mostrarErro('meusPostsContainer');
-        }
-    },
-
-    verDetalhe(postId) {
-        // Implementar visualização detalhada
-        console.log('Ver detalhe:', postId);
-    },
-
-    renderizarCard(post) {
-        const isLiked = AuthService.isAuthenticated() && 
-                       post.likedBy?.includes(AuthService.usuarioAtual.id);
-        
-        return `
-            <article class="feed-post" data-id="${post.id}">
-                <header class="feed-post-header">
-                    <div class="avatar">✂️</div>
-                    <div class="user-info">
-                        <strong>${post.barbeiroNome || 'Barbearia RM'}</strong>
-                        <time>${Utils.formatTimeAgo(post.dataCriacao)}</time>
-                    </div>
-                </header>
-                
-                ${post.imagem ? `
-                    <img src="${post.imagem}" alt="${post.titulo}" class="post-imagem" loading="lazy">
-                ` : ''}
-                
-                ${post.video ? `
-                    <video controls preload="metadata" class="post-video">
-                        <source src="${post.video}" type="video/mp4">
-                    </video>
-                ` : ''}
-                
-                <div class="feed-post-body">
-                    <h3>${post.titulo}</h3>
-                    <p class="preco">${Utils.formatCurrency(post.preco)}</p>
-                    ${post.descricao ? `<p class="descricao">${Utils.truncateText(post.descricao)}</p>` : ''}
-                </div>
-                
-                <footer class="feed-post-actions">
-                    <button class="btn-like ${isLiked ? 'active' : ''}" 
-                            onclick="PostService.curtir('${post.id}')">
-                        ❤️ <span>${post.likes || 0}</span>
-                    </button>
-                    <button onclick="ComentarioService.abrir('${post.id}')">
-                        💬 <span>${post.comentarios?.length || 0}</span>
-                    </button>
-                </footer>
-            </article>
-        `;
+    } catch (erro) {
+        mostrarToast('❌ Erro ao publicar!', 'error');
     }
-};
+}
+
+async function excluirMeuPost(id) {
+    if (!confirm('Excluir este post?')) return;
+    
+    try {
+        await db.collection('posts').doc(id).delete();
+        mostrarToast('🗑 Excluído!', 'success');
+        carregarMeusPosts();
+        carregarFeedCliente();
+    } catch (erro) {
+        mostrarToast('❌ Erro ao excluir!', 'error');
+    }
+}
+
+function likePost(id, btn) {
+    btn.classList.toggle('liked');
+}
 
 // ==========================================================
-// SERVIÇO DE AGENDAMENTOS
+// COMENTÁRIOS
 // ==========================================================
-const AgendamentoService = {
-    async criar(dados) {
-        if (!AuthService.isCliente()) throw new Error('Apenas clientes podem agendar');
-        
-        const { data, horario, tipo } = dados;
-        
-        if (!Utils.isValidDate(data)) throw new Error('Data inválida');
-        if (!horario) throw new Error('Horário inválido');
-        if (!tipo) throw new Error('Tipo de corte inválido');
-        
-        const agendamento = await FirebaseDB.criar('agendamentos', {
-            clienteId: AuthService.usuarioAtual.id,
-            clienteNome: AuthService.usuarioAtual.nome,
-            clienteEmail: AuthService.usuarioAtual.email,
+function abrirComentarios(id) {
+    postSelecionadoId = id;
+    carregarComentarios(id);
+    document.getElementById('modalComentario').classList.add('active');
+}
+
+async function carregarComentarios(id) {
+    const container = document.getElementById('comentariosContainer');
+    if (!container) return;
+    
+    const doc = await db.collection('posts').doc(id).get();
+    if (!doc.exists) return;
+    
+    const comentarios = doc.data().comentarios || [];
+    container.innerHTML = comentarios.length === 0 
+        ? '<p style="color:#6B7280;">Nenhum comentário</p>'
+        : comentarios.map(c => `
+            <div style="padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;">
+                <strong style="color:#D4A84B;">${c.autor}</strong>
+                <p style="color:#B0B0B0;">${c.texto}</p>
+            </div>
+        `).join('');
+}
+
+async function adicionarComentario() {
+    const texto = document.getElementById('novoComentario').value.trim();
+    if (!texto) return;
+    
+    const autor = clienteLogado ? clienteLogado.nome : (barbeiroLogado ? barbeiroLogado.nome : 'Anônimo');
+    
+    const doc = await db.collection('posts').doc(postSelecionadoId).get();
+    const comentarios = doc.data().comentarios || [];
+    comentarios.push({ autor, texto, data: new Date().toISOString() });
+    
+    await db.collection('posts').doc(postSelecionadoId).update({ comentarios });
+    document.getElementById('novoComentario').value = '';
+    carregarComentarios(postSelecionadoId);
+    carregarFeedCliente();
+}
+
+function fecharModalComentario() {
+    document.getElementById('modalComentario').classList.remove('active');
+}
+
+// ==========================================================
+// UPLOAD DE IMAGENS
+// ==========================================================
+function previewImagem(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        imagemBase64 = ev.target.result;
+        document.getElementById('postImagem').value = imagemBase64;
+        document.getElementById('imagemPreviewImg').src = imagemBase64;
+        document.getElementById('imagemPreview').style.display = 'block';
+        document.getElementById('imagemUploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerImagem() {
+    imagemBase64 = '';
+    document.getElementById('postImagem').value = '';
+    document.getElementById('imagemPreview').style.display = 'none';
+    document.getElementById('imagemUploadArea').style.display = 'block';
+    document.getElementById('postImagemInput').value = '';
+}
+
+function previewVideo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        videoBase64 = ev.target.result;
+        document.getElementById('postVideo').value = videoBase64;
+        document.getElementById('videoPreviewVideo').src = videoBase64;
+        document.getElementById('videoPreview').style.display = 'block';
+        document.getElementById('videoUploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerVideo() {
+    videoBase64 = '';
+    document.getElementById('postVideo').value = '';
+    document.getElementById('videoPreview').style.display = 'none';
+    document.getElementById('videoUploadArea').style.display = 'block';
+    document.getElementById('postVideoInput').value = '';
+}
+
+// ==========================================================
+// AGENDAMENTOS
+// ==========================================================
+function carregarOpcoesAgendamento() {
+    const selectHorario = document.getElementById('agendamentoHorario');
+    const selectTipo = document.getElementById('agendamentoTipo');
+    
+    if (selectHorario) {
+        const horarios = [];
+        for (let h = 9; h <= 18; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                if (h === 18 && m > 0) break;
+                const hora = String(h).padStart(2, '0');
+                const min = String(m).padStart(2, '0');
+                horarios.push(`${hora}:${min}`);
+            }
+        }
+        selectHorario.innerHTML = horarios.map(h => `<option value="${h}">${h}</option>`).join('');
+    }
+    
+    if (selectTipo) {
+        const tipos = ['Corte Social', 'Corte Degradê', 'Corte Navalhado', 'Corte Máquina', 'Barba', 'Barba + Corte', 'Pintura', 'Luzes', 'Platinado', 'Selagem', 'Progressiva'];
+        selectTipo.innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+    
+    const inputData = document.getElementById('agendamentoData');
+    if (inputData) {
+        inputData.min = new Date().toISOString().split('T')[0];
+    }
+}
+
+async function agendarCorte() {
+    if (!clienteLogado) {
+        mostrarToast('❌ Faça login para agendar!', 'error');
+        return;
+    }
+    
+    const data = document.getElementById('agendamentoData').value;
+    const horario = document.getElementById('agendamentoHorario').value;
+    const tipo = document.getElementById('agendamentoTipo').value;
+    
+    if (!data) {
+        mostrarToast('❌ Selecione uma data!', 'error');
+        return;
+    }
+    
+    try {
+        const id = Date.now().toString();
+        await db.collection('agendamentos').doc(id).set({
+            id,
+            clienteId: clienteLogado.id,
+            clienteNome: clienteLogado.nome,
+            clienteEmail: clienteLogado.email,
             data,
             horario,
             tipo,
-            status: 'pendente'
+            status: 'pendente',
+            dataCriacao: new Date().toISOString()
         });
         
-        return agendamento;
-    },
-
-    async confirmar(id) {
-        await FirebaseDB.atualizar('agendamentos', id, { status: 'confirmado' });
-    },
-
-    async cancelar(id) {
-        await FirebaseDB.atualizar('agendamentos', id, { status: 'cancelado' });
-    },
-
-    async carregarAgendaCliente() {
-        if (!AuthService.isCliente()) return;
+        mostrarToast('✅ Agendado com sucesso!', 'success');
+        document.getElementById('agendamentoData').value = '';
+        carregarAgendaCliente();
+        mostrarTela('homeCliente');
         
-        const container = document.getElementById('agendaClienteContainer');
-        if (!container) return;
-        
-        try {
-            const agendamentos = await FirebaseDB.buscarPorFiltro(
-                'agendamentos', 'clienteId', '==', AuthService.usuarioAtual.id
-            );
-            
-            if (agendamentos.length === 0) {
-                UIManager.mostrarVazio('agendaClienteContainer', 'Nenhum agendamento');
-                return;
-            }
-            
-            agendamentos.sort((a, b) => new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario));
-            
-            container.innerHTML = agendamentos.map(a => `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <strong>${a.tipo}</strong>
-                        <span>📅 ${Utils.formatDate(a.data)} • ⏰ ${a.horario}</span>
-                    </div>
-                    <span class="badge badge-${a.status}">
-                        ${a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳'}
-                        ${a.status}
-                    </span>
-                </div>
-            `).join('');
-        } catch (erro) {
-            UIManager.mostrarErro('agendaClienteContainer');
-        }
-    },
-
-    async carregarAgendamentosBarbeiro() {
-        if (!AuthService.isBarbeiro()) return;
-        
-        const container = document.getElementById('agendamentosBarbeiroContainer');
-        if (!container) return;
-        
-        try {
-            const agendamentos = await FirebaseDB.listar('agendamentos');
-            
-            if (agendamentos.length === 0) {
-                UIManager.mostrarVazio('agendamentosBarbeiroContainer', 'Nenhum agendamento');
-                return;
-            }
-            
-            container.innerHTML = agendamentos.map(a => `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <strong>👤 ${a.clienteNome || 'Cliente'}</strong>
-                        <span>📅 ${Utils.formatDate(a.data)} • ⏰ ${a.horario}</span>
-                        <span>✂️ ${a.tipo}</span>
-                    </div>
-                    <span class="badge badge-${a.status}">
-                        ${a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳'}
-                        ${a.status}
-                    </span>
-                    ${a.status === 'pendente' ? `
-                        <div class="btn-group">
-                            <button class="btn btn-small btn-success" 
-                                    onclick="AgendamentoService.confirmar('${a.id}')">
-                                ✅
-                            </button>
-                            <button class="btn btn-small btn-danger" 
-                                    onclick="AgendamentoService.cancelar('${a.id}')">
-                                ❌
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-        } catch (erro) {
-            UIManager.mostrarErro('agendamentosBarbeiroContainer');
-        }
-    }
-};
-
-// ==========================================================
-// SERVIÇO FINANCEIRO
-// ==========================================================
-const FinanceiroService = {
-    async calcularFaturamento() {
-        if (!AuthService.isBarbeiro()) return;
-        
-        try {
-            const hoje = new Date();
-            const hojeStr = hoje.toISOString().split('T')[0];
-            
-            const agendamentos = await FirebaseDB.buscarPorFiltro(
-                'agendamentos', 'status', '==', 'confirmado'
-            );
-            
-            let totalHoje = 0;
-            let totalSemana = 0;
-            let totalMes = 0;
-            let totalAno = 0;
-            
-            agendamentos.forEach(a => {
-                const valor = 35; // Valor base - idealmente viria do banco
-                const dataAgendamento = new Date(a.data);
-                
-                if (a.data === hojeStr) totalHoje += valor;
-                
-                // Calcular semana
-                const inicioSemana = new Date(hoje);
-                inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-                if (dataAgendamento >= inicioSemana) totalSemana += valor;
-                
-                // Calcular mês
-                if (dataAgendamento.getMonth() === hoje.getMonth() && 
-                    dataAgendamento.getFullYear() === hoje.getFullYear()) {
-                    totalMes += valor;
-                }
-                
-                // Calcular ano
-                if (dataAgendamento.getFullYear() === hoje.getFullYear()) {
-                    totalAno += valor;
-                }
-            });
-            
-            document.getElementById('faturamentoHoje').textContent = Utils.formatCurrency(totalHoje);
-            document.getElementById('faturamentoSemana').textContent = Utils.formatCurrency(totalSemana);
-            document.getElementById('faturamentoMes').textContent = Utils.formatCurrency(totalMes);
-            document.getElementById('faturamentoAno').textContent = Utils.formatCurrency(totalAno);
-            
-        } catch (erro) {
-            console.error('Erro ao calcular faturamento:', erro);
-        }
-    }
-};
-
-// ==========================================================
-// GERENCIADOR DE LIVE
-// ==========================================================
-const LiveManager = {
-    ativa: false,
-    stream: null,
-    viewerId: null,
-    chatInterval: null,
-    frameInterval: null,
-
-    async carregar() {
-        try {
-            const doc = await FirebaseDB.db.collection('lives').doc('live_atual').get();
-            
-            if (doc.exists && doc.data().ativa) {
-                this.ativa = true;
-                this.mostrarPlayer();
-                this.iniciarChatListener();
-                
-                if (AuthService.isAuthenticated()) {
-                    this.adicionarViewer();
-                }
-            } else {
-                this.ativa = false;
-                this.mostrarPlaceholder();
-            }
-        } catch (erro) {
-            console.error('Erro ao carregar live:', erro);
-            this.mostrarPlaceholder();
-        }
-    },
-
-    mostrarPlayer() {
-        document.getElementById('livePlaceholder').style.display = 'none';
-        document.getElementById('livePlayer').style.display = 'block';
-        document.getElementById('liveStatus').style.display = 'block';
-        
-        if (AuthService.isBarbeiro()) {
-            document.getElementById('liveControls').style.display = 'block';
-        }
-    },
-
-    mostrarPlaceholder() {
-        document.getElementById('livePlaceholder').style.display = 'flex';
-        document.getElementById('livePlayer').style.display = 'none';
-        document.getElementById('liveStatus').style.display = 'none';
-        document.getElementById('liveControls').style.display = 'none';
-    },
-
-    async iniciar() {
-        if (!AuthService.isBarbeiro()) {
-            UIManager.mostrarToast('Apenas barbeiros podem iniciar live', 'error');
-            return;
-        }
-        
-        try {
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 640 }, height: { ideal: 480 } },
-                audio: true
-            });
-            
-            const videoEl = document.getElementById('liveVideo');
-            videoEl.srcObject = this.stream;
-            videoEl.style.display = 'block';
-            
-            // Criar live no banco
-            const titulo = document.getElementById('liveTitulo').value || 'Live da Barbearia RM';
-            
-            await FirebaseDB.db.collection('lives').doc('live_atual').set({
-                id: 'live_atual',
-                barbeiroId: AuthService.usuarioAtual.id,
-                barbeiroNome: AuthService.usuarioAtual.nome,
-                titulo,
-                ativa: true,
-                chat: [],
-                viewers: 0,
-                likes: 0,
-                dataInicio: new Date().toISOString()
-            });
-            
-            this.ativa = true;
-            this.mostrarPlayer();
-            UIManager.mostrarToast('🔴 Live iniciada!', 'success');
-            
-        } catch (erro) {
-            console.error('Erro ao iniciar live:', erro);
-            UIManager.mostrarToast('Erro ao acessar câmera', 'error');
-        }
-    },
-
-    async encerrar() {
-        if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
-        }
-        
-        if (this.chatInterval) clearInterval(this.chatInterval);
-        if (this.frameInterval) clearInterval(this.frameInterval);
-        
-        await FirebaseDB.db.collection('lives').doc('live_atual').update({
-            ativa: false,
-            dataFim: new Date().toISOString()
-        });
-        
-        this.ativa = false;
-        this.mostrarPlaceholder();
-        UIManager.mostrarToast('Live encerrada', 'info');
-    },
-
-    iniciarChatListener() {
-        this.chatInterval = setInterval(async () => {
-            const doc = await FirebaseDB.db.collection('lives').doc('live_atual').get();
-            if (doc.exists && doc.data().ativa) {
-                this.atualizarChat(doc.data().chat || []);
-            }
-        }, 2000);
-    },
-
-    atualizarChat(mensagens) {
-        const container = document.getElementById('liveChatContainer');
-        if (!container) return;
-        
-        container.innerHTML = mensagens.map(msg => `
-            <div class="chat-message">
-                <strong>${msg.autor}</strong>
-                <span>${msg.texto}</span>
-            </div>
-        `).join('');
-        
-        container.scrollTop = container.scrollHeight;
-    },
-
-    async enviarMensagem(texto) {
-        if (!this.ativa) return;
-        
-        const autor = AuthService.isAuthenticated() ? 
-            AuthService.usuarioAtual.nome : 'Visitante';
-        
-        await FirebaseDB.db.collection('lives').doc('live_atual').update({
-            chat: firebase.firestore.FieldValue.arrayUnion({
-                autor,
-                texto,
-                data: new Date().toISOString()
-            })
-        });
-    },
-
-    adicionarViewer() {
-        // Implementar contagem de viewers
-    }
-};
-
-// ==========================================================
-// INICIALIZAÇÃO DA APLICAÇÃO
-// ==========================================================
-async function iniciarApp() {
-    console.log('🚀 Iniciando Barbearia RM...');
-    
-    // Inicializar Firebase
-    FirebaseDB.inicializar();
-    
-    // Inicializar UI
-    UIManager.init();
-    
-    // Tentar restaurar sessão
-    const sessaoRestaurada = await AuthService.restaurarSessao();
-    
-    if (sessaoRestaurada) {
-        console.log('✅ Sessão restaurada:', AuthService.usuarioAtual.nome);
-        UIManager.navegarPara(AuthService.isCliente() ? 'homeCliente' : 'homeBarbeiro');
-    } else {
-        console.log('👋 Nenhuma sessão ativa');
-        UIManager.navegarPara('login');
+    } catch (erro) {
+        mostrarToast('❌ Erro ao agendar!', 'error');
     }
 }
 
-// Iniciar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', iniciarApp);
-
-// Limpar recursos ao sair
-window.addEventListener('beforeunload', () => {
-    if (LiveManager.ativa) {
-        LiveManager.encerrar();
+async function carregarAgendaCliente() {
+    if (!clienteLogado) return;
+    const container = document.getElementById('agendaClienteContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('agendamentos')
+            .where('clienteId', '==', clienteLogado.id)
+            .get();
+        
+        const agendamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        agendamentos.sort((a, b) => new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario));
+        
+        if (agendamentos.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>';
+            return;
+        }
+        
+        container.innerHTML = agendamentos.map(a => {
+            const statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
+            const statusIcon = a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳';
+            return `
+                <div class="agenda-item">
+                    <div class="agenda-info">
+                        <div class="agenda-cliente">${a.tipo}</div>
+                        <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
+                    </div>
+                    <span class="agenda-status ${statusClass}">${statusIcon} ${a.status}</span>
+                </div>
+            `;
+        }).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
     }
+}
+
+async function carregarAgendamentosBarbeiro() {
+    const container = document.getElementById('agendamentosBarbeiroContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('agendamentos').orderBy('data', 'desc').get();
+        const agendamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        if (agendamentos.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>';
+            return;
+        }
+        
+        container.innerHTML = agendamentos.map(a => {
+            const statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
+            const statusIcon = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
+            return `
+                <div class="agenda-item">
+                    <div class="agenda-info">
+                        <div class="agenda-cliente">👤 ${a.clienteNome || 'Cliente'}</div>
+                        <div class="agenda-data">📅 ${a.data || 'N/A'} • ⏰ ${a.horario || 'N/A'}</div>
+                    </div>
+                    <span class="agenda-status ${statusClass}">${statusIcon}</span>
+                    ${a.status === 'pendente' ? `
+                        <button class="btn btn-small btn-success" onclick="confirmarAgendamento('${a.id}')">✅</button>
+                        <button class="btn btn-small btn-danger" onclick="cancelarAgendamento('${a.id}')">❌</button>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
+    }
+}
+
+async function confirmarAgendamento(id) {
+    await db.collection('agendamentos').doc(id).update({ status: 'confirmado' });
+    carregarAgendamentosBarbeiro();
+    if (clienteLogado) carregarAgendaCliente();
+}
+
+async function cancelarAgendamento(id) {
+    if (!confirm('Cancelar agendamento?')) return;
+    await db.collection('agendamentos').doc(id).update({ status: 'cancelado' });
+    carregarAgendamentosBarbeiro();
+    if (clienteLogado) carregarAgendaCliente();
+}
+
+// ==========================================================
+// PLANOS
+// ==========================================================
+async function carregarPlanos() {
+    const container = document.getElementById('planosContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('planos').orderBy('dataCriacao', 'desc').get();
+        const planos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        if (planos.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum plano</p>';
+            return;
+        }
+        
+        container.innerHTML = planos.map(p => `
+            <div class="plano-card" style="flex-direction:column;align-items:flex-start;">
+                ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : ''}
+                <div style="display:flex;justify-content:space-between;width:100%;">
+                    <div>
+                        <div class="plano-nome">${p.nome}</div>
+                        <div class="plano-periodo">📅 ${p.periodo}</div>
+                    </div>
+                    <div class="plano-preco">R$ ${(p.preco || 0).toFixed(2)}</div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-small btn-primary" onclick="editarPlano('${p.id}')">✏️</button>
+                    <button class="btn btn-small btn-danger" onclick="excluirPlanoDireto('${p.id}')">🗑</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
+    }
+}
+
+async function criarPlano() {
+    if (!barbeiroLogado) return;
+    
+    const nome = document.getElementById('planoNome').value.trim();
+    const periodo = document.getElementById('planoPeriodo').value;
+    const preco = parseFloat(document.getElementById('planoPreco').value);
+    const descricao = document.getElementById('planoDescricao').value.trim();
+    const imagem = document.getElementById('planoImagem').value || '';
+    
+    if (!nome || !preco || preco <= 0) {
+        mostrarToast('❌ Nome e preço são obrigatórios!', 'error');
+        return;
+    }
+    
+    try {
+        const id = Date.now().toString();
+        await db.collection('planos').doc(id).set({
+            id,
+            barbeiroId: barbeiroLogado.id,
+            nome,
+            periodo,
+            preco,
+            descricao,
+            imagem,
+            dataCriacao: new Date().toISOString()
+        });
+        
+        mostrarToast('✅ Plano criado!', 'success');
+        document.getElementById('planoNome').value = '';
+        document.getElementById('planoPreco').value = '';
+        document.getElementById('planoDescricao').value = '';
+        removerImagemPlano();
+        mostrarTela('homeBarbeiro');
+        
+    } catch (erro) {
+        mostrarToast('❌ Erro ao criar plano!', 'error');
+    }
+}
+
+async function excluirPlanoDireto(id) {
+    if (!confirm('Excluir plano?')) return;
+    await db.collection('planos').doc(id).delete();
+    mostrarToast('🗑 Excluído!', 'success');
+    carregarPlanos();
+}
+
+function previewImagemPlano(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        imagemPlanoBase64 = ev.target.result;
+        document.getElementById('planoImagem').value = imagemPlanoBase64;
+        document.getElementById('planoImagemPreview').src = imagemPlanoBase64;
+        document.getElementById('planoImagemPreview').style.display = 'block';
+        document.getElementById('btnRemoverImagemPlano').style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerImagemPlano() {
+    imagemPlanoBase64 = '';
+    document.getElementById('planoImagem').value = '';
+    document.getElementById('planoImagemPreview').style.display = 'none';
+    document.getElementById('btnRemoverImagemPlano').style.display = 'none';
+    document.getElementById('planoImagemInput').value = '';
+}
+
+// ==========================================================
+// ANÚNCIOS
+// ==========================================================
+async function carregarAnuncios() {
+    const container = document.getElementById('anunciosContainer');
+    if (!container) return;
+    
+    try {
+        const hoje = new Date().toISOString();
+        const snapshot = await db.collection('anuncios').where('dataExpiracao', '>', hoje).get();
+        const anuncios = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        if (anuncios.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;"><p style="color:#6B7280;">📢 Nenhum anúncio ativo</p></div>';
+            return;
+        }
+        
+        container.innerHTML = anuncios.map(a => `
+            <div class="card" style="border:2px solid #FF6B6B;margin-bottom:12px;">
+                <span style="background:#FF4757;color:white;padding:4px 10px;border-radius:20px;font-size:11px;">📢 ANÚNCIO</span>
+                ${a.imagem ? `<img src="${a.imagem}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:8px 0;">` : ''}
+                <h3 style="color:#FF6B6B;">${a.titulo}</h3>
+                <p style="color:#B0B0B0;">${a.descricao}</p>
+                ${a.link ? `<a href="${a.link}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,#FF6B6B,#FF4757);color:white;border-radius:8px;text-decoration:none;font-weight:bold;">🔗 Saiba Mais</a>` : ''}
+                ${barbeiroLogado ? `<button class="btn btn-small btn-danger" onclick="excluirAnuncio('${a.id}')" style="margin-top:8px;">🗑</button>` : ''}
+            </div>
+        `).join('');
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
+    }
+}
+
+async function criarAnuncio() {
+    if (!barbeiroLogado) return;
+    
+    const titulo = document.getElementById('anuncioTitulo').value.trim();
+    const descricao = document.getElementById('anuncioDescricao').value.trim();
+    const link = document.getElementById('anuncioLink').value.trim();
+    const imagem = document.getElementById('anuncioImagem').value || '';
+    const duracao = parseInt(document.getElementById('anuncioDuracao').value);
+    
+    if (!titulo) {
+        mostrarToast('❌ Título é obrigatório!', 'error');
+        return;
+    }
+    
+    const expiracao = new Date();
+    expiracao.setDate(expiracao.getDate() + duracao);
+    
+    try {
+        const id = 'anuncio_' + Date.now();
+        await db.collection('anuncios').doc(id).set({
+            id,
+            barbeiroId: barbeiroLogado.id,
+            barbeiroNome: barbeiroLogado.nome,
+            titulo,
+            descricao,
+            link,
+            imagem,
+            duracao,
+            dataCriacao: new Date().toISOString(),
+            dataExpiracao: expiracao.toISOString()
+        });
+        
+        mostrarToast('✅ Anúncio publicado!', 'success');
+        document.getElementById('anuncioTitulo').value = '';
+        document.getElementById('anuncioDescricao').value = '';
+        document.getElementById('anuncioLink').value = '';
+        removerAnuncioImagem();
+        carregarAnuncios();
+        
+    } catch (erro) {
+        mostrarToast('❌ Erro ao publicar!', 'error');
+    }
+}
+
+async function excluirAnuncio(id) {
+    if (!confirm('Excluir anúncio?')) return;
+    await db.collection('anuncios').doc(id).delete();
+    mostrarToast('🗑 Excluído!', 'success');
+    carregarAnuncios();
+}
+
+function previewAnuncioImagem(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        anuncioImagemBase64 = ev.target.result;
+        document.getElementById('anuncioImagem').value = anuncioImagemBase64;
+        document.getElementById('anuncioImagemPreview').src = anuncioImagemBase64;
+        document.getElementById('anuncioImagemPreview').style.display = 'block';
+        document.getElementById('btnRemoverAnuncioImagem').style.display = 'inline-block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removerAnuncioImagem() {
+    anuncioImagemBase64 = '';
+    document.getElementById('anuncioImagem').value = '';
+    document.getElementById('anuncioImagemPreview').style.display = 'none';
+    document.getElementById('btnRemoverAnuncioImagem').style.display = 'none';
+    document.getElementById('anuncioImagemInput').value = '';
+}
+
+// ==========================================================
+// GALERIA / REELS
+// ==========================================================
+async function carregarGaleria() {
+    const container = document.getElementById('galeriaContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
+        todosPosts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        filtrarGaleria();
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
+    }
+}
+
+function filtrarGaleria() {
+    const container = document.getElementById('galeriaContainer');
+    const filtro = document.getElementById('filtroCategoria')?.value || 'todos';
+    
+    const filtrados = filtro === 'todos' ? todosPosts : todosPosts.filter(p => p.titulo === filtro);
+    
+    if (filtrados.length === 0) {
+        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum corte encontrado</p>';
+        return;
+    }
+    
+    container.innerHTML = filtrados.map(post => `
+        <div class="galeria-item" onclick="verDetalheCorte('${post.id}')">
+            ${post.imagem ? `<img src="${post.imagem}" class="galeria-item-image">` : '<div class="galeria-item-image" style="display:flex;align-items:center;justify-content:center;font-size:40px;">✂️</div>'}
+            <div class="galeria-item-info">
+                <div class="galeria-item-title">${post.titulo}</div>
+                <div class="galeria-item-price">R$ ${(post.preco || 0).toFixed(2)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function verDetalheCorte(id) {
+    const post = todosPosts.find(p => p.id === id);
+    if (!post) return;
+    
+    document.getElementById('detalhePostConteudo').innerHTML = `
+        <div class="card">
+            <h3>${post.titulo}</h3>
+            ${post.video ? `<video controls><source src="${post.video}" type="video/mp4"></video>` : ''}
+            ${post.imagem ? `<img src="${post.imagem}" style="width:100%;max-height:300px;object-fit:cover;">` : ''}
+            <p style="font-size:24px;color:var(--primary);">R$ ${(post.preco || 0).toFixed(2)}</p>
+            <button class="btn btn-outline" onclick="mostrarTela('galeriaCortes')">← Voltar</button>
+        </div>
+    `;
+    mostrarTela('detalhePost');
+}
+
+async function carregarReels() {
+    const container = document.getElementById('reelsContainer');
+    if (!container) return;
+    
+    try {
+        const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
+        todosReels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        if (todosReels.length === 0) {
+            container.innerHTML = '<p style="color:#6B7280;padding:40px;">Nenhum reel</p>';
+            return;
+        }
+        
+        reelsAtual = 0;
+        exibirReel(0);
+    } catch (erro) {
+        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
+    }
+}
+
+function exibirReel(i) {
+    if (i < 0) i = 0;
+    if (i >= todosReels.length) i = todosReels.length - 1;
+    reelsAtual = i;
+    
+    const post = todosReels[i];
+    document.getElementById('reelsContainer').innerHTML = `
+        <div class="reel-item">
+            ${post.video ? `<video src="${post.video}" autoplay loop muted playsinline></video>` : ''}
+            ${post.imagem && !post.video ? `<img src="${post.imagem}" class="reel-item-image">` : ''}
+            ${!post.video && !post.imagem ? '<div class="reel-item-image" style="display:flex;align-items:center;justify-content:center;font-size:80px;">✂️</div>' : ''}
+            <div class="reel-item-overlay">
+                <div class="reel-item-title">${post.titulo}</div>
+                <div class="reel-item-price">R$ ${(post.preco || 0).toFixed(2)}</div>
+            </div>
+        </div>
+    `;
+}
+
+function reelAnterior() {
+    if (reelsAtual > 0) {
+        reelsAtual--;
+        exibirReel(reelsAtual);
+    }
+}
+
+function reelProximo() {
+    if (reelsAtual < todosReels.length - 1) {
+        reelsAtual++;
+        exibirReel(reelsAtual);
+    }
+}
+
+// ==========================================================
+// PERFIL
+// ==========================================================
+function carregarPerfilCliente() {
+    if (!clienteLogado) return;
+    document.getElementById('perfilClienteNome').textContent = clienteLogado.nome;
+    document.getElementById('perfilClienteEmail').textContent = clienteLogado.email;
+    document.getElementById('editClienteNome').value = clienteLogado.nome || '';
+    document.getElementById('editClienteCelular').value = clienteLogado.celular || '';
+}
+
+async function salvarPerfilCliente() {
+    if (!clienteLogado) return;
+    
+    const nome = document.getElementById('editClienteNome').value.trim();
+    const celular = document.getElementById('editClienteCelular').value.trim();
+    
+    await db.collection('clientes').doc(clienteLogado.id).update({ nome, celular });
+    clienteLogado.nome = nome;
+    clienteLogado.celular = celular;
+    salvarSessao('cliente', clienteLogado);
+    mostrarToast('✅ Perfil salvo!', 'success');
+}
+
+function carregarPerfilBarbeiro() {
+    if (!barbeiroLogado) return;
+    document.getElementById('perfilBarbeiroNome').textContent = barbeiroLogado.nome;
+    document.getElementById('perfilBarbeiroEmail').textContent = barbeiroLogado.email;
+    document.getElementById('editBarbeiroNome').value = barbeiroLogado.nome || '';
+    document.getElementById('editBarbeiroCelular').value = barbeiroLogado.celular || '';
+    document.getElementById('editBarbeiroEmail').value = barbeiroLogado.email || '';
+}
+
+async function salvarPerfilBarbeiro() {
+    if (!barbeiroLogado) return;
+    
+    const nome = document.getElementById('editBarbeiroNome').value.trim();
+    const celular = document.getElementById('editBarbeiroCelular').value.trim();
+    const email = document.getElementById('editBarbeiroEmail').value.trim();
+    
+    await db.collection('barbeiros').doc(barbeiroLogado.id).update({ nome, celular, email });
+    barbeiroLogado.nome = nome;
+    barbeiroLogado.celular = celular;
+    barbeiroLogado.email = email;
+    salvarSessao('barbeiro', barbeiroLogado);
+    mostrarToast('✅ Perfil salvo!', 'success');
+}
+
+function uploadFotoCliente(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        const foto = ev.target.result;
+        const avatar = document.getElementById('perfilClienteAvatar');
+        if (avatar) {
+            const img = avatar.querySelector('img');
+            if (img) img.src = foto;
+        }
+        clienteLogado.fotoPerfil = foto;
+        await db.collection('clientes').doc(clienteLogado.id).update({ fotoPerfil: foto });
+        salvarSessao('cliente', clienteLogado);
+    };
+    reader.readAsDataURL(file);
+}
+
+function uploadFotoBarbeiro(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        const foto = ev.target.result;
+        const avatar = document.getElementById('perfilBarbeiroAvatar');
+        if (avatar) {
+            const img = avatar.querySelector('img');
+            if (img) img.src = foto;
+        }
+        barbeiroLogado.fotoPerfil = foto;
+        await db.collection('barbeiros').doc(barbeiroLogado.id).update({ fotoPerfil: foto });
+        salvarSessao('barbeiro', barbeiroLogado);
+    };
+    reader.readAsDataURL(file);
+}
+
+// ==========================================================
+// FINANCEIRO
+// ==========================================================
+async function calcularFaturamento() {
+    try {
+        const snapshot = await db.collection('agendamentos').where('status', '==', 'confirmado').get();
+        const agendamentos = snapshot.docs.map(d => d.data());
+        
+        const hoje = new Date().toISOString().split('T')[0];
+        let totalHoje = 0;
+        let totalGeral = 0;
+        
+        agendamentos.forEach(a => {
+            const valor = 35; // Valor base
+            if (a.data === hoje) totalHoje += valor;
+            totalGeral += valor;
+        });
+        
+        document.getElementById('faturamentoHoje').textContent = 'R$ ' + totalHoje.toFixed(2);
+        document.getElementById('faturamentoSemana').textContent = 'R$ ' + (totalGeral * 0.3).toFixed(2);
+        document.getElementById('faturamentoMes').textContent = 'R$ ' + (totalGeral * 0.7).toFixed(2);
+        document.getElementById('faturamentoAno').textContent = 'R$ ' + totalGeral.toFixed(2);
+    } catch (erro) {
+        console.error('Erro ao calcular faturamento:', erro);
+    }
+}
+
+// ==========================================================
+// HORÁRIOS
+// ==========================================================
+async function carregarHorarios() {
+    if (!barbeiroLogado) return;
+    
+    try {
+        const doc = await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).get();
+        if (doc.exists) {
+            horariosTrabalho = doc.data();
+        }
+        
+        ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
+            const cb = document.getElementById('dia' + dia);
+            if (cb) cb.checked = horariosTrabalho.diasTrabalho.includes(dia.toLowerCase());
+        });
+        
+        document.getElementById('horarioInicio').value = horariosTrabalho.horarioInicio;
+        document.getElementById('horarioFim').value = horariosTrabalho.horarioFim;
+        document.getElementById('intervaloCortes').value = horariosTrabalho.intervaloCortes;
+        carregarFolgas();
+    } catch (erro) {
+        console.error('Erro ao carregar horários:', erro);
+    }
+}
+
+function carregarFolgas() {
+    const container = document.getElementById('folgasContainer');
+    if (!container) return;
+    
+    if (!horariosTrabalho.folgas || horariosTrabalho.folgas.length === 0) {
+        container.innerHTML = '<p style="color:#6B7280;">Nenhuma folga</p>';
+        return;
+    }
+    
+    container.innerHTML = horariosTrabalho.folgas.map((f, i) => `
+        <div class="folga-item">
+            <span>🏖️ ${new Date(f).toLocaleDateString('pt-BR')}</span>
+            <button onclick="removerFolga(${i})">❌</button>
+        </div>
+    `).join('');
+}
+
+function adicionarFolga() {
+    const data = document.getElementById('folgaData').value;
+    if (!data) return;
+    
+    if (horariosTrabalho.folgas.includes(data)) {
+        mostrarToast('❌ Data já adicionada!', 'error');
+        return;
+    }
+    
+    horariosTrabalho.folgas.push(data);
+    horariosTrabalho.folgas.sort();
+    carregarFolgas();
+    document.getElementById('folgaData').value = '';
+    mostrarToast('✅ Folga adicionada!', 'success');
+}
+
+function removerFolga(i) {
+    horariosTrabalho.folgas.splice(i, 1);
+    carregarFolgas();
+}
+
+async function salvarHorarios() {
+    if (!barbeiroLogado) return;
+    
+    const dias = [];
+    ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
+        const cb = document.getElementById('dia' + dia);
+        if (cb && cb.checked) dias.push(dia.toLowerCase());
+    });
+    
+    horariosTrabalho.diasTrabalho = dias;
+    horariosTrabalho.horarioInicio = document.getElementById('horarioInicio').value;
+    horariosTrabalho.horarioFim = document.getElementById('horarioFim').value;
+    horariosTrabalho.intervaloCortes = parseInt(document.getElementById('intervaloCortes').value);
+    
+    await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).set(horariosTrabalho);
+    mostrarToast('✅ Horários salvos!', 'success');
+}
+
+// ==========================================================
+// EXTRATO
+// ==========================================================
+function filtrarExtrato(tipo) {
+    mostrarToast('📊 Filtrando por ' + tipo, 'info');
+}
+
+// ==========================================================
+// PAGAMENTO
+// ==========================================================
+function copiarPix() {
+    const chave = document.getElementById('pixChave').textContent;
+    navigator.clipboard.writeText(chave);
+    mostrarToast('✅ Chave PIX copiada!', 'success');
+}
+
+function fecharPagamento() {
+    mostrarTela('homeCliente');
+}
+
+// ==========================================================
+// LIVE
+// ==========================================================
+async function carregarLive() {
+    try {
+        const doc = await db.collection('lives').doc('live_atual').get();
+        
+        if (doc.exists && doc.data().ativa) {
+            const live = doc.data();
+            document.getElementById('livePlaceholder').style.display = 'none';
+            document.getElementById('livePlayer').style.display = 'block';
+            document.getElementById('liveStatus').style.display = 'block';
+            
+            document.getElementById('liveStatusTitulo').textContent = live.titulo;
+            document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome;
+        } else {
+            document.getElementById('livePlaceholder').style.display = 'flex';
+            document.getElementById('livePlayer').style.display = 'none';
+            document.getElementById('liveStatus').style.display = 'none';
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar live:', erro);
+    }
+}
+
+async function verificarLiveAtiva() {
+    try {
+        const doc = await db.collection('lives').doc('live_atual').get();
+        const ativa = doc.exists && doc.data().ativa;
+        
+        const badgeCliente = document.getElementById('liveBadgeCliente');
+        const badgeBarbeiro = document.getElementById('liveBadgeBarbeiro');
+        
+        if (badgeCliente) badgeCliente.style.display = ativa ? 'inline-block' : 'none';
+        if (badgeBarbeiro) badgeBarbeiro.style.display = ativa ? 'inline-block' : 'none';
+    } catch (erro) {
+        console.error('Erro ao verificar live:', erro);
+    }
+}
+
+// ==========================================================
+// INICIALIZAÇÃO
+// ==========================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Barbearia RM iniciando...');
+    
+    // Esconder todas as telas
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    
+    // Esconder navegação
+    const navCliente = document.getElementById('bottomNavCliente');
+    const navBarbeiro = document.getElementById('bottomNavBarbeiro');
+    if (navCliente) navCliente.style.display = 'none';
+    if (navBarbeiro) navBarbeiro.style.display = 'none';
+    
+    // Esconder formulários de login
+    fecharFormulariosLogin();
+    
+    // Tentar restaurar sessão
+    const restaurado = await restaurarSessao();
+    
+    if (!restaurado) {
+        document.getElementById('loginScreen').classList.add('active');
+    }
+    
+    // Verificar live
+    verificarLiveAtiva();
+    
+    console.log('✅ Barbearia RM pronta!');
 });
 
-console.log('✅ Script carregado com sucesso!');
+console.log('✅ Script completo carregado!');
