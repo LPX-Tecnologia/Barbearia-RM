@@ -207,9 +207,36 @@
             <div style="padding:8px;background:linear-gradient(135deg,#FF0000,#CC0000);display:flex;justify-content:space-between;align-items:center;font-size:11px;"><span style="color:white;font-weight:700;">🔴 AO VIVO</span><span id="liveViewerCount" style="color:rgba(255,255,255,0.8);">👥 0</span></div>
         </div>
         <div id="liveStatus" class="card" style="text-align:center;display:none;"><span style="color:#F00;font-weight:700;">🔴 AO VIVO</span><span id="liveDuration" style="color:#aaa;font-size:12px;margin-left:8px;">00:00:00</span></div>
+        
+        <!-- CONTROLES -->
         <div class="card" id="liveControlsCard" style="display:none;">
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="btn btn-small btn-primary" id="btnRecordClip">⏺️ Gravar Trecho</button><button class="btn btn-small btn-danger" id="btnStopClip" style="display:none;">⏹️ Parar</button><button class="btn btn-small btn-outline" id="btnSaveClipsLive">💾 Salvar</button><button class="btn btn-small btn-outline" id="btnSwitchCamera">🔄 Câmera</button></div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="btn btn-small btn-outline" id="btnTelaCamera">🎥 Câmera</button><button class="btn btn-small btn-outline" id="btnTelaComercial">📺 Comercial</button><button class="btn btn-small btn-outline" id="btnTelaAnuncio">📢 Anúncio</button><button class="btn btn-small btn-danger" id="btnFinalizarLive">⏹️ Finalizar</button></div>
+            <!-- Linha 1: Gravação -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-small btn-primary" id="btnRecordClip">⏺️ Gravar Trecho</button>
+                <button class="btn btn-small btn-danger" id="btnStopClip" style="display:none;">⏹️ Parar</button>
+                <button class="btn btn-small btn-outline" id="btnSaveClipsLive">💾 Salvar</button>
+                <button class="btn btn-small btn-outline" id="btnSwitchCamera">🔄 Câmera</button>
+            </div>
+            <!-- Linha 2: Telas -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-small btn-outline" id="btnTelaCamera">🎥 Câmera</button>
+                <button class="btn btn-small btn-outline" id="btnTelaComercial">📺 Comercial</button>
+                <button class="btn btn-small btn-outline" id="btnTelaAnuncio">📢 Anúncio</button>
+                <button class="btn btn-small btn-danger" id="btnFinalizarLive">⏹️ Finalizar</button>
+            </div>
+            
+            <!-- SORTEIO -->
+            <div style="margin-top:8px;padding:10px;background:rgba(0,200,100,0.05);border-radius:8px;border:1px solid rgba(0,200,100,0.2);">
+                <h4 style="color:#00cc66;margin-bottom:6px;font-size:12px;">🎉 SORTEIO AO VIVO</h4>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <input type="text" id="premioSorteioInput" placeholder="Prêmio do sorteio..." style="flex:1;min-width:120px;padding:6px 8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:6px;color:white;font-size:11px;">
+                    <button class="btn btn-small btn-success" id="btnIniciarSorteio" style="font-size:10px;">🎉 Iniciar</button>
+                    <button class="btn btn-small btn-primary" id="btnRealizarSorteio" style="font-size:10px;">🏆 Sortear</button>
+                </div>
+                <div id="sorteioStatus" style="margin-top:6px;font-size:10px;color:#aaa;">Pronto para sortear</div>
+            </div>
+            
+            <!-- ANÚNCIO AUTOMÁTICO -->
             <div style="margin-top:8px;padding:10px;background:rgba(255,215,0,0.05);border-radius:8px;border:1px solid rgba(255,215,0,0.2);">
                 <h4 style="color:#FFD700;margin-bottom:6px;font-size:12px;">📢 ANÚNCIO AUTOMÁTICO</h4>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -222,15 +249,35 @@
                 </div>
                 <div id="anuncioAutoStatus" style="margin-top:6px;font-size:10px;color:#aaa;">Pronto para configurar</div>
             </div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;"><span style="font-size:10px;color:#aaa;">✨ Efeitos:</span><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('none')" style="font-size:10px;padding:4px 8px;">Normal</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('bw')" style="font-size:10px;padding:4px 8px;">⬛ P&B</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('sepia')" style="font-size:10px;padding:4px 8px;">🟫 Sépia</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('neon')" style="font-size:10px;padding:4px 8px;">💜 Neon</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('warm')" style="font-size:10px;padding:4px 8px;">🔥 Quente</button></div>
-            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><input type="file" id="comercialVideoInput" accept="video/*" style="display:none;" onchange="carregarComercialLive(event)"><button class="btn btn-small btn-outline" onclick="document.getElementById('comercialVideoInput').click()" style="font-size:10px;">🎬 Add Comercial</button></div>
+            
+            <!-- EFEITOS -->
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;">
+                <span style="font-size:10px;color:#aaa;">✨ Efeitos:</span>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('none')" style="font-size:10px;padding:4px 8px;">Normal</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('bw')" style="font-size:10px;padding:4px 8px;">⬛ P&B</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('sepia')" style="font-size:10px;padding:4px 8px;">🟫 Sépia</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('neon')" style="font-size:10px;padding:4px 8px;">💜 Neon</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('warm')" style="font-size:10px;padding:4px 8px;">🔥 Quente</button>
+            </div>
+            
+            <!-- COMERCIAL -->
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                <input type="file" id="comercialVideoInput" accept="video/*" style="display:none;" onchange="carregarComercialLive(event)">
+                <button class="btn btn-small btn-outline" onclick="document.getElementById('comercialVideoInput').click()" style="font-size:10px;">🎬 Add Comercial</button>
+            </div>
         </div>
+        
+        <!-- TRECHOS -->
         <div class="card" id="clipsCard" style="display:none;"><h4>🎬 Trechos Gravados (<span id="clipCountLive">0</span>)</h4><div id="clipsTimelineLive" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0;"><span style="color:#aaa;font-size:11px;">Nenhum trecho</span></div></div>
+        
+        <!-- CHAT -->
         <div class="card"><h4>💬 Chat</h4><div id="liveChatMessages" style="max-height:120px;overflow-y:auto;margin-bottom:8px;font-size:12px;"><p style="color:#aaa;text-align:center;">Chat vazio</p></div><div style="display:flex;gap:6px;"><input type="text" id="liveChatInput" placeholder="Mensagem..." style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:12px;"><button class="btn btn-small btn-primary" id="btnSendLiveChat">📤</button></div></div>
+        
+        <!-- COMPARTILHAR -->
         <div class="card"><h4>📤 Compartilhar</h4><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-small btn-outline" onclick="compartilharLive('whatsapp')">💬 WhatsApp</button><button class="btn btn-small btn-outline" onclick="compartilharLive('facebook')">📘 Facebook</button><button class="btn btn-small btn-outline" onclick="compartilharLive('link')">🔗 Copiar Link</button></div></div>
+        
         <button class="btn btn-outline" id="btnVoltarLive" style="margin-top:10px;">← Voltar</button>
     </section>
-
     <!-- ==================== GALERIA / REELS / PERFIS / HORÁRIOS / ANÚNCIOS / PLANO / MODAL / TOAST / NAVS ==================== -->
     <section class="screen" id="galeriaCortesScreen"><h2 class="screen-title">💇 GALERIA</h2><select id="filtroCategoria" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:2px solid rgba(212,168,75,.2);border-radius:12px;color:white;font-size:14px;margin-bottom:16px;"><option value="todos">Todos</option><option value="Corte Social">Corte Social</option><option value="Corte Degradê">Corte Degradê</option></select><div id="galeriaContainer" class="galeria-grid"></div><button class="btn btn-outline" id="btnVoltarGaleria" style="margin-top:16px;">← Voltar</button></section>
     <section class="screen" id="reelsScreen"><h2 class="screen-title">🎬 REELS</h2><div id="reelsContainer" style="width:100%;max-width:400px;margin:0 auto;aspect-ratio:9/16;background:#000;border-radius:12px;overflow:hidden;"></div><div style="display:flex;justify-content:center;gap:10px;margin-top:10px;"><button class="btn btn-small btn-primary" id="btnReelAnterior">⬅️</button><button class="btn btn-small btn-primary" id="btnReelProximo">➡️</button></div><button class="btn btn-outline" id="btnVoltarReels" style="margin-top:10px;">← Voltar</button></section>
