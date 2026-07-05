@@ -500,32 +500,237 @@ async function calcularFaturamento() {
 }
 
 // ==========================================================
-// LIVE
+// LIVE STUDIO - FUNÇÕES
 // ==========================================================
-async function carregarLive() {
-    try {
-        var doc = await db.collection('lives').doc('live_atual').get();
-        if (doc.exists && doc.data().ativa) {
-            var live = doc.data();
-            var ph = document.getElementById('livePlaceholder');
-            var pl = document.getElementById('livePlayer');
-            var st = document.getElementById('liveStatus');
-            if (ph) ph.style.display = 'none';
-            if (pl) pl.style.display = 'block';
-            if (st) { st.style.display = 'block'; }
-        }
-    } catch(e) {}
+let liveStream = null;
+let liveAtiva = false;
+let gravandoTrecho = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let trechosGravados = [];
+let efeitoLiveAtual = 'none';
+let telaLiveAtual = 'camera';
+let liveTimerInterval = null;
+let liveDuracao = 0;
+let liveFacingMode = 'user';
+
+function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.className = 'toast ' + (tipo || 'info');
+    t.style.display = 'block';
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => t.style.display = 'none', 3000);
 }
 
-async function verificarLiveAtiva() {
+async function iniciarLive() {
     try {
-        var doc = await db.collection('lives').doc('live_atual').get();
-        var ativa = doc.exists && doc.data().ativa;
-        var bc = document.getElementById('liveBadgeCliente');
-        var bb = document.getElementById('liveBadgeBarbeiro');
-        if (bc) bc.style.display = ativa ? 'inline-block' : 'none';
-        if (bb) bb.style.display = ativa ? 'inline-block' : 'none';
-    } catch(e) {}
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: liveFacingMode },
+            audio: { echoCancellation: true, noiseSuppression: true }
+        });
+        
+        liveStream = stream;
+        liveAtiva = true;
+        
+        document.getElementById('liveVideo').srcObject = stream;
+        document.getElementById('liveVideo').muted = true;
+        document.getElementById('livePlaceholder').style.display = 'none';
+        document.getElementById('liveControlsCard').style.display = 'block';
+        document.getElementById('clipsCard').style.display = 'block';
+        document.getElementById('liveStatus').style.display = 'block';
+        
+        // Timer
+        liveDuracao = 0;
+        liveTimerInterval = setInterval(() => {
+            liveDuracao++;
+            const h = Math.floor(liveDuracao / 3600);
+            const m = Math.floor((liveDuracao % 3600) / 60);
+            const s = liveDuracao % 60;
+            document.getElementById('liveDuration').textContent = 
+                String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        }, 1000);
+        
+        mostrarToast('🔴 Live iniciada!', 'success');
+    } catch (erro) {
+        mostrarToast('❌ Erro: ' + erro.message, 'error');
+    }
+}
+
+function pararLive() {
+    if (gravandoTrecho) pararGravacaoTrecho();
+    if (liveStream) { liveStream.getTracks().forEach(t => t.stop()); liveStream = null; }
+    liveAtiva = false;
+    clearInterval(liveTimerInterval);
+    document.getElementById('liveVideo').srcObject = null;
+    document.getElementById('livePlaceholder').style.display = 'flex';
+    document.getElementById('liveControlsCard').style.display = 'none';
+    document.getElementById('clipsCard').style.display = 'none';
+    document.getElementById('liveStatus').style.display = 'none';
+    document.getElementById('liveDuration').textContent = '00:00:00';
+}
+
+function iniciarGravacaoTrecho() {
+    if (!liveStream || gravandoTrecho) return;
+    mediaRecorder = new MediaRecorder(liveStream, { mimeType: 'video/webm' });
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        trechosGravados.push({ id: Date.now(), url, blob, efeito: efeitoLiveAtual });
+        atualizarTimelineLive();
+        document.getElementById('clipCountLive').textContent = trechosGravados.length;
+        mostrarToast('✅ Trecho salvo!', 'success');
+    };
+    mediaRecorder.start(1000);
+    gravandoTrecho = true;
+    document.getElementById('btnRecordClip').style.display = 'none';
+    document.getElementById('btnStopClip').style.display = 'inline-block';
+}
+
+function pararGravacaoTrecho() {
+    if (!gravandoTrecho || !mediaRecorder) return;
+    mediaRecorder.stop();
+    gravandoTrecho = false;
+    document.getElementById('btnRecordClip').style.display = 'inline-block';
+    document.getElementById('btnStopClip').style.display = 'none';
+}
+
+function atualizarTimelineLive() {
+    const tl = document.getElementById('clipsTimelineLive');
+    if (trechosGravados.length === 0) {
+        tl.innerHTML = '<span style="color:#aaa;font-size:11px;">Nenhum trecho</span>';
+        return;
+    }
+    tl.innerHTML = trechosGravados.map((c, i) => 
+        `<span style="background:rgba(255,255,255,.05);padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer;" onclick="window.open('${c.url}','_blank')">🎬 Clip ${i+1}</span>`
+    ).join('');
+}
+
+function salvarTrechosLive() {
+    trechosGravados.forEach((c, i) => {
+        const a = document.createElement('a');
+        a.href = c.url;
+        a.download = 'barbearia-clip-' + (i+1) + '.webm';
+        a.click();
+    });
+    mostrarToast('💾 ' + trechosGravados.length + ' trechos salvos!', 'success');
+}
+
+async function trocarCameraLive() {
+    liveFacingMode = liveFacingMode === 'user' ? 'environment' : 'user';
+    if (liveStream) liveStream.getTracks().forEach(t => t.stop());
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: liveFacingMode },
+            audio: true
+        });
+        liveStream = stream;
+        document.getElementById('liveVideo').srcObject = stream;
+        mostrarToast('🔄 Câmera: ' + (liveFacingMode === 'user' ? 'Frontal' : 'Traseira'), 'info');
+    } catch (e) {
+        mostrarToast('❌ Erro ao trocar', 'error');
+    }
+}
+
+function aplicarEfeitoLive(efeito) {
+    const overlay = document.getElementById('effectsOverlay');
+    const video = document.getElementById('liveVideo');
+    overlay.className = '';
+    video.style.filter = '';
+    efeitoLiveAtual = efeito;
+    if (efeito === 'bw') video.style.filter = 'grayscale(100%)';
+    else if (efeito === 'sepia') video.style.filter = 'sepia(80%)';
+    else if (efeito === 'neon') video.style.filter = 'brightness(1.2) contrast(1.3) saturate(1.5)';
+    else if (efeito === 'warm') video.style.filter = 'sepia(20%) saturate(1.3)';
+    mostrarToast('✨ Efeito: ' + efeito, 'info');
+}
+
+function mostrarTelaLive(tipo) {
+    document.getElementById('overlayComercial').style.display = 'none';
+    document.getElementById('overlayAnuncio').style.display = 'none';
+    telaLiveAtual = tipo;
+    if (tipo === 'comercial') document.getElementById('overlayComercial').style.display = 'block';
+    else if (tipo === 'anuncio') document.getElementById('overlayAnuncio').style.display = 'flex';
+}
+
+function carregarComercialLive(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const vid = document.getElementById('comercialVideo');
+    vid.src = URL.createObjectURL(file);
+    vid.loop = true;
+    vid.muted = true;
+    mostrarToast('🎬 Comercial carregado!', 'success');
+}
+
+function carregarAnuncioLive(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('anuncioImg').src = e.target.result;
+        mostrarTelaLive('anuncio');
+    };
+    reader.readAsDataURL(file);
+}
+
+function compartilharLive(rede) {
+    const url = window.location.href;
+    const texto = '🔴 Barbearia RM - Ao Vivo!';
+    const links = {
+        whatsapp: 'https://wa.me/?text=' + encodeURIComponent(texto + ' ' + url),
+        facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + url,
+        twitter: 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(texto) + '&url=' + url,
+        instagram: 'https://instagram.com',
+        tiktok: 'https://tiktok.com',
+        link: null
+    };
+    if (rede === 'link') {
+        navigator.clipboard.writeText(url);
+        mostrarToast('📋 Link copiado!', 'success');
+    } else if (links[rede]) {
+        window.open(links[rede], '_blank');
+    }
+}
+
+async function finalizarLive() {
+    if (!confirm('Finalizar live?')) return;
+    pararLive();
+    if (typeof db !== 'undefined') {
+        await db.collection('lives').doc('live_atual').update({ ativa: false, dataFim: new Date().toISOString() });
+    }
+    mostrarToast('✅ Live finalizada!', 'info');
+}
+
+// ==========================================================
+// EVENT LISTENERS DA LIVE
+// ==========================================================
+function setupLiveListeners() {
+    document.getElementById('btnIniciarLiveNaTela')?.addEventListener('click', iniciarLive);
+    document.getElementById('btnRecordClip')?.addEventListener('click', iniciarGravacaoTrecho);
+    document.getElementById('btnStopClip')?.addEventListener('click', pararGravacaoTrecho);
+    document.getElementById('btnSaveClipsLive')?.addEventListener('click', salvarTrechosLive);
+    document.getElementById('btnSwitchCamera')?.addEventListener('click', trocarCameraLive);
+    document.getElementById('btnTelaCamera')?.addEventListener('click', () => mostrarTelaLive('camera'));
+    document.getElementById('btnTelaComercial')?.addEventListener('click', () => mostrarTelaLive('comercial'));
+    document.getElementById('btnTelaAnuncio')?.addEventListener('click', () => mostrarTelaLive('anuncio'));
+    document.getElementById('btnFinalizarLive')?.addEventListener('click', finalizarLive);
+    document.getElementById('btnVoltarLive')?.addEventListener('click', () => {
+        if (liveAtiva) pararLive();
+        if (typeof mostrarTela === 'function') mostrarTela('homeCliente');
+    });
+    document.getElementById('btnSendLiveChat')?.addEventListener('click', () => {
+        const input = document.getElementById('liveChatInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+        const container = document.getElementById('liveChatMessages');
+        container.innerHTML += `<div style="padding:4px;font-size:11px;"><strong style="color:#D4A84B;">Você:</strong> ${msg}</div>`;
+        container.scrollTop = container.scrollHeight;
+        input.value = '';
+    });
 }
 
 // ==========================================================
