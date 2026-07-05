@@ -219,56 +219,111 @@
         <button class="btn btn-outline" id="btnVoltarExtrato">← Voltar</button>
     </section>
 
-    <!-- ==================== LIVE (TELA COMPLETA) ==================== -->
+        <!-- ==================== LIVE (TELA COMPLETA) ==================== -->
     <section class="screen" id="liveScreen">
         <h2 class="screen-title">🔴 ESTÚDIO AO VIVO</h2>
         
         <div class="card" id="livePlayerContainer" style="padding:0;overflow:hidden;background:#000;">
             <div style="position:relative;width:100%;padding-bottom:56.25%;background:#000;">
-                <div id="liveTela1" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;">
-                    <video id="liveVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;background:#111;"></video>
-                    <img id="liveFrameImg" src="#" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;">
-                    <div id="livePlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:2;">
-                        <div style="text-align:center;color:white;">
-                            <div style="font-size:50px;">🔴</div>
-                            <p style="margin-top:8px;color:#B0B0B0;">Nenhuma transmissão ativa no momento</p>
-                            <button class="btn btn-small btn-primary" id="btnAtualizarLive" style="margin-top:8px;">🔄 Verificar Live</button>
-                        </div>
+                <video id="liveVideo" autoplay playsinline muted style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;background:#111;"></video>
+                <img id="liveFrameImg" src="#" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;">
+                <div id="livePlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:2;">
+                    <div style="text-align:center;color:white;">
+                        <div style="font-size:50px;">🔴</div>
+                        <p style="margin-top:8px;color:#B0B0B0;">Estúdio offline</p>
+                        <button class="btn btn-small btn-primary" id="btnIniciarLiveNaTela" style="margin-top:8px;">🎥 INICIAR LIVE</button>
                     </div>
                 </div>
+                <!-- Overlay Comercial -->
+                <div id="overlayComercial" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;background:#111;z-index:5;">
+                    <video id="comercialVideo" loop muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+                </div>
+                <!-- Overlay Anúncio -->
+                <div id="overlayAnuncio" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;background:rgba(0,0,0,0.85);z-index:6;align-items:center;justify-content:center;">
+                    <img id="anuncioImg" src="#" style="max-width:80%;max-height:80%;object-fit:contain;border-radius:10px;border:3px solid #FFD700;">
+                </div>
+                <!-- Efeitos -->
+                <div id="effectsOverlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;"></div>
+                <!-- Mini câmera -->
+                <video id="pipVideo" autoplay playsinline muted style="position:absolute;bottom:8px;right:8px;width:100px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #F00;display:none;z-index:10;"></video>
             </div>
-            <div style="padding:10px;background:linear-gradient(135deg,#FF0000,#CC0000);display:flex;justify-content:space-between;align-items:center;">
+            <div style="padding:8px;background:linear-gradient(135deg,#FF0000,#CC0000);display:flex;justify-content:space-between;align-items:center;font-size:11px;">
                 <span style="color:white;font-weight:700;">🔴 AO VIVO</span>
-                <span id="liveViewerCount" style="color:rgba(255,255,255,0.8);font-size:11px;">👥 0 espectadores</span>
+                <span id="liveViewerCount" style="color:rgba(255,255,255,0.8);">👥 0</span>
             </div>
         </div>
 
+        <!-- Status -->
         <div id="liveStatus" class="card" style="text-align:center;display:none;">
-            <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-                <span style="width:10px;height:10px;background:#F00;border-radius:50%;animation:pulse 2s infinite;"></span>
-                <span style="color:#F00;font-weight:700;">AO VIVO</span>
+            <span style="color:#F00;font-weight:700;">🔴 AO VIVO</span>
+            <span id="liveDuration" style="color:#aaa;font-size:12px;margin-left:8px;">00:00:00</span>
+        </div>
+
+        <!-- Controles -->
+        <div class="card" id="liveControlsCard" style="display:none;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-small btn-primary" id="btnRecordClip">⏺️ Gravar Trecho</button>
+                <button class="btn btn-small btn-danger" id="btnStopClip" style="display:none;">⏹️ Parar</button>
+                <button class="btn btn-small btn-outline" id="btnSaveClipsLive">💾 Salvar</button>
+                <button class="btn btn-small btn-outline" id="btnSwitchCamera">🔄 Câmera</button>
             </div>
-            <p id="liveStatusTitulo" style="color:white;margin-top:6px;font-weight:700;"></p>
-            <p id="liveStatusBarbeiro" style="color:#B0B0B0;font-size:12px;"></p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button class="btn btn-small btn-outline" id="btnTelaCamera">🎥 Câmera</button>
+                <button class="btn btn-small btn-outline" id="btnTelaComercial">📺 Comercial</button>
+                <button class="btn btn-small btn-outline" id="btnTelaAnuncio">📢 Anúncio</button>
+                <button class="btn btn-small btn-danger" id="btnFinalizarLive">⏹️ Finalizar</button>
+            </div>
+            <!-- Efeitos rápidos -->
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                <span style="font-size:10px;color:#aaa;">✨ Efeitos:</span>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('none')" style="font-size:10px;padding:4px 8px;">Normal</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('bw')" style="font-size:10px;padding:4px 8px;">⬛ P&B</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('sepia')" style="font-size:10px;padding:4px 8px;">🟫 Sépia</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('neon')" style="font-size:10px;padding:4px 8px;">💜 Neon</button>
+                <button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('warm')" style="font-size:10px;padding:4px 8px;">🔥 Quente</button>
+            </div>
+            <!-- Upload comercial/anúncio -->
+            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                <input type="file" id="comercialVideoInput" accept="video/*" style="display:none;" onchange="carregarComercialLive(event)">
+                <input type="file" id="anuncioImgInput" accept="image/*" style="display:none;" onchange="carregarAnuncioLive(event)">
+                <button class="btn btn-small btn-outline" onclick="document.getElementById('comercialVideoInput').click()" style="font-size:10px;">🎬 Add Comercial</button>
+                <button class="btn btn-small btn-outline" onclick="document.getElementById('anuncioImgInput').click()" style="font-size:10px;">📢 Add Anúncio</button>
+            </div>
         </div>
 
-        <div class="card" style="text-align:center;padding:8px;">
-            <button class="btn btn-small btn-primary" id="btnCurtirLive">❤️ Curtir</button>
-            <button class="btn btn-small btn-outline" id="btnCompartilharLive">📤 Compartilhar</button>
+        <!-- Trechos gravados -->
+        <div class="card" id="clipsCard" style="display:none;">
+            <h4>🎬 Trechos Gravados (<span id="clipCountLive">0</span>)</h4>
+            <div id="clipsTimelineLive" style="display:flex;gap:6px;overflow-x:auto;padding:4px 0;">
+                <span style="color:#aaa;font-size:11px;">Nenhum trecho</span>
+            </div>
         </div>
 
-        <div class="card" id="liveChatCard">
-            <h3>💬 CHAT AO VIVO</h3>
-            <div id="liveChatContainer" style="max-height:180px;min-height:70px;overflow-y:auto;margin-bottom:8px;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;">
-                <p style="color:#6B7280;text-align:center;">Chat vazio</p>
+        <!-- Chat -->
+        <div class="card">
+            <h4>💬 Chat</h4>
+            <div id="liveChatMessages" style="max-height:120px;overflow-y:auto;margin-bottom:8px;font-size:12px;">
+                <p style="color:#aaa;text-align:center;">Chat vazio</p>
             </div>
             <div style="display:flex;gap:6px;">
-                <input type="text" id="liveChatInput" placeholder="Digite sua mensagem..." style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:13px;">
-                <button class="btn btn-primary" id="btnEnviarChat" style="width:auto;padding:10px 14px;">📤</button>
+                <input type="text" id="liveChatInput" placeholder="Mensagem..." style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:12px;">
+                <button class="btn btn-small btn-primary" id="btnSendLiveChat">📤</button>
             </div>
         </div>
 
-        <button class="btn btn-outline" id="btnVoltarLive">← Voltar</button>
+        <!-- Compartilhar -->
+        <div class="card">
+            <h4>📤 Compartilhar</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="btn btn-small btn-outline" onclick="compartilharLive('whatsapp')">💬 WhatsApp</button>
+                <button class="btn btn-small btn-outline" onclick="compartilharLive('instagram')">📷 Instagram</button>
+                <button class="btn btn-small btn-outline" onclick="compartilharLive('facebook')">📘 Facebook</button>
+                <button class="btn btn-small btn-outline" onclick="compartilharLive('tiktok')">🎵 TikTok</button>
+                <button class="btn btn-small btn-outline" onclick="compartilharLive('link')">🔗 Copiar Link</button>
+            </div>
+        </div>
+
+        <button class="btn btn-outline" id="btnVoltarLive" style="margin-top:10px;">← Voltar</button>
     </section>
 
     <!-- ==================== GALERIA ==================== -->
