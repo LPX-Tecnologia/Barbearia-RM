@@ -1,5 +1,5 @@
 /* ==========================================================
-   BARBEARIA RM - SCRIPT PRINCIPAL COMPLETO
+   BARBEARIA RM - SCRIPT PRINCIPAL
    ========================================================== */
 
 // ==========================================================
@@ -25,21 +25,6 @@ console.log('🔥 Firebase conectado');
 // ==========================================================
 let clienteLogado = null;
 let barbeiroLogado = null;
-let imagemBase64 = '';
-let videoBase64 = '';
-let imagemPlanoBase64 = '';
-let anuncioImagemBase64 = '';
-let todosPosts = [];
-let todosReels = [];
-let reelsAtual = 0;
-let postSelecionadoId = null;
-let horariosTrabalho = {
-    diasTrabalho: ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'],
-    horarioInicio: '09:00',
-    horarioFim: '18:00',
-    intervaloCortes: 30,
-    folgas: []
-};
 
 // ==========================================================
 // FUNÇÕES DE NAVEGAÇÃO
@@ -104,9 +89,6 @@ function carregarDadosTela(nomeTela) {
             break;
         case 'anuncios':
             carregarAnuncios();
-            if (barbeiroLogado && document.getElementById('formAnuncio')) {
-                document.getElementById('formAnuncio').style.display = 'block';
-            }
             break;
         case 'live':
             carregarLive();
@@ -116,15 +98,6 @@ function carregarDadosTela(nomeTela) {
             break;
         case 'perfilBarbeiro':
             carregarPerfilBarbeiro();
-            break;
-        case 'galeriaCortes':
-            carregarGaleria();
-            break;
-        case 'reels':
-            carregarReels();
-            break;
-        case 'horariosTrabalho':
-            carregarHorarios();
             break;
     }
 }
@@ -147,16 +120,19 @@ function mostrarToast(mensagem, tipo = 'info') {
 }
 
 // ==========================================================
-// FUNÇÕES DE LOGIN
+// LOGIN
 // ==========================================================
 function mostrarFormularioLogin(tipo) {
-    document.getElementById('loginFormCliente').classList.remove('visible');
-    document.getElementById('loginFormBarbeiro').classList.remove('visible');
+    const formCliente = document.getElementById('loginFormCliente');
+    const formBarbeiro = document.getElementById('loginFormBarbeiro');
     
-    if (tipo === 'cliente') {
-        document.getElementById('loginFormCliente').classList.add('visible');
-    } else if (tipo === 'barbeiro') {
-        document.getElementById('loginFormBarbeiro').classList.add('visible');
+    if (formCliente) formCliente.classList.remove('visible');
+    if (formBarbeiro) formBarbeiro.classList.remove('visible');
+    
+    if (tipo === 'cliente' && formCliente) {
+        formCliente.classList.add('visible');
+    } else if (tipo === 'barbeiro' && formBarbeiro) {
+        formBarbeiro.classList.add('visible');
     }
 }
 
@@ -165,11 +141,6 @@ function fecharFormulariosLogin() {
     const formBarbeiro = document.getElementById('loginFormBarbeiro');
     if (formCliente) formCliente.classList.remove('visible');
     if (formBarbeiro) formBarbeiro.classList.remove('visible');
-}
-
-function voltarParaLogin() {
-    fecharFormulariosLogin();
-    mostrarTela('login');
 }
 
 // ==========================================================
@@ -192,7 +163,6 @@ function salvarSessao(tipo, dados) {
 function carregarSessao() {
     const dados = localStorage.getItem('barbeariaRM_sessao');
     if (!dados) return null;
-    
     try {
         const sessao = JSON.parse(dados);
         if ((Date.now() - sessao.timestamp) / 86400000 > 30) {
@@ -251,7 +221,7 @@ async function restaurarSessao() {
 }
 
 // ==========================================================
-// LOGIN / CADASTRO
+// FUNÇÕES DE LOGIN
 // ==========================================================
 async function loginCliente() {
     const email = document.getElementById('loginEmailCliente').value.trim();
@@ -354,11 +324,7 @@ async function cadastrarCliente() {
         
         const id = Date.now().toString();
         const cliente = {
-            id,
-            nome,
-            email,
-            celular,
-            senha,
+            id, nome, email, celular, senha,
             fotoPerfil: '',
             dataCriacao: new Date().toISOString()
         };
@@ -407,11 +373,7 @@ async function cadastrarBarbeiro() {
         
         const id = Date.now().toString();
         const barbeiro = {
-            id,
-            nome,
-            email,
-            celular,
-            senha,
+            id, nome, email, celular, senha,
             fotoPerfil: '',
             dataCriacao: new Date().toISOString()
         };
@@ -452,7 +414,7 @@ function sairBarbeiro() {
 }
 
 // ==========================================================
-// FEED / POSTS
+// FEED
 // ==========================================================
 async function carregarFeedCliente() {
     const container = document.getElementById('feedClienteContainer');
@@ -461,7 +423,6 @@ async function carregarFeedCliente() {
     try {
         const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
         const posts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        todosPosts = posts;
         
         if (posts.length === 0) {
             container.innerHTML = '<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post ainda</h3></div>';
@@ -479,14 +440,13 @@ async function carregarFeedCliente() {
                             <div class="feed-post-user-time">${new Date(post.dataCriacao).toLocaleDateString('pt-BR')}</div>
                         </div>
                     </div>
-                    ${post.video ? `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>` : ''}
                     ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image">` : ''}
                     <div class="feed-post-body">
                         <div class="feed-post-title">${post.titulo}</div>
                         <div class="feed-post-price">R$ ${(post.preco || 0).toFixed(2)}</div>
                     </div>
                     <div class="feed-post-actions">
-                        <button onclick="likePost('${post.id}', this)">❤️ ${post.likes || 0}</button>
+                        <button>❤️ ${post.likes || 0}</button>
                         <button onclick="abrirComentarios('${post.id}')">💬 ${comentarios.length}</button>
                     </div>
                 </div>
@@ -502,10 +462,7 @@ async function carregarMeusPosts() {
     if (!container || !barbeiroLogado) return;
     
     try {
-        const snapshot = await db.collection('posts')
-            .where('barbeiroId', '==', barbeiroLogado.id)
-            .get();
-        
+        const snapshot = await db.collection('posts').where('barbeiroId', '==', barbeiroLogado.id).get();
         const posts = [];
         snapshot.forEach(d => posts.push({ id: d.id, ...d.data() }));
         posts.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
@@ -515,101 +472,40 @@ async function carregarMeusPosts() {
             return;
         }
         
-        container.innerHTML = posts.map(post => {
-            const comentarios = post.comentarios || [];
-            let html = `
-                <div class="feed-post" style="margin-bottom:12px;">
-                    <div class="feed-post-header">
-                        <div class="feed-post-avatar">✂️</div>
-                        <div class="feed-post-user">
-                            <div class="feed-post-user-name">${post.titulo}</div>
-                            <div class="feed-post-user-time">R$ ${(post.preco || 0).toFixed(2)}</div>
-                        </div>
+        container.innerHTML = posts.map(post => `
+            <div class="feed-post" style="margin-bottom:12px;">
+                <div class="feed-post-header">
+                    <div class="feed-post-avatar">✂️</div>
+                    <div class="feed-post-user">
+                        <div class="feed-post-user-name">${post.titulo}</div>
+                        <div class="feed-post-user-time">R$ ${(post.preco || 0).toFixed(2)}</div>
                     </div>
-            `;
-            
-            if (post.imagem) html += `<img src="${post.imagem}" class="feed-post-image">`;
-            if (post.video) html += `<video class="feed-post-video" controls><source src="${post.video}" type="video/mp4"></video>`;
-            
-            html += `
-                    <div class="feed-post-body">
-                        <p>${post.descricao || ''}</p>
-                        <p style="font-size:11px;color:#6B7280;">❤️ ${post.likes || 0} • 💬 ${comentarios.length}</p>
-                    </div>
-                    <button class="btn btn-small btn-danger" onclick="excluirMeuPost('${post.id}')">🗑 Excluir</button>
                 </div>
-            `;
-            
-            return html;
-        }).join('');
+                ${post.imagem ? `<img src="${post.imagem}" class="feed-post-image">` : ''}
+                <div class="feed-post-body">
+                    <p>${post.descricao || ''}</p>
+                </div>
+                <button class="btn btn-small btn-danger" onclick="excluirMeuPost('${post.id}')">🗑 Excluir</button>
+            </div>
+        `).join('');
     } catch (erro) {
         container.innerHTML = '<p style="color:#6B7280;text-align:center;">Erro ao carregar</p>';
     }
 }
 
-async function criarPost() {
-    if (!barbeiroLogado) return;
-    
-    const titulo = document.getElementById('postTitulo').value.trim();
-    const preco = parseFloat(document.getElementById('postPreco').value);
-    const descricao = document.getElementById('postDescricao').value.trim();
-    const imagem = document.getElementById('postImagem').value || '';
-    const video = document.getElementById('postVideo').value || '';
-    
-    if (!titulo || !preco || preco <= 0) {
-        mostrarToast('❌ Título e preço são obrigatórios!', 'error');
-        return;
-    }
-    
-    try {
-        const id = Date.now().toString();
-        await db.collection('posts').doc(id).set({
-            id,
-            barbeiroId: barbeiroLogado.id,
-            barbeiroNome: barbeiroLogado.nome,
-            titulo,
-            preco,
-            imagem,
-            video,
-            descricao,
-            likes: 0,
-            comentarios: [],
-            dataCriacao: new Date().toISOString()
-        });
-        
-        mostrarToast('✅ Publicado!', 'success');
-        document.getElementById('postTitulo').value = '';
-        document.getElementById('postPreco').value = '';
-        document.getElementById('postDescricao').value = '';
-        removerImagem();
-        removerVideo();
-        mostrarTela('homeBarbeiro');
-        
-    } catch (erro) {
-        mostrarToast('❌ Erro ao publicar!', 'error');
-    }
-}
-
 async function excluirMeuPost(id) {
     if (!confirm('Excluir este post?')) return;
-    
-    try {
-        await db.collection('posts').doc(id).delete();
-        mostrarToast('🗑 Excluído!', 'success');
-        carregarMeusPosts();
-        carregarFeedCliente();
-    } catch (erro) {
-        mostrarToast('❌ Erro ao excluir!', 'error');
-    }
-}
-
-function likePost(id, btn) {
-    btn.classList.toggle('liked');
+    await db.collection('posts').doc(id).delete();
+    mostrarToast('🗑 Excluído!', 'success');
+    carregarMeusPosts();
+    carregarFeedCliente();
 }
 
 // ==========================================================
 // COMENTÁRIOS
 // ==========================================================
+let postSelecionadoId = null;
+
 function abrirComentarios(id) {
     postSelecionadoId = id;
     carregarComentarios(id);
@@ -647,60 +543,10 @@ async function adicionarComentario() {
     await db.collection('posts').doc(postSelecionadoId).update({ comentarios });
     document.getElementById('novoComentario').value = '';
     carregarComentarios(postSelecionadoId);
-    carregarFeedCliente();
 }
 
 function fecharModalComentario() {
     document.getElementById('modalComentario').classList.remove('active');
-}
-
-// ==========================================================
-// UPLOAD DE IMAGENS
-// ==========================================================
-function previewImagem(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        imagemBase64 = ev.target.result;
-        document.getElementById('postImagem').value = imagemBase64;
-        document.getElementById('imagemPreviewImg').src = imagemBase64;
-        document.getElementById('imagemPreview').style.display = 'block';
-        document.getElementById('imagemUploadArea').style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerImagem() {
-    imagemBase64 = '';
-    document.getElementById('postImagem').value = '';
-    document.getElementById('imagemPreview').style.display = 'none';
-    document.getElementById('imagemUploadArea').style.display = 'block';
-    document.getElementById('postImagemInput').value = '';
-}
-
-function previewVideo(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        videoBase64 = ev.target.result;
-        document.getElementById('postVideo').value = videoBase64;
-        document.getElementById('videoPreviewVideo').src = videoBase64;
-        document.getElementById('videoPreview').style.display = 'block';
-        document.getElementById('videoUploadArea').style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerVideo() {
-    videoBase64 = '';
-    document.getElementById('postVideo').value = '';
-    document.getElementById('videoPreview').style.display = 'none';
-    document.getElementById('videoUploadArea').style.display = 'block';
-    document.getElementById('postVideoInput').value = '';
 }
 
 // ==========================================================
@@ -715,23 +561,19 @@ function carregarOpcoesAgendamento() {
         for (let h = 9; h <= 18; h++) {
             for (let m = 0; m < 60; m += 30) {
                 if (h === 18 && m > 0) break;
-                const hora = String(h).padStart(2, '0');
-                const min = String(m).padStart(2, '0');
-                horarios.push(`${hora}:${min}`);
+                horarios.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
             }
         }
         selectHorario.innerHTML = horarios.map(h => `<option value="${h}">${h}</option>`).join('');
     }
     
     if (selectTipo) {
-        const tipos = ['Corte Social', 'Corte Degradê', 'Corte Navalhado', 'Corte Máquina', 'Barba', 'Barba + Corte', 'Pintura', 'Luzes', 'Platinado', 'Selagem', 'Progressiva'];
+        const tipos = ['Corte Social', 'Corte Degradê', 'Corte Navalhado', 'Corte Máquina', 'Barba', 'Barba + Corte'];
         selectTipo.innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
     }
     
     const inputData = document.getElementById('agendamentoData');
-    if (inputData) {
-        inputData.min = new Date().toISOString().split('T')[0];
-    }
+    if (inputData) inputData.min = new Date().toISOString().split('T')[0];
 }
 
 async function agendarCorte() {
@@ -755,10 +597,7 @@ async function agendarCorte() {
             id,
             clienteId: clienteLogado.id,
             clienteNome: clienteLogado.nome,
-            clienteEmail: clienteLogado.email,
-            data,
-            horario,
-            tipo,
+            data, horario, tipo,
             status: 'pendente',
             dataCriacao: new Date().toISOString()
         });
@@ -767,7 +606,6 @@ async function agendarCorte() {
         document.getElementById('agendamentoData').value = '';
         carregarAgendaCliente();
         mostrarTela('homeCliente');
-        
     } catch (erro) {
         mostrarToast('❌ Erro ao agendar!', 'error');
     }
@@ -784,26 +622,22 @@ async function carregarAgendaCliente() {
             .get();
         
         const agendamentos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        agendamentos.sort((a, b) => new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario));
+        agendamentos.sort((a, b) => new Date(b.data) - new Date(a.data));
         
         if (agendamentos.length === 0) {
             container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>';
             return;
         }
         
-        container.innerHTML = agendamentos.map(a => {
-            const statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
-            const statusIcon = a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳';
-            return `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <div class="agenda-cliente">${a.tipo}</div>
-                        <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
-                    </div>
-                    <span class="agenda-status ${statusClass}">${statusIcon} ${a.status}</span>
+        container.innerHTML = agendamentos.map(a => `
+            <div class="agenda-item">
+                <div class="agenda-info">
+                    <div class="agenda-cliente">${a.tipo}</div>
+                    <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario}</div>
                 </div>
-            `;
-        }).join('');
+                <span class="agenda-status ${a.status}">${a.status === 'confirmado' ? '✅' : '⏳'} ${a.status}</span>
+            </div>
+        `).join('');
     } catch (erro) {
         container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
     }
@@ -822,39 +656,18 @@ async function carregarAgendamentosBarbeiro() {
             return;
         }
         
-        container.innerHTML = agendamentos.map(a => {
-            const statusClass = a.status === 'confirmado' ? 'confirmado' : a.status === 'cancelado' ? 'cancelado' : 'pendente';
-            const statusIcon = a.status === 'confirmado' ? '✅ Confirmado' : a.status === 'cancelado' ? '❌ Cancelado' : '⏳ Pendente';
-            return `
-                <div class="agenda-item">
-                    <div class="agenda-info">
-                        <div class="agenda-cliente">👤 ${a.clienteNome || 'Cliente'}</div>
-                        <div class="agenda-data">📅 ${a.data || 'N/A'} • ⏰ ${a.horario || 'N/A'}</div>
-                    </div>
-                    <span class="agenda-status ${statusClass}">${statusIcon}</span>
-                    ${a.status === 'pendente' ? `
-                        <button class="btn btn-small btn-success" onclick="confirmarAgendamento('${a.id}')">✅</button>
-                        <button class="btn btn-small btn-danger" onclick="cancelarAgendamento('${a.id}')">❌</button>
-                    ` : ''}
+        container.innerHTML = agendamentos.map(a => `
+            <div class="agenda-item">
+                <div class="agenda-info">
+                    <div class="agenda-cliente">👤 ${a.clienteNome || 'Cliente'}</div>
+                    <div class="agenda-data">📅 ${a.data} • ⏰ ${a.horario} • ✂️ ${a.tipo}</div>
                 </div>
-            `;
-        }).join('');
+                <span class="agenda-status ${a.status}">${a.status}</span>
+            </div>
+        `).join('');
     } catch (erro) {
         container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
     }
-}
-
-async function confirmarAgendamento(id) {
-    await db.collection('agendamentos').doc(id).update({ status: 'confirmado' });
-    carregarAgendamentosBarbeiro();
-    if (clienteLogado) carregarAgendaCliente();
-}
-
-async function cancelarAgendamento(id) {
-    if (!confirm('Cancelar agendamento?')) return;
-    await db.collection('agendamentos').doc(id).update({ status: 'cancelado' });
-    carregarAgendamentosBarbeiro();
-    if (clienteLogado) carregarAgendaCliente();
 }
 
 // ==========================================================
@@ -874,93 +687,17 @@ async function carregarPlanos() {
         }
         
         container.innerHTML = planos.map(p => `
-            <div class="plano-card" style="flex-direction:column;align-items:flex-start;">
-                ${p.imagem ? `<img src="${p.imagem}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;">` : ''}
-                <div style="display:flex;justify-content:space-between;width:100%;">
-                    <div>
-                        <div class="plano-nome">${p.nome}</div>
-                        <div class="plano-periodo">📅 ${p.periodo}</div>
-                    </div>
-                    <div class="plano-preco">R$ ${(p.preco || 0).toFixed(2)}</div>
+            <div class="plano-card">
+                <div class="plano-info">
+                    <div class="plano-nome">${p.nome}</div>
+                    <div class="plano-periodo">📅 ${p.periodo}</div>
                 </div>
-                <div style="margin-top:8px;">
-                    <button class="btn btn-small btn-primary" onclick="editarPlano('${p.id}')">✏️</button>
-                    <button class="btn btn-small btn-danger" onclick="excluirPlanoDireto('${p.id}')">🗑</button>
-                </div>
+                <div class="plano-preco">R$ ${(p.preco || 0).toFixed(2)}</div>
             </div>
         `).join('');
     } catch (erro) {
         container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
     }
-}
-
-async function criarPlano() {
-    if (!barbeiroLogado) return;
-    
-    const nome = document.getElementById('planoNome').value.trim();
-    const periodo = document.getElementById('planoPeriodo').value;
-    const preco = parseFloat(document.getElementById('planoPreco').value);
-    const descricao = document.getElementById('planoDescricao').value.trim();
-    const imagem = document.getElementById('planoImagem').value || '';
-    
-    if (!nome || !preco || preco <= 0) {
-        mostrarToast('❌ Nome e preço são obrigatórios!', 'error');
-        return;
-    }
-    
-    try {
-        const id = Date.now().toString();
-        await db.collection('planos').doc(id).set({
-            id,
-            barbeiroId: barbeiroLogado.id,
-            nome,
-            periodo,
-            preco,
-            descricao,
-            imagem,
-            dataCriacao: new Date().toISOString()
-        });
-        
-        mostrarToast('✅ Plano criado!', 'success');
-        document.getElementById('planoNome').value = '';
-        document.getElementById('planoPreco').value = '';
-        document.getElementById('planoDescricao').value = '';
-        removerImagemPlano();
-        mostrarTela('homeBarbeiro');
-        
-    } catch (erro) {
-        mostrarToast('❌ Erro ao criar plano!', 'error');
-    }
-}
-
-async function excluirPlanoDireto(id) {
-    if (!confirm('Excluir plano?')) return;
-    await db.collection('planos').doc(id).delete();
-    mostrarToast('🗑 Excluído!', 'success');
-    carregarPlanos();
-}
-
-function previewImagemPlano(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        imagemPlanoBase64 = ev.target.result;
-        document.getElementById('planoImagem').value = imagemPlanoBase64;
-        document.getElementById('planoImagemPreview').src = imagemPlanoBase64;
-        document.getElementById('planoImagemPreview').style.display = 'block';
-        document.getElementById('btnRemoverImagemPlano').style.display = 'inline-block';
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerImagemPlano() {
-    imagemPlanoBase64 = '';
-    document.getElementById('planoImagem').value = '';
-    document.getElementById('planoImagemPreview').style.display = 'none';
-    document.getElementById('btnRemoverImagemPlano').style.display = 'none';
-    document.getElementById('planoImagemInput').value = '';
 }
 
 // ==========================================================
@@ -986,193 +723,11 @@ async function carregarAnuncios() {
                 ${a.imagem ? `<img src="${a.imagem}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:8px 0;">` : ''}
                 <h3 style="color:#FF6B6B;">${a.titulo}</h3>
                 <p style="color:#B0B0B0;">${a.descricao}</p>
-                ${a.link ? `<a href="${a.link}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,#FF6B6B,#FF4757);color:white;border-radius:8px;text-decoration:none;font-weight:bold;">🔗 Saiba Mais</a>` : ''}
-                ${barbeiroLogado ? `<button class="btn btn-small btn-danger" onclick="excluirAnuncio('${a.id}')" style="margin-top:8px;">🗑</button>` : ''}
+                ${a.link ? `<a href="${a.link}" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 16px;background:#FF4757;color:white;border-radius:8px;text-decoration:none;font-weight:bold;">🔗 Saiba Mais</a>` : ''}
             </div>
         `).join('');
     } catch (erro) {
         container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
-    }
-}
-
-async function criarAnuncio() {
-    if (!barbeiroLogado) return;
-    
-    const titulo = document.getElementById('anuncioTitulo').value.trim();
-    const descricao = document.getElementById('anuncioDescricao').value.trim();
-    const link = document.getElementById('anuncioLink').value.trim();
-    const imagem = document.getElementById('anuncioImagem').value || '';
-    const duracao = parseInt(document.getElementById('anuncioDuracao').value);
-    
-    if (!titulo) {
-        mostrarToast('❌ Título é obrigatório!', 'error');
-        return;
-    }
-    
-    const expiracao = new Date();
-    expiracao.setDate(expiracao.getDate() + duracao);
-    
-    try {
-        const id = 'anuncio_' + Date.now();
-        await db.collection('anuncios').doc(id).set({
-            id,
-            barbeiroId: barbeiroLogado.id,
-            barbeiroNome: barbeiroLogado.nome,
-            titulo,
-            descricao,
-            link,
-            imagem,
-            duracao,
-            dataCriacao: new Date().toISOString(),
-            dataExpiracao: expiracao.toISOString()
-        });
-        
-        mostrarToast('✅ Anúncio publicado!', 'success');
-        document.getElementById('anuncioTitulo').value = '';
-        document.getElementById('anuncioDescricao').value = '';
-        document.getElementById('anuncioLink').value = '';
-        removerAnuncioImagem();
-        carregarAnuncios();
-        
-    } catch (erro) {
-        mostrarToast('❌ Erro ao publicar!', 'error');
-    }
-}
-
-async function excluirAnuncio(id) {
-    if (!confirm('Excluir anúncio?')) return;
-    await db.collection('anuncios').doc(id).delete();
-    mostrarToast('🗑 Excluído!', 'success');
-    carregarAnuncios();
-}
-
-function previewAnuncioImagem(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        anuncioImagemBase64 = ev.target.result;
-        document.getElementById('anuncioImagem').value = anuncioImagemBase64;
-        document.getElementById('anuncioImagemPreview').src = anuncioImagemBase64;
-        document.getElementById('anuncioImagemPreview').style.display = 'block';
-        document.getElementById('btnRemoverAnuncioImagem').style.display = 'inline-block';
-    };
-    reader.readAsDataURL(file);
-}
-
-function removerAnuncioImagem() {
-    anuncioImagemBase64 = '';
-    document.getElementById('anuncioImagem').value = '';
-    document.getElementById('anuncioImagemPreview').style.display = 'none';
-    document.getElementById('btnRemoverAnuncioImagem').style.display = 'none';
-    document.getElementById('anuncioImagemInput').value = '';
-}
-
-// ==========================================================
-// GALERIA / REELS
-// ==========================================================
-async function carregarGaleria() {
-    const container = document.getElementById('galeriaContainer');
-    if (!container) return;
-    
-    try {
-        const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
-        todosPosts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        filtrarGaleria();
-    } catch (erro) {
-        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
-    }
-}
-
-function filtrarGaleria() {
-    const container = document.getElementById('galeriaContainer');
-    const filtro = document.getElementById('filtroCategoria')?.value || 'todos';
-    
-    const filtrados = filtro === 'todos' ? todosPosts : todosPosts.filter(p => p.titulo === filtro);
-    
-    if (filtrados.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;text-align:center;">Nenhum corte encontrado</p>';
-        return;
-    }
-    
-    container.innerHTML = filtrados.map(post => `
-        <div class="galeria-item" onclick="verDetalheCorte('${post.id}')">
-            ${post.imagem ? `<img src="${post.imagem}" class="galeria-item-image">` : '<div class="galeria-item-image" style="display:flex;align-items:center;justify-content:center;font-size:40px;">✂️</div>'}
-            <div class="galeria-item-info">
-                <div class="galeria-item-title">${post.titulo}</div>
-                <div class="galeria-item-price">R$ ${(post.preco || 0).toFixed(2)}</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function verDetalheCorte(id) {
-    const post = todosPosts.find(p => p.id === id);
-    if (!post) return;
-    
-    document.getElementById('detalhePostConteudo').innerHTML = `
-        <div class="card">
-            <h3>${post.titulo}</h3>
-            ${post.video ? `<video controls><source src="${post.video}" type="video/mp4"></video>` : ''}
-            ${post.imagem ? `<img src="${post.imagem}" style="width:100%;max-height:300px;object-fit:cover;">` : ''}
-            <p style="font-size:24px;color:var(--primary);">R$ ${(post.preco || 0).toFixed(2)}</p>
-            <button class="btn btn-outline" onclick="mostrarTela('galeriaCortes')">← Voltar</button>
-        </div>
-    `;
-    mostrarTela('detalhePost');
-}
-
-async function carregarReels() {
-    const container = document.getElementById('reelsContainer');
-    if (!container) return;
-    
-    try {
-        const snapshot = await db.collection('posts').orderBy('dataCriacao', 'desc').get();
-        todosReels = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        if (todosReels.length === 0) {
-            container.innerHTML = '<p style="color:#6B7280;padding:40px;">Nenhum reel</p>';
-            return;
-        }
-        
-        reelsAtual = 0;
-        exibirReel(0);
-    } catch (erro) {
-        container.innerHTML = '<p style="color:#6B7280;">Erro ao carregar</p>';
-    }
-}
-
-function exibirReel(i) {
-    if (i < 0) i = 0;
-    if (i >= todosReels.length) i = todosReels.length - 1;
-    reelsAtual = i;
-    
-    const post = todosReels[i];
-    document.getElementById('reelsContainer').innerHTML = `
-        <div class="reel-item">
-            ${post.video ? `<video src="${post.video}" autoplay loop muted playsinline></video>` : ''}
-            ${post.imagem && !post.video ? `<img src="${post.imagem}" class="reel-item-image">` : ''}
-            ${!post.video && !post.imagem ? '<div class="reel-item-image" style="display:flex;align-items:center;justify-content:center;font-size:80px;">✂️</div>' : ''}
-            <div class="reel-item-overlay">
-                <div class="reel-item-title">${post.titulo}</div>
-                <div class="reel-item-price">R$ ${(post.preco || 0).toFixed(2)}</div>
-            </div>
-        </div>
-    `;
-}
-
-function reelAnterior() {
-    if (reelsAtual > 0) {
-        reelsAtual--;
-        exibirReel(reelsAtual);
-    }
-}
-
-function reelProximo() {
-    if (reelsAtual < todosReels.length - 1) {
-        reelsAtual++;
-        exibirReel(reelsAtual);
     }
 }
 
@@ -1189,10 +744,8 @@ function carregarPerfilCliente() {
 
 async function salvarPerfilCliente() {
     if (!clienteLogado) return;
-    
     const nome = document.getElementById('editClienteNome').value.trim();
     const celular = document.getElementById('editClienteCelular').value.trim();
-    
     await db.collection('clientes').doc(clienteLogado.id).update({ nome, celular });
     clienteLogado.nome = nome;
     clienteLogado.celular = celular;
@@ -1211,55 +764,15 @@ function carregarPerfilBarbeiro() {
 
 async function salvarPerfilBarbeiro() {
     if (!barbeiroLogado) return;
-    
     const nome = document.getElementById('editBarbeiroNome').value.trim();
     const celular = document.getElementById('editBarbeiroCelular').value.trim();
     const email = document.getElementById('editBarbeiroEmail').value.trim();
-    
     await db.collection('barbeiros').doc(barbeiroLogado.id).update({ nome, celular, email });
     barbeiroLogado.nome = nome;
     barbeiroLogado.celular = celular;
     barbeiroLogado.email = email;
     salvarSessao('barbeiro', barbeiroLogado);
     mostrarToast('✅ Perfil salvo!', 'success');
-}
-
-function uploadFotoCliente(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-        const foto = ev.target.result;
-        const avatar = document.getElementById('perfilClienteAvatar');
-        if (avatar) {
-            const img = avatar.querySelector('img');
-            if (img) img.src = foto;
-        }
-        clienteLogado.fotoPerfil = foto;
-        await db.collection('clientes').doc(clienteLogado.id).update({ fotoPerfil: foto });
-        salvarSessao('cliente', clienteLogado);
-    };
-    reader.readAsDataURL(file);
-}
-
-function uploadFotoBarbeiro(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-        const foto = ev.target.result;
-        const avatar = document.getElementById('perfilBarbeiroAvatar');
-        if (avatar) {
-            const img = avatar.querySelector('img');
-            if (img) img.src = foto;
-        }
-        barbeiroLogado.fotoPerfil = foto;
-        await db.collection('barbeiros').doc(barbeiroLogado.id).update({ fotoPerfil: foto });
-        salvarSessao('barbeiro', barbeiroLogado);
-    };
-    reader.readAsDataURL(file);
 }
 
 // ==========================================================
@@ -1269,13 +782,12 @@ async function calcularFaturamento() {
     try {
         const snapshot = await db.collection('agendamentos').where('status', '==', 'confirmado').get();
         const agendamentos = snapshot.docs.map(d => d.data());
-        
         const hoje = new Date().toISOString().split('T')[0];
         let totalHoje = 0;
         let totalGeral = 0;
         
         agendamentos.forEach(a => {
-            const valor = 35; // Valor base
+            const valor = 35;
             if (a.data === hoje) totalHoje += valor;
             totalGeral += valor;
         });
@@ -1290,126 +802,24 @@ async function calcularFaturamento() {
 }
 
 // ==========================================================
-// HORÁRIOS
-// ==========================================================
-async function carregarHorarios() {
-    if (!barbeiroLogado) return;
-    
-    try {
-        const doc = await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).get();
-        if (doc.exists) {
-            horariosTrabalho = doc.data();
-        }
-        
-        ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
-            const cb = document.getElementById('dia' + dia);
-            if (cb) cb.checked = horariosTrabalho.diasTrabalho.includes(dia.toLowerCase());
-        });
-        
-        document.getElementById('horarioInicio').value = horariosTrabalho.horarioInicio;
-        document.getElementById('horarioFim').value = horariosTrabalho.horarioFim;
-        document.getElementById('intervaloCortes').value = horariosTrabalho.intervaloCortes;
-        carregarFolgas();
-    } catch (erro) {
-        console.error('Erro ao carregar horários:', erro);
-    }
-}
-
-function carregarFolgas() {
-    const container = document.getElementById('folgasContainer');
-    if (!container) return;
-    
-    if (!horariosTrabalho.folgas || horariosTrabalho.folgas.length === 0) {
-        container.innerHTML = '<p style="color:#6B7280;">Nenhuma folga</p>';
-        return;
-    }
-    
-    container.innerHTML = horariosTrabalho.folgas.map((f, i) => `
-        <div class="folga-item">
-            <span>🏖️ ${new Date(f).toLocaleDateString('pt-BR')}</span>
-            <button onclick="removerFolga(${i})">❌</button>
-        </div>
-    `).join('');
-}
-
-function adicionarFolga() {
-    const data = document.getElementById('folgaData').value;
-    if (!data) return;
-    
-    if (horariosTrabalho.folgas.includes(data)) {
-        mostrarToast('❌ Data já adicionada!', 'error');
-        return;
-    }
-    
-    horariosTrabalho.folgas.push(data);
-    horariosTrabalho.folgas.sort();
-    carregarFolgas();
-    document.getElementById('folgaData').value = '';
-    mostrarToast('✅ Folga adicionada!', 'success');
-}
-
-function removerFolga(i) {
-    horariosTrabalho.folgas.splice(i, 1);
-    carregarFolgas();
-}
-
-async function salvarHorarios() {
-    if (!barbeiroLogado) return;
-    
-    const dias = [];
-    ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
-        const cb = document.getElementById('dia' + dia);
-        if (cb && cb.checked) dias.push(dia.toLowerCase());
-    });
-    
-    horariosTrabalho.diasTrabalho = dias;
-    horariosTrabalho.horarioInicio = document.getElementById('horarioInicio').value;
-    horariosTrabalho.horarioFim = document.getElementById('horarioFim').value;
-    horariosTrabalho.intervaloCortes = parseInt(document.getElementById('intervaloCortes').value);
-    
-    await db.collection('configuracoes').doc('horarios_' + barbeiroLogado.id).set(horariosTrabalho);
-    mostrarToast('✅ Horários salvos!', 'success');
-}
-
-// ==========================================================
-// EXTRATO
-// ==========================================================
-function filtrarExtrato(tipo) {
-    mostrarToast('📊 Filtrando por ' + tipo, 'info');
-}
-
-// ==========================================================
-// PAGAMENTO
-// ==========================================================
-function copiarPix() {
-    const chave = document.getElementById('pixChave').textContent;
-    navigator.clipboard.writeText(chave);
-    mostrarToast('✅ Chave PIX copiada!', 'success');
-}
-
-function fecharPagamento() {
-    mostrarTela('homeCliente');
-}
-
-// ==========================================================
 // LIVE
 // ==========================================================
 async function carregarLive() {
     try {
         const doc = await db.collection('lives').doc('live_atual').get();
-        
         if (doc.exists && doc.data().ativa) {
             const live = doc.data();
-            document.getElementById('livePlaceholder').style.display = 'none';
-            document.getElementById('livePlayer').style.display = 'block';
-            document.getElementById('liveStatus').style.display = 'block';
+            const placeholder = document.getElementById('livePlaceholder');
+            const player = document.getElementById('livePlayer');
+            const status = document.getElementById('liveStatus');
             
-            document.getElementById('liveStatusTitulo').textContent = live.titulo;
-            document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome;
-        } else {
-            document.getElementById('livePlaceholder').style.display = 'flex';
-            document.getElementById('livePlayer').style.display = 'none';
-            document.getElementById('liveStatus').style.display = 'none';
+            if (placeholder) placeholder.style.display = 'none';
+            if (player) player.style.display = 'block';
+            if (status) {
+                status.style.display = 'block';
+                document.getElementById('liveStatusTitulo').textContent = live.titulo;
+                document.getElementById('liveStatusBarbeiro').textContent = '👤 ' + live.barbeiroNome;
+            }
         }
     } catch (erro) {
         console.error('Erro ao carregar live:', erro);
@@ -1420,10 +830,8 @@ async function verificarLiveAtiva() {
     try {
         const doc = await db.collection('lives').doc('live_atual').get();
         const ativa = doc.exists && doc.data().ativa;
-        
         const badgeCliente = document.getElementById('liveBadgeCliente');
         const badgeBarbeiro = document.getElementById('liveBadgeBarbeiro');
-        
         if (badgeCliente) badgeCliente.style.display = ativa ? 'inline-block' : 'none';
         if (badgeBarbeiro) badgeBarbeiro.style.display = ativa ? 'inline-block' : 'none';
     } catch (erro) {
@@ -1432,10 +840,118 @@ async function verificarLiveAtiva() {
 }
 
 // ==========================================================
+// EXTRATO
+// ==========================================================
+function filtrarExtrato(tipo) {
+    mostrarToast('📊 Filtrando por ' + tipo, 'info');
+}
+
+// ==========================================================
+// INICIALIZAÇÃO COM EVENT LISTENERS
+// ==========================================================
+function setupEventListeners() {
+    console.log('🎯 Configurando event listeners...');
+    
+    // Botões da tela de login
+    document.getElementById('btnSouCliente')?.addEventListener('click', () => mostrarFormularioLogin('cliente'));
+    document.getElementById('btnSouBarbeiro')?.addEventListener('click', () => mostrarFormularioLogin('barbeiro'));
+    document.getElementById('btnEntrarCliente')?.addEventListener('click', loginCliente);
+    document.getElementById('btnEntrarBarbeiro')?.addEventListener('click', loginBarbeiro);
+    document.getElementById('btnCriarContaCliente')?.addEventListener('click', () => mostrarTela('cadastroCliente'));
+    document.getElementById('btnCriarContaBarbeiro')?.addEventListener('click', () => mostrarTela('cadastroBarbeiro'));
+    document.getElementById('btnVoltarCliente')?.addEventListener('click', fecharFormulariosLogin);
+    document.getElementById('btnVoltarBarbeiro')?.addEventListener('click', fecharFormulariosLogin);
+    
+    // Botões de cadastro
+    document.getElementById('btnFinalizarCadastroCliente')?.addEventListener('click', cadastrarCliente);
+    document.getElementById('btnFinalizarCadastroBarbeiro')?.addEventListener('click', cadastrarBarbeiro);
+    document.getElementById('btnVoltarCadastroCliente')?.addEventListener('click', () => mostrarTela('login'));
+    document.getElementById('btnVoltarCadastroBarbeiro')?.addEventListener('click', () => mostrarTela('login'));
+    
+    // Home Cliente
+    document.getElementById('btnAgendarCorte')?.addEventListener('click', () => mostrarTela('agendamento'));
+    document.getElementById('btnGaleria')?.addEventListener('click', () => mostrarTela('galeriaCortes'));
+    document.getElementById('btnReels')?.addEventListener('click', () => mostrarTela('reels'));
+    document.getElementById('btnAnuncios')?.addEventListener('click', () => mostrarTela('anuncios'));
+    document.getElementById('btnLive')?.addEventListener('click', () => mostrarTela('live'));
+    
+    // Home Barbeiro
+    document.getElementById('btnCriarPlano')?.addEventListener('click', () => mostrarTela('criarPlano'));
+    document.getElementById('btnNovoPost')?.addEventListener('click', () => mostrarTela('criarPost'));
+    document.getElementById('btnExtrato')?.addEventListener('click', () => mostrarTela('extrato'));
+    document.getElementById('btnHorarios')?.addEventListener('click', () => mostrarTela('horariosTrabalho'));
+    document.getElementById('btnAnunciosBarbeiro')?.addEventListener('click', () => mostrarTela('anuncios'));
+    document.getElementById('btnLiveBarbeiro')?.addEventListener('click', () => mostrarTela('live'));
+    
+    // Agendamento
+    document.getElementById('btnConfirmarAgendamento')?.addEventListener('click', agendarCorte);
+    document.getElementById('btnVoltarAgendamento')?.addEventListener('click', () => mostrarTela('homeCliente'));
+    
+    // Perfil Cliente
+    document.getElementById('btnSalvarPerfilCliente')?.addEventListener('click', salvarPerfilCliente);
+    document.getElementById('btnSairCliente')?.addEventListener('click', sairCliente);
+    document.getElementById('perfilClienteAvatar')?.addEventListener('click', () => document.getElementById('fotoClienteInput').click());
+    document.getElementById('fotoClienteInput')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+            const foto = ev.target.result;
+            document.querySelector('#perfilClienteAvatar img').src = foto;
+            clienteLogado.fotoPerfil = foto;
+            await db.collection('clientes').doc(clienteLogado.id).update({ fotoPerfil: foto });
+            salvarSessao('cliente', clienteLogado);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Perfil Barbeiro
+    document.getElementById('btnSalvarPerfilBarbeiro')?.addEventListener('click', salvarPerfilBarbeiro);
+    document.getElementById('btnSairBarbeiro')?.addEventListener('click', sairBarbeiro);
+    document.getElementById('perfilBarbeiroAvatar')?.addEventListener('click', () => document.getElementById('fotoBarbeiroInput').click());
+    document.getElementById('fotoBarbeiroInput')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+            const foto = ev.target.result;
+            document.querySelector('#perfilBarbeiroAvatar img').src = foto;
+            barbeiroLogado.fotoPerfil = foto;
+            await db.collection('barbeiros').doc(barbeiroLogado.id).update({ fotoPerfil: foto });
+            salvarSessao('barbeiro', barbeiroLogado);
+        };
+        reader.readAsDataURL(file);
+    });
+    
+    // Modal comentários
+    document.getElementById('btnComentar')?.addEventListener('click', adicionarComentario);
+    document.getElementById('btnFecharComentario')?.addEventListener('click', fecharModalComentario);
+    
+    // Navegação inferior Cliente
+    document.getElementById('navHomeCliente')?.addEventListener('click', () => mostrarTela('homeCliente'));
+    document.getElementById('navAgendar')?.addEventListener('click', () => mostrarTela('agendamento'));
+    document.getElementById('navGaleria')?.addEventListener('click', () => mostrarTela('galeriaCortes'));
+    document.getElementById('navLive')?.addEventListener('click', () => mostrarTela('live'));
+    document.getElementById('navPerfilCliente')?.addEventListener('click', () => mostrarTela('perfilCliente'));
+    
+    // Navegação inferior Barbeiro
+    document.getElementById('navHomeBarbeiro')?.addEventListener('click', () => mostrarTela('homeBarbeiro'));
+    document.getElementById('navPostar')?.addEventListener('click', () => mostrarTela('criarPost'));
+    document.getElementById('navExtrato')?.addEventListener('click', () => mostrarTela('extrato'));
+    document.getElementById('navLiveBarbeiro')?.addEventListener('click', () => mostrarTela('live'));
+    document.getElementById('navPerfilBarbeiro')?.addEventListener('click', () => mostrarTela('perfilBarbeiro'));
+    
+    console.log('✅ Event listeners configurados!');
+}
+
+// ==========================================================
 // INICIALIZAÇÃO
 // ==========================================================
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Barbearia RM iniciando...');
+    
+    // Configurar event listeners
+    setupEventListeners();
     
     // Esconder todas as telas
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1454,6 +970,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     if (!restaurado) {
         document.getElementById('loginScreen').classList.add('active');
+        console.log('👋 Nenhuma sessão ativa - mostrando login');
     }
     
     // Verificar live
@@ -1461,5 +978,3 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     console.log('✅ Barbearia RM pronta!');
 });
-
-console.log('✅ Script completo carregado!');
