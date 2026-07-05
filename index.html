@@ -10,176 +10,75 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
     <style>
-        /* Estilos inline para garantir funcionamento */
-        @keyframes livePulse { 
-            0%,100% { opacity:1; transform:scale(1); } 
-            50% { opacity:.7; transform:scale(1.05); } 
-        }
-        @keyframes pulse { 
-            0%,100% { opacity:1; } 
-            50% { opacity:.3; } 
-        }
+        @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.05)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        @keyframes spin{to{transform:rotate(360deg)}}
         
-        .live-badge {
-            display:inline-block;
-            background:#F00;
-            color:#fff;
-            padding:4px 10px;
-            border-radius:20px;
-            font-size:11px;
-            font-weight:700;
-            animation:livePulse 2s infinite;
-        }
-        
-        .live-chat-message {
-            padding:8px;
-            margin:4px 0;
-            background:rgba(255,255,255,.03);
-            border-radius:8px;
-            font-size:13px;
-        }
-        
-        .live-chat-message .autor {
-            color:#F00;
-            font-weight:700;
-            font-size:12px;
-        }
-        
-        .live-chat-message .texto {
-            color:#B0B0B0;
-            margin-top:2px;
-        }
-        
-        #livePlayerContainer {
-            border:2px solid #F00;
-            box-shadow:0 0 20px rgba(255,0,0,.3);
-        }
-        
-        #liveFrameImg {
-            position:absolute;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            display:none;
-        }
-        
-        #liveVideo {
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            background:#111;
-        }
-
-        /* Correção para os formulários de login */
-        .login-form-container {
-            display: none;
-        }
-        
-        .login-form-container.visible {
-            display: block;
-        }
-
-        /* Loading state */
-        .loading-state {
-            text-align: center;
-            padding: 40px;
-            color: #6B7280;
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(212,168,75,0.2);
-            border-top-color: #D4A84B;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Melhorias nos botões */
-        .btn {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn:active {
-            transform: scale(0.95);
-        }
+        .live-badge{display:inline-block;background:#F00;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;animation:livePulse 2s infinite}
+        .login-form-container{display:none;margin-top:16px}
+        .login-form-container.show{display:block}
+        .loading-spinner{width:40px;height:40px;border:3px solid rgba(212,168,75,.2);border-top-color:#D4A84B;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+        .btn-anuncio{background:linear-gradient(135deg,#FF6B6B,#FF4757)!important;color:#fff!important;border:none!important;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%}
+        .btn-live{background:linear-gradient(135deg,#F00,#C00)!important;color:#fff!important;border:none!important;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:100%}
+        .checkbox-label{display:block;padding:8px 0;color:#B0B0B0;cursor:pointer}
+        .checkbox-label input{margin-right:8px}
+        .file-upload-area{border:2px dashed rgba(212,168,75,.3);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.3s}
+        .file-upload-area:hover{border-color:#D4A84B;background:rgba(212,168,75,.05)}
+        .file-upload-icon{font-size:32px;margin-bottom:8px}
+        .galeria-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+        .galeria-item{background:rgba(26,26,26,.9);border-radius:12px;overflow:hidden;cursor:pointer;transition:.3s;border:1px solid rgba(212,168,75,.1)}
+        .galeria-item:hover{border-color:#D4A84B;transform:translateY(-2px)}
+        .galeria-item-image{width:100%;height:150px;object-fit:cover;background:#111}
+        .galeria-item-info{padding:10px}
+        .galeria-item-title{font-weight:600;color:#fff;font-size:14px}
+        .galeria-item-price{color:#D4A84B;font-weight:700;font-size:16px}
+        .folga-item{display:flex;justify-content:space-between;align-items:center;padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px}
+        .folga-item button{background:none;border:none;color:#F00;cursor:pointer;font-size:18px}
+        #livePlayerContainer{border:2px solid #F00;box-shadow:0 0 20px rgba(255,0,0,.3)}
+        #liveFrameImg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none}
+        #liveVideo{width:100%;height:100%;object-fit:cover;background:#111}
     </style>
 </head>
 <body>
 
-    <!-- ==================== HEADER ==================== -->
+    <!-- HEADER -->
     <header class="header">
         <div class="header-logo">
-            <div class="logo-container">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header">
-            </div>
+            <div class="logo-container"><img src="logobarbearia-rm.png" alt="Barbearia RM" class="logo-header"></div>
             <div class="slogan">Atitude, Estilo e Confiança</div>
         </div>
     </header>
 
-    <!-- ==================== TELA DE LOGIN ==================== -->
+    <!-- ==================== TELA LOGIN ==================== -->
     <section class="screen active" id="loginScreen">
         <div class="login-container">
-            <!-- Apenas UMA logo aqui -->
-            <div class="login-logo">
-                <img src="logobarbearia-rm.png" alt="Barbearia RM">
-            </div>
+            <div class="login-logo"><img src="logobarbearia-rm.png" alt="Barbearia RM"></div>
             <h2>Barbearia RM</h2>
             <p class="subtitle">Faça seu login ou cadastre-se</p>
-            
             <div class="card">
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="mostrarFormularioLogin('cliente')">
-                        👤 Sou Cliente
-                    </button>
-                    <button class="btn btn-secondary" onclick="mostrarFormularioLogin('barbeiro')">
-                        ✂️ Sou Barbeiro
-                    </button>
+                    <button class="btn btn-primary" id="btnMostrarLoginCliente">👤 Sou Cliente</button>
+                    <button class="btn btn-secondary" id="btnMostrarLoginBarbeiro">✂️ Sou Barbeiro</button>
                 </div>
-                
-                <!-- Formulário Cliente -->
                 <div id="loginFormCliente" class="login-form-container">
                     <h3 style="color:#D4A84B;text-align:center;margin-bottom:16px;">👤 Login Cliente</h3>
-                    <div class="input-group">
-                        <label>📧 E-mail</label>
-                        <input type="email" id="loginEmailCliente" placeholder="seu@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="loginSenhaCliente" placeholder="Digite sua senha">
-                    </div>
-                    <button class="btn btn-primary" onclick="loginCliente()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarTela('cadastroCliente')">📝 Criar Conta</button>
-                    <button class="btn btn-small btn-outline" onclick="fecharFormulariosLogin()" style="margin-top:8px;">← Voltar</button>
+                    <div class="input-group"><label>📧 E-mail</label><input type="email" id="loginEmailCliente" placeholder="seu@email.com"></div>
+                    <div class="input-group"><label>🔒 Senha</label><input type="password" id="loginSenhaCliente" placeholder="Digite sua senha"></div>
+                    <button class="btn btn-primary" id="btnEntrarCliente">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" id="btnCriarContaCliente">📝 Criar Conta</button>
+                    <button class="btn btn-small btn-outline" id="btnVoltarLoginCliente" style="margin-top:8px;">← Voltar</button>
                 </div>
-                
-                <!-- Formulário Barbeiro -->
                 <div id="loginFormBarbeiro" class="login-form-container">
                     <h3 style="color:#D4A84B;text-align:center;margin-bottom:16px;">✂️ Login Barbeiro</h3>
-                    <div class="input-group">
-                        <label>📧 E-mail</label>
-                        <input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com">
-                    </div>
-                    <div class="input-group">
-                        <label>🔒 Senha</label>
-                        <input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha">
-                    </div>
-                    <button class="btn btn-secondary" onclick="loginBarbeiro()">🔑 ENTRAR</button>
-                    <button class="btn btn-outline" onclick="mostrarTela('cadastroBarbeiro')">📝 Criar Conta Barbeiro</button>
-                    <button class="btn btn-small btn-outline" onclick="fecharFormulariosLogin()" style="margin-top:8px;">← Voltar</button>
+                    <div class="input-group"><label>📧 E-mail</label><input type="email" id="loginEmailBarbeiro" placeholder="barbeiro@email.com"></div>
+                    <div class="input-group"><label>🔒 Senha</label><input type="password" id="loginSenhaBarbeiro" placeholder="Digite sua senha"></div>
+                    <button class="btn btn-secondary" id="btnEntrarBarbeiro">🔑 ENTRAR</button>
+                    <button class="btn btn-outline" id="btnCriarContaBarbeiro">📝 Criar Conta Barbeiro</button>
+                    <button class="btn btn-small btn-outline" id="btnVoltarLoginBarbeiro" style="margin-top:8px;">← Voltar</button>
                 </div>
             </div>
         </div>
@@ -189,24 +88,12 @@
     <section class="screen" id="cadastroClienteScreen">
         <h2 class="screen-title">📝 CADASTRO CLIENTE</h2>
         <div class="card">
-            <div class="input-group">
-                <label>👤 Nome Completo</label>
-                <input type="text" id="cadNomeCliente" placeholder="Seu nome completo">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="cadEmailCliente" placeholder="seu@email.com">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999" data-mask="phone">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres">
-            </div>
-            <button class="btn btn-primary" onclick="cadastrarCliente()">✅ FINALIZAR CADASTRO</button>
-            <button class="btn btn-outline" onclick="mostrarTela('login')">← Voltar para Login</button>
+            <div class="input-group"><label>👤 Nome Completo</label><input type="text" id="cadNomeCliente" placeholder="Seu nome completo"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailCliente" placeholder="seu@email.com"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularCliente" placeholder="(11) 99999-9999"></div>
+            <div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaCliente" placeholder="Mínimo 6 caracteres"></div>
+            <button class="btn btn-primary" id="btnFinalizarCadastroCliente">✅ FINALIZAR CADASTRO</button>
+            <button class="btn btn-outline" id="btnVoltarCadastroCliente">← Voltar para Login</button>
         </div>
     </section>
 
@@ -214,269 +101,319 @@
     <section class="screen" id="cadastroBarbeiroScreen">
         <h2 class="screen-title">✂️ CADASTRO BARBEIRO</h2>
         <div class="card">
-            <div class="input-group">
-                <label>👤 Nome Completo</label>
-                <input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999" data-mask="phone">
-            </div>
-            <div class="input-group">
-                <label>🔒 Senha</label>
-                <input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres">
-            </div>
-            <button class="btn btn-primary" onclick="cadastrarBarbeiro()">✅ FINALIZAR CADASTRO</button>
-            <button class="btn btn-outline" onclick="mostrarTela('login')">← Voltar para Login</button>
+            <div class="input-group"><label>👤 Nome Completo</label><input type="text" id="cadNomeBarbeiro" placeholder="Seu nome completo"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="cadEmailBarbeiro" placeholder="barbeiro@email.com"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="cadCelularBarbeiro" placeholder="(11) 99999-9999"></div>
+            <div class="input-group"><label>🔒 Senha</label><input type="password" id="cadSenhaBarbeiro" placeholder="Mínimo 6 caracteres"></div>
+            <button class="btn btn-primary" id="btnFinalizarCadastroBarbeiro">✅ FINALIZAR CADASTRO</button>
+            <button class="btn btn-outline" id="btnVoltarCadastroBarbeiro">← Voltar para Login</button>
         </div>
     </section>
 
     <!-- ==================== HOME CLIENTE ==================== -->
     <section class="screen" id="homeClienteScreen">
-        <div class="welcome-banner">
-            <h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2>
-            <p>Confira os cortes e agende seu horário</p>
-        </div>
-        
-        <div class="feed-container" id="feedClienteContainer">
-            <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Carregando publicações...</p>
-            </div>
-        </div>
-        
-        <div class="card" id="agendaClienteCard">
-            <h3>📅 Meus Agendamentos</h3>
-            <div id="agendaClienteContainer">
-                <p style="color:#6B7280;text-align:center;">Nenhum agendamento</p>
-            </div>
-        </div>
-        
-        <button class="btn btn-primary" onclick="mostrarTela('agendamento')">
-            ✂️ AGENDAR CORTE
-        </button>
-        
+        <div class="welcome-banner"><h2>👋 Olá, <span id="welcomeClienteNome">Cliente</span>!</h2><p>Confira os cortes e agende seu horário</p></div>
+        <div class="feed-container" id="feedClienteContainer"><div style="text-align:center;padding:40px;"><div class="loading-spinner"></div><p style="color:#6B7280;">Carregando...</p></div></div>
+        <div class="card"><h3>📅 Meus Agendamentos</h3><div id="agendaClienteContainer"><p style="color:#6B7280;text-align:center;">Nenhum agendamento</p></div></div>
+        <button class="btn btn-primary" id="btnAgendarCorte">✂️ AGENDAR CORTE</button>
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('galeriaCortes')">
-                💇 GALERIA
-            </button>
-            <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('reels')">
-                🎬 REELS
-            </button>
+            <button class="btn btn-secondary" style="flex:1;" id="btnGaleriaCliente">💇 GALERIA</button>
+            <button class="btn btn-outline" style="flex:1;" id="btnReelsCliente">🎬 REELS</button>
         </div>
-        
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-anuncio" style="flex:1;" onclick="mostrarTela('anuncios')">
-                📢 ANÚNCIOS
-            </button>
-            <button class="btn btn-live" style="flex:1;" onclick="mostrarTela('live')">
-                🔴 AO VIVO <span id="liveBadgeCliente" class="live-badge" style="display:none;">ON</span>
-            </button>
+            <button class="btn-anuncio" style="flex:1;" id="btnAnunciosCliente">📢 ANÚNCIOS</button>
+            <button class="btn-live" style="flex:1;" id="btnLiveCliente">🔴 AO VIVO <span id="liveBadgeCliente" class="live-badge" style="display:none;">ON</span></button>
         </div>
     </section>
 
     <!-- ==================== HOME BARBEIRO ==================== -->
     <section class="screen" id="homeBarbeiroScreen">
-        <div class="welcome-banner barbeiro">
-            <h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2>
-            <p>Gerencie sua barbearia</p>
+        <div class="welcome-banner barbeiro"><h2>✂️ Olá, <span id="welcomeBarbeiroNome">Barbeiro</span>!</h2><p>Gerencie sua barbearia</p></div>
+        <div class="card"><h3>💰 FATURAMENTO</h3><div class="financeiro-resumo"><div class="financeiro-item"><span>📅 Hoje</span><strong id="faturamentoHoje">R$ 0,00</strong></div><div class="financeiro-item"><span>📆 Semana</span><strong id="faturamentoSemana">R$ 0,00</strong></div><div class="financeiro-item"><span>📊 Mês</span><strong id="faturamentoMes">R$ 0,00</strong></div><div class="financeiro-item"><span>📈 Ano</span><strong id="faturamentoAno">R$ 0,00</strong></div></div></div>
+        <div class="card"><h3>📋 PLANOS</h3><div id="planosContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div><button class="btn btn-outline" id="btnCriarPlano">➕ CRIAR PLANO</button></div>
+        <div class="card"><h3>📅 AGENDAMENTOS</h3><div id="agendamentosBarbeiroContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div></div>
+        <div class="card"><h3>📸 MEUS POSTS</h3><div id="meusPostsContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" style="flex:1;" id="btnNovoPost">📸 NOVO POST</button>
+            <button class="btn btn-secondary" style="flex:1;" id="btnExtratoBarbeiro">📊 EXTRATO</button>
         </div>
-        
-        <div class="card">
-            <h3>💰 FATURAMENTO</h3>
-            <div class="financeiro-resumo">
-                <div class="financeiro-item">
-                    <span>📅 Hoje</span>
-                    <strong id="faturamentoHoje">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📆 Semana</span>
-                    <strong id="faturamentoSemana">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📊 Mês</span>
-                    <strong id="faturamentoMes">R$ 0,00</strong>
-                </div>
-                <div class="financeiro-item">
-                    <span>📈 Ano</span>
-                    <strong id="faturamentoAno">R$ 0,00</strong>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h3>📋 PLANOS</h3>
-            <div id="planosContainer">
-                <p style="color:#6B7280;text-align:center;">Carregando...</p>
-            </div>
-            <button class="btn btn-outline" onclick="mostrarTela('criarPlano')">
-                ➕ CRIAR PLANO
-            </button>
-        </div>
-        
-        <div class="card">
-            <h3>📅 AGENDAMENTOS</h3>
-            <div id="agendamentosBarbeiroContainer">
-                <p style="color:#6B7280;text-align:center;">Carregando...</p>
-            </div>
-        </div>
-        
-        <div class="card">
-            <h3>📸 MEUS POSTS</h3>
-            <div id="meusPostsContainer">
-                <p style="color:#6B7280;text-align:center;">Carregando...</p>
-            </div>
-        </div>
-        
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-primary" style="flex:1;" onclick="mostrarTela('criarPost')">
-                📸 NOVO POST
-            </button>
-            <button class="btn btn-secondary" style="flex:1;" onclick="mostrarTela('extrato')">
-                📊 EXTRATO
-            </button>
+            <button class="btn btn-outline" style="flex:1;" id="btnHorariosBarbeiro">⏰ HORÁRIOS</button>
+            <button class="btn-anuncio" style="flex:1;" id="btnAnunciosBarbeiro">📢 ANÚNCIOS</button>
         </div>
-        
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-outline" style="flex:1;" onclick="mostrarTela('horariosTrabalho')">
-                ⏰ HORÁRIOS
-            </button>
-            <button class="btn btn-anuncio" style="flex:1;" onclick="mostrarTela('anuncios')">
-                📢 ANÚNCIOS
-            </button>
-        </div>
-        
-        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-            <button class="btn btn-live" style="flex:1;" onclick="mostrarTela('live')">
-                🔴 AO VIVO <span id="liveBadgeBarbeiro" class="live-badge" style="display:none;">ON</span>
-            </button>
+            <button class="btn-live" style="flex:1;" id="btnLiveBarbeiro">🔴 AO VIVO <span id="liveBadgeBarbeiro" class="live-badge" style="display:none;">ON</span></button>
         </div>
     </section>
 
-    <!-- ==================== DEMAIS TELAS (RESUMIDAS) ==================== -->
-    
-    <!-- Agendamento -->
+    <!-- ==================== AGENDAMENTO ==================== -->
     <section class="screen" id="agendamentoScreen">
         <h2 class="screen-title">✂️ AGENDAR CORTE</h2>
         <div class="card">
-            <div class="input-group">
-                <label>📅 Data</label>
-                <input type="date" id="agendamentoData">
-            </div>
-            <div class="input-group">
-                <label>⏰ Horário</label>
-                <select id="agendamentoHorario"></select>
-            </div>
-            <div class="input-group">
-                <label>✂️ Tipo de Corte</label>
-                <select id="agendamentoTipo"></select>
-            </div>
-            <button class="btn btn-primary" onclick="agendarCorte()">✅ AGENDAR</button>
-            <button class="btn btn-outline" onclick="mostrarTela('homeCliente')">← Voltar</button>
+            <div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div>
+            <div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"></select></div>
+            <div class="input-group"><label>✂️ Tipo de Corte</label><select id="agendamentoTipo"></select></div>
+            <button class="btn btn-primary" id="btnConfirmarAgendamento">✅ AGENDAR</button>
+            <button class="btn btn-outline" id="btnVoltarAgendamento">← Voltar</button>
         </div>
     </section>
 
-    <!-- Perfil Cliente -->
+    <!-- ==================== CRIAR POST (TELA QUE FALTAVA) ==================== -->
+    <section class="screen" id="criarPostScreen">
+        <h2 class="screen-title">📸 NOVO POST</h2>
+        <div class="card">
+            <div class="input-group"><label>📝 Título do Corte</label><input type="text" id="postTitulo" placeholder="Ex: Corte Degradê"></div>
+            <div class="input-group"><label>💰 Preço (R$)</label><input type="number" id="postPreco" step="0.01" placeholder="0,00"></div>
+            <div class="input-group">
+                <label>📷 Imagem do Corte</label>
+                <div class="file-upload-area" id="imagemUploadArea"><div class="file-upload-icon">🖼️</div><p>Clique para selecionar uma imagem</p></div>
+                <div id="imagemPreview" style="display:none;margin-top:10px;">
+                    <img id="imagemPreviewImg" src="#" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;">
+                    <button class="btn btn-small btn-danger" id="btnRemoverImagem" style="margin-top:5px;">❌ Remover</button>
+                </div>
+                <input type="file" id="postImagemInput" accept="image/*" style="display:none">
+                <input type="hidden" id="postImagem" value="">
+            </div>
+            <div class="input-group">
+                <label>🎬 Vídeo do Corte</label>
+                <div class="file-upload-area" id="videoUploadArea"><div class="file-upload-icon">🎥</div><p>Clique para selecionar um vídeo</p></div>
+                <div id="videoPreview" style="display:none;margin-top:10px;">
+                    <video id="videoPreviewVideo" controls style="width:100%;max-height:200px;border-radius:12px;"></video>
+                    <button class="btn btn-small btn-danger" id="btnRemoverVideo" style="margin-top:5px;">❌ Remover</button>
+                </div>
+                <input type="file" id="postVideoInput" accept="video/*" style="display:none">
+                <input type="hidden" id="postVideo" value="">
+            </div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="postDescricao" rows="3" placeholder="Detalhes do corte..."></textarea></div>
+            <button class="btn btn-primary" id="btnPublicarPost">📤 PUBLICAR POST</button>
+            <button class="btn btn-outline" id="btnVoltarCriarPost">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ==================== EXTRATO (TELA QUE FALTAVA) ==================== -->
+    <section class="screen" id="extratoScreen">
+        <h2 class="screen-title">📊 EXTRATO FINANCEIRO</h2>
+        <div class="card">
+            <h3>📅 Filtrar por período</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                <button class="btn btn-small btn-outline" id="btnFiltroDia">📅 Hoje</button>
+                <button class="btn btn-small btn-outline" id="btnFiltroSemana">📆 Semana</button>
+                <button class="btn btn-small btn-outline" id="btnFiltroMes">📊 Mês</button>
+                <button class="btn btn-small btn-outline" id="btnFiltroAno">📈 Ano</button>
+            </div>
+            <div id="extratoContainer">
+                <div style="text-align:center;padding:40px;">
+                    <p style="color:#6B7280;">Selecione um período para ver o extrato</p>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <h3>💰 Resumo</h3>
+            <div class="financeiro-resumo">
+                <div class="financeiro-item"><span>📅 Total Hoje</span><strong id="extratoTotalHoje">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📆 Total Semana</span><strong id="extratoTotalSemana">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📊 Total Mês</span><strong id="extratoTotalMes">R$ 0,00</strong></div>
+                <div class="financeiro-item"><span>📈 Total Ano</span><strong id="extratoTotalAno">R$ 0,00</strong></div>
+            </div>
+        </div>
+        <button class="btn btn-outline" id="btnVoltarExtrato">← Voltar</button>
+    </section>
+
+    <!-- ==================== LIVE (TELA COMPLETA) ==================== -->
+    <section class="screen" id="liveScreen">
+        <h2 class="screen-title">🔴 ESTÚDIO AO VIVO</h2>
+        
+        <div class="card" id="livePlayerContainer" style="padding:0;overflow:hidden;background:#000;">
+            <div style="position:relative;width:100%;padding-bottom:56.25%;background:#000;">
+                <div id="liveTela1" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;">
+                    <video id="liveVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;background:#111;"></video>
+                    <img id="liveFrameImg" src="#" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none;">
+                    <div id="livePlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#0a0a0a;z-index:2;">
+                        <div style="text-align:center;color:white;">
+                            <div style="font-size:50px;">🔴</div>
+                            <p style="margin-top:8px;color:#B0B0B0;">Nenhuma transmissão ativa no momento</p>
+                            <button class="btn btn-small btn-primary" id="btnAtualizarLive" style="margin-top:8px;">🔄 Verificar Live</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:10px;background:linear-gradient(135deg,#FF0000,#CC0000);display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:white;font-weight:700;">🔴 AO VIVO</span>
+                <span id="liveViewerCount" style="color:rgba(255,255,255,0.8);font-size:11px;">👥 0 espectadores</span>
+            </div>
+        </div>
+
+        <div id="liveStatus" class="card" style="text-align:center;display:none;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                <span style="width:10px;height:10px;background:#F00;border-radius:50%;animation:pulse 2s infinite;"></span>
+                <span style="color:#F00;font-weight:700;">AO VIVO</span>
+            </div>
+            <p id="liveStatusTitulo" style="color:white;margin-top:6px;font-weight:700;"></p>
+            <p id="liveStatusBarbeiro" style="color:#B0B0B0;font-size:12px;"></p>
+        </div>
+
+        <div class="card" style="text-align:center;padding:8px;">
+            <button class="btn btn-small btn-primary" id="btnCurtirLive">❤️ Curtir</button>
+            <button class="btn btn-small btn-outline" id="btnCompartilharLive">📤 Compartilhar</button>
+        </div>
+
+        <div class="card" id="liveChatCard">
+            <h3>💬 CHAT AO VIVO</h3>
+            <div id="liveChatContainer" style="max-height:180px;min-height:70px;overflow-y:auto;margin-bottom:8px;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;">
+                <p style="color:#6B7280;text-align:center;">Chat vazio</p>
+            </div>
+            <div style="display:flex;gap:6px;">
+                <input type="text" id="liveChatInput" placeholder="Digite sua mensagem..." style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-size:13px;">
+                <button class="btn btn-primary" id="btnEnviarChat" style="width:auto;padding:10px 14px;">📤</button>
+            </div>
+        </div>
+
+        <button class="btn btn-outline" id="btnVoltarLive">← Voltar</button>
+    </section>
+
+    <!-- ==================== GALERIA ==================== -->
+    <section class="screen" id="galeriaCortesScreen">
+        <h2 class="screen-title">💇 GALERIA DE CORTES</h2>
+        <div class="filtro-cortes">
+            <select id="filtroCategoria" style="width:100%;padding:12px;background:rgba(255,255,255,.05);border:2px solid rgba(212,168,75,.2);border-radius:12px;color:white;font-size:14px;">
+                <option value="todos">Todos os Cortes</option>
+                <option value="Corte Social">Corte Social</option>
+                <option value="Corte Degradê">Corte Degradê</option>
+                <option value="Corte Navalhado">Corte Navalhado</option>
+                <option value="Corte Máquina">Corte Máquina</option>
+                <option value="Barba">Barba</option>
+                <option value="Barba + Corte">Barba + Corte</option>
+            </select>
+        </div>
+        <div id="galeriaContainer" class="galeria-grid"></div>
+        <button class="btn btn-outline" id="btnVoltarGaleria" style="margin-top:16px;">← Voltar</button>
+    </section>
+
+    <!-- ==================== REELS ==================== -->
+    <section class="screen" id="reelsScreen">
+        <h2 class="screen-title">🎬 REELS</h2>
+        <div class="reels-container" id="reelsContainer" style="position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:9/16;background:#000;border-radius:12px;overflow:hidden;"></div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
+            <button class="btn btn-small btn-primary" id="btnReelAnterior">⬅️ Anterior</button>
+            <button class="btn btn-small btn-primary" id="btnReelProximo">➡️ Próximo</button>
+        </div>
+        <button class="btn btn-outline" id="btnVoltarReels" style="margin-top:10px;">← Voltar</button>
+    </section>
+
+    <!-- ==================== PERFIL CLIENTE ==================== -->
     <section class="screen" id="perfilClienteScreen">
         <div class="profile-header">
-            <div class="profile-avatar" id="perfilClienteAvatar" onclick="document.getElementById('fotoClienteInput').click()">
-                <img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;">
-                <div class="camera-icon">📷</div>
-            </div>
-            <input type="file" id="fotoClienteInput" accept="image/*" style="display:none" onchange="uploadFotoCliente(event)">
-            <h2 id="perfilClienteNome">Cliente</h2>
-            <p id="perfilClienteEmail"></p>
+            <div class="profile-avatar" id="perfilClienteAvatar"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div>
+            <input type="file" id="fotoClienteInput" accept="image/*" style="display:none">
+            <h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail"></p>
         </div>
-        <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editClienteNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editClienteCelular">
-            </div>
-            <button class="btn btn-primary" onclick="salvarPerfilCliente()">💾 SALVAR</button>
+        <div class="card"><h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div>
+            <button class="btn btn-primary" id="btnSalvarPerfilCliente">💾 SALVAR</button>
         </div>
-        <button class="btn btn-danger" onclick="sairCliente()">🚪 SAIR</button>
+        <button class="btn btn-danger" id="btnSairCliente">🚪 SAIR</button>
     </section>
 
-    <!-- Perfil Barbeiro -->
+    <!-- ==================== PERFIL BARBEIRO ==================== -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div class="profile-header">
-            <div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()">
-                <img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;">
-                <div class="camera-icon">📷</div>
-            </div>
-            <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none" onchange="uploadFotoBarbeiro(event)">
-            <h2 id="perfilBarbeiroNome">Barbeiro</h2>
-            <p id="perfilBarbeiroEmail"></p>
+            <div class="profile-avatar" id="perfilBarbeiroAvatar"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div>
+            <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none">
+            <h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail"></p>
+        </div>
+        <div class="card"><h3>✏️ EDITAR PERFIL</h3>
+            <div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div>
+            <div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div>
+            <div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div>
+            <button class="btn btn-primary" id="btnSalvarPerfilBarbeiro">💾 SALVAR</button>
+        </div>
+        <button class="btn btn-danger" id="btnSairBarbeiro">🚪 SAIR</button>
+    </section>
+
+    <!-- ==================== HORÁRIOS ==================== -->
+    <section class="screen" id="horariosTrabalhoScreen">
+        <h2 class="screen-title">⏰ HORÁRIOS DE TRABALHO</h2>
+        <div class="card">
+            <h3>📅 Dias de Trabalho</h3>
+            <label class="checkbox-label"><input type="checkbox" id="diaSegunda" checked> Segunda-feira</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaTerca" checked> Terça-feira</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaQuarta" checked> Quarta-feira</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaQuinta" checked> Quinta-feira</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaSexta" checked> Sexta-feira</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaSabado" checked> Sábado</label>
+            <label class="checkbox-label"><input type="checkbox" id="diaDomingo"> Domingo</label>
         </div>
         <div class="card">
-            <h3>✏️ EDITAR PERFIL</h3>
-            <div class="input-group">
-                <label>👤 Nome</label>
-                <input type="text" id="editBarbeiroNome">
-            </div>
-            <div class="input-group">
-                <label>📱 Celular</label>
-                <input type="tel" id="editBarbeiroCelular">
-            </div>
-            <div class="input-group">
-                <label>📧 E-mail</label>
-                <input type="email" id="editBarbeiroEmail">
-            </div>
-            <button class="btn btn-primary" onclick="salvarPerfilBarbeiro()">💾 SALVAR</button>
+            <h3>🕐 Horário de Atendimento</h3>
+            <div class="input-group"><label>⏰ Início</label><input type="time" id="horarioInicio" value="09:00"></div>
+            <div class="input-group"><label>⏰ Fim</label><input type="time" id="horarioFim" value="18:00"></div>
+            <div class="input-group"><label>⏱️ Intervalo entre cortes</label><select id="intervaloCortes"><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></div>
         </div>
-        <button class="btn btn-danger" onclick="sairBarbeiro()">🚪 SAIR</button>
+        <div class="card">
+            <h3>🏖️ Folgas</h3>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+                <div class="input-group" style="flex:1;"><label>📅 Data</label><input type="date" id="folgaData"></div>
+                <button class="btn btn-small btn-primary" id="btnAdicionarFolga" style="margin-bottom:14px;">➕ Adicionar</button>
+            </div>
+            <div id="folgasContainer"></div>
+        </div>
+        <button class="btn btn-primary" id="btnSalvarHorarios">💾 SALVAR HORÁRIOS</button>
+        <button class="btn btn-outline" id="btnVoltarHorarios">← Voltar</button>
     </section>
+
+    <!-- ==================== ANÚNCIOS ==================== -->
+    <section class="screen" id="anunciosScreen">
+        <h2 class="screen-title">📢 ANÚNCIOS</h2>
+        <div id="anunciosContainer" style="min-height:200px;"></div>
+        <button class="btn btn-outline" id="btnVoltarAnuncios" style="margin-top:16px;">← Voltar</button>
+    </section>
+
+    <!-- ==================== CRIAR PLANO ==================== -->
+    <section class="screen" id="criarPlanoScreen">
+        <h2 class="screen-title">📋 CRIAR PLANO</h2>
+        <div class="card">
+            <div class="input-group"><label>📝 Nome do Plano</label><input type="text" id="planoNome" placeholder="Ex: Plano Mensal"></div>
+            <div class="input-group"><label>📅 Período</label><select id="planoPeriodo"><option value="semanal">Semanal</option><option value="quinzenal">Quinzenal</option><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option></select></div>
+            <div class="input-group"><label>💰 Preço (R$)</label><input type="number" id="planoPreco" step="0.01" placeholder="0,00"></div>
+            <div class="input-group"><label>📝 Descrição</label><textarea id="planoDescricao" rows="2" placeholder="Benefícios do plano..."></textarea></div>
+            <button class="btn btn-primary" id="btnSalvarPlano">💾 SALVAR PLANO</button>
+            <button class="btn btn-outline" id="btnVoltarCriarPlano">← Voltar</button>
+        </div>
+    </section>
+
+    <!-- ==================== MODAL COMENTÁRIOS ==================== -->
+    <div class="modal" id="modalComentario">
+        <div class="modal-content">
+            <h3>💬 Comentários</h3>
+            <div id="comentariosContainer" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
+            <div class="input-group"><textarea id="novoComentario" rows="2" placeholder="Escreva um comentário..."></textarea></div>
+            <button class="btn btn-primary" id="btnEnviarComentario">📤 COMENTAR</button>
+            <button class="btn btn-outline" id="btnFecharComentario">Fechar</button>
+        </div>
+    </div>
 
     <!-- ==================== TOAST ==================== -->
     <div class="toast" id="toast" style="display:none;"></div>
 
-    <!-- ==================== NAVEGAÇÃO INFERIOR ==================== -->
+    <!-- ==================== NAVEGAÇÃO INFERIOR CLIENTE ==================== -->
     <nav class="bottom-nav" id="bottomNavCliente" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeCliente')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('agendamento')">
-            <span class="nav-icon">✂️</span> Agendar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('galeriaCortes')">
-            <span class="nav-icon">💇</span> Galeria
-        </button>
-        <button class="nav-item" onclick="mostrarTela('live')">
-            <span class="nav-icon">🔴</span> Live
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilCliente')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
+        <button class="nav-item" id="navHomeCliente"><span class="nav-icon">🏠</span>Início</button>
+        <button class="nav-item" id="navAgendarCliente"><span class="nav-icon">✂️</span>Agendar</button>
+        <button class="nav-item" id="navGaleriaCliente"><span class="nav-icon">💇</span>Galeria</button>
+        <button class="nav-item" id="navLiveCliente"><span class="nav-icon">🔴</span>Live</button>
+        <button class="nav-item" id="navPerfilCliente"><span class="nav-icon">👤</span>Perfil</button>
     </nav>
 
+    <!-- ==================== NAVEGAÇÃO INFERIOR BARBEIRO ==================== -->
     <nav class="bottom-nav" id="bottomNavBarbeiro" style="display:none;">
-        <button class="nav-item active" onclick="mostrarTela('homeBarbeiro')">
-            <span class="nav-icon">🏠</span> Início
-        </button>
-        <button class="nav-item" onclick="mostrarTela('criarPost')">
-            <span class="nav-icon">📸</span> Postar
-        </button>
-        <button class="nav-item" onclick="mostrarTela('extrato')">
-            <span class="nav-icon">📊</span> Extrato
-        </button>
-        <button class="nav-item" onclick="mostrarTela('live')">
-            <span class="nav-icon">🔴</span> Live
-        </button>
-        <button class="nav-item" onclick="mostrarTela('perfilBarbeiro')">
-            <span class="nav-icon">👤</span> Perfil
-        </button>
+        <button class="nav-item" id="navHomeBarbeiro"><span class="nav-icon">🏠</span>Início</button>
+        <button class="nav-item" id="navPostarBarbeiro"><span class="nav-icon">📸</span>Postar</button>
+        <button class="nav-item" id="navExtratoBarbeiro"><span class="nav-icon">📊</span>Extrato</button>
+        <button class="nav-item" id="navLiveBarbeiro"><span class="nav-icon">🔴</span>Live</button>
+        <button class="nav-item" id="navPerfilBarbeiro"><span class="nav-icon">👤</span>Perfil</button>
     </nav>
 
-    <!-- ==================== SCRIPTS ==================== -->
     <script src="script.js"></script>
 </body>
 </html>
