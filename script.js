@@ -1,7 +1,14 @@
+/* ==========================================================
+   BARBEARIA RM - SCRIPT PRINCIPAL (REFRATORADO)
+   Autor: Barbearia RM
+   Versão: 2.0
+   ========================================================== */
+
 // ==========================================================
-// ===== CONFIGURAÇÃO FIREBASE =====
+// CONFIGURAÇÃO SEGURA DO FIREBASE
+// (Em produção, carregue isso de um arquivo .env ou backend)
 // ==========================================================
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
     apiKey: "AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",
     authDomain: "barbearia-rm.firebaseapp.com",
     projectId: "barbearia-rm",
@@ -10,254 +17,1325 @@ const firebaseConfig = {
     appId: "1:512819922057:web:6a913791cb6435e4f63258",
     measurementId: "G-TKVLVLPBJH"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-db.settings({ ignoreUndefinedProperties: true });
-console.log('🔥 Firebase OK');
 
 // ==========================================================
-// ===== VARIÁVEIS =====
+// CONSTANTES E CONFIGURAÇÕES GLOBAIS
 // ==========================================================
-var clienteLogado = null, barbeiroLogado = null;
-var imagemBase64 = '', videoBase64 = '', imagemPlanoBase64 = '', anuncioImagemBase64 = '';
-var todosPosts = [], todosReels = [], reelsAtual = 0, postSelecionadoId = null;
-var horariosTrabalho = { diasTrabalho: ['segunda','terca','quarta','quinta','sexta','sabado'], horarioInicio: '09:00', horarioFim: '18:00', intervaloCortes: 30, folgas: [] };
-var liveLocalStream = null, liveChatInterval = null, liveAtiva = false, liveChatMessages = [];
-var liveViewerId = null, liveViewerInterval = null, liveLikes = 0, liveLiked = false;
-var liveFrameInterval = null, liveFrameCanvas = null, liveFrameCtx = null;
-var liveViewersAtivos = {};
-var liveUltimoFrameEnviado = 0;
-var liveCarregandoLive = false;
-var liveAudioMonitor = null;
-var liveTelaAtiva = 1;
-var liveAnuncioAtivo = false;
+const APP_CONFIG = {
+    nome: 'Barbearia RM',
+    slogan: 'Atitude, Estilo e Confiança',
+    moeda: 'BRL',
+    locale: 'pt-BR',
+    sessionDuration: 30 * 24 * 60 * 60 * 1000, // 30 dias
+    cacheTimeout: 5 * 60 * 1000, // 5 minutos
+    maxImageWidth: 800,
+    imageQuality: 0.7,
+    tiposCorte: [
+        'Corte Social', 'Corte Degradê', 'Corte Navalhado',
+        'Corte Máquina', 'Barba', 'Barba + Corte',
+        'Pintura', 'Luzes', 'Platinado', 'Selagem', 'Progressiva'
+    ],
+    horariosDisponiveis: gerarHorarios('09:00', '18:00', 30)
+};
 
 // ==========================================================
-// ===== SESSÃO =====
+// UTILITÁRIOS (Utils)
 // ==========================================================
-function salvarSessao(t,d){var s={tipo:t,id:d.id,nome:d.nome,email:d.email,celular:d.celular||'',senha:d.senha||'',fotoPerfil:d.fotoPerfil||'',timestamp:Date.now()};localStorage.setItem('barbeariaRM_sessao',JSON.stringify(s));}
-function carregarSessao(){var s=localStorage.getItem('barbeariaRM_sessao');if(!s)return null;try{var p=JSON.parse(s);if((Date.now()-p.timestamp)/86400000>30){localStorage.removeItem('barbeariaRM_sessao');return null;}return p;}catch(e){localStorage.removeItem('barbeariaRM_sessao');return null;}}
-function limparSessao(){localStorage.removeItem('barbeariaRM_sessao');}
-async function restaurarSessao(){var s=carregarSessao();if(!s)return false;try{if(s.tipo==='cliente'){var sn=await db.collection('clientes').where('email','==',s.email).where('senha','==',s.senha).get();if(!sn.empty){var d=sn.docs[0];clienteLogado={id:d.id,...d.data()};document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;mostrarTela('homeClienteScreen');return true;}}else{var sn=await db.collection('barbeiros').where('email','==',s.email).where('senha','==',s.senha).get();if(!sn.empty){var d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;mostrarTela('homeBarbeiroScreen');return true;}}}catch(e){}limparSessao();return false;}
+const Utils = {
+    // Hash simples (apenas para demonstração - use bcrypt em produção!)
+    hashPassword: (senha) => {
+        let hash = 0;
+        for (let i = 0; i < senha.length; i++) {
+            const char = senha.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(16);
+    },
 
-// ==========================================================
-// ===== FUNÇÕES BÁSICAS =====
-// ==========================================================
-function mostrarToast(m,t){var x=document.getElementById('toast');if(!x)return;x.textContent=m;x.className='toast '+(t||'info');x.style.display='block';setTimeout(function(){x.style.display='none';},3000);}
-function voltarParaLogin(){document.getElementById('loginFormCliente').style.display='none';document.getElementById('loginFormBarbeiro').style.display='none';mostrarTela('loginScreen');}
-function mostrarLoginCliente(){document.getElementById('loginFormCliente').style.display='block';document.getElementById('loginFormBarbeiro').style.display='none';}
-function mostrarLoginBarbeiro(){document.getElementById('loginFormCliente').style.display='none';document.getElementById('loginFormBarbeiro').style.display='block';}
+    // Validadores
+    isValidEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+    isValidPassword: (senha) => senha && senha.length >= 6,
+    isValidPhone: (fone) => {
+        const limpo = fone.replace(/\D/g, '');
+        return limpo.length >= 10 && limpo.length <= 11;
+    },
+    isValidPrice: (preco) => !isNaN(preco) && preco > 0,
+    isValidDate: (data) => {
+        const d = new Date(data);
+        return d instanceof Date && !isNaN(d);
+    },
 
-// ==========================================================
-// ===== LOGIN/CADASTRO =====
-// ==========================================================
-async function cadastrarCliente(){var n=document.getElementById('cadNomeCliente').value.trim(),e=document.getElementById('cadEmailCliente').value.trim(),c=document.getElementById('cadCelularCliente').value.trim(),s=document.getElementById('cadSenhaCliente').value;if(!n||!e||!c||!s){mostrarToast('❌ Preencha todos!','error');return;}if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}try{var sn=await db.collection('clientes').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email já existe!','error');return;}var id=Date.now().toString(),cl={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',dataCriacao:new Date().toISOString()};await db.collection('clientes').doc(id).set(cl);clienteLogado=cl;salvarSessao('cliente',cl);document.getElementById('welcomeClienteNome').textContent=n;mostrarToast('✅ OK!','success');mostrarTela('homeClienteScreen');document.getElementById('cadNomeCliente').value='';document.getElementById('cadEmailCliente').value='';document.getElementById('cadCelularCliente').value='';document.getElementById('cadSenhaCliente').value='';}catch(er){mostrarToast('❌ '+er.message,'error');}}
-async function cadastrarBarbeiro(){var n=document.getElementById('cadNomeBarbeiro').value.trim(),e=document.getElementById('cadEmailBarbeiro').value.trim(),c=document.getElementById('cadCelularBarbeiro').value.trim(),s=document.getElementById('cadSenhaBarbeiro').value;if(!n||!e||!c||!s){mostrarToast('❌ Preencha todos!','error');return;}if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}try{var sn=await db.collection('barbeiros').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email já existe!','error');return;}var id=Date.now().toString(),bb={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',dataCriacao:new Date().toISOString()};await db.collection('barbeiros').doc(id).set(bb);barbeiroLogado=bb;salvarSessao('barbeiro',bb);document.getElementById('welcomeBarbeiroNome').textContent=n;mostrarToast('✅ OK!','success');mostrarTela('homeBarbeiroScreen');document.getElementById('cadNomeBarbeiro').value='';document.getElementById('cadEmailBarbeiro').value='';document.getElementById('cadCelularBarbeiro').value='';document.getElementById('cadSenhaBarbeiro').value='';}catch(er){mostrarToast('❌ '+er.message,'error');}}
-async function loginCliente(){var e=document.getElementById('loginEmailCliente').value.trim(),s=document.getElementById('loginSenhaCliente').value;if(!e||!s){mostrarToast('❌ Preencha!','error');return;}try{var sn=await db.collection('clientes').where('email','==',e).where('senha','==',s).get();if(sn.empty){mostrarToast('❌ Inválido!','error');return;}var d=sn.docs[0];clienteLogado={id:d.id,...d.data()};salvarSessao('cliente',clienteLogado);document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;document.getElementById('loginEmailCliente').value='';document.getElementById('loginSenhaCliente').value='';document.getElementById('loginFormCliente').style.display='none';mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeClienteScreen');}catch(er){mostrarToast('❌ Erro!','error');}}
-async function loginBarbeiro(){var e=document.getElementById('loginEmailBarbeiro').value.trim(),s=document.getElementById('loginSenhaBarbeiro').value;if(!e||!s){mostrarToast('❌ Preencha!','error');return;}try{var sn=await db.collection('barbeiros').where('email','==',e).where('senha','==',s).get();if(sn.empty){mostrarToast('❌ Inválido!','error');return;}var d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};salvarSessao('barbeiro',barbeiroLogado);document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;document.getElementById('loginEmailBarbeiro').value='';document.getElementById('loginSenhaBarbeiro').value='';document.getElementById('loginFormBarbeiro').style.display='none';mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeBarbeiroScreen');}catch(er){mostrarToast('❌ Erro!','error');}}
-function sairCliente(){removerViewerLive();clienteLogado=null;limparSessao();document.getElementById('loginFormCliente').style.display='none';document.getElementById('loginFormBarbeiro').style.display='none';mostrarTela('loginScreen');mostrarToast('👋 Até logo!','info');}
-function sairBarbeiro(){encerrarLive();barbeiroLogado=null;limparSessao();document.getElementById('loginFormCliente').style.display='none';document.getElementById('loginFormBarbeiro').style.display='none';mostrarTela('loginScreen');mostrarToast('👋 Até logo!','info');}
+    // Formatadores
+    formatPhone: (valor) => {
+        const limpo = valor.replace(/\D/g, '');
+        if (limpo.length === 11) return `(${limpo.slice(0,2)}) ${limpo.slice(2,7)}-${limpo.slice(7)}`;
+        if (limpo.length === 10) return `(${limpo.slice(0,2)}) ${limpo.slice(2,6)}-${limpo.slice(6)}`;
+        return valor;
+    },
 
-// ==========================================================
-// ===== AGENDAMENTOS =====
-// ==========================================================
-async function carregarAgendamentosBarbeiro(){var c=document.getElementById('agendamentosBarbeiroContainer');if(!c)return;try{var sn=await db.collection('agendamentos').orderBy('data','desc').get();var ag=sn.docs.map(d=>({id:d.id,...d.data()}));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;text-align:center;">Nenhum</p>';return;}c.innerHTML=ag.map(function(a){var sc=a.status==='confirmado'?'confirmado':a.status==='cancelado'?'cancelado':'pendente';var st=a.status==='confirmado'?'✅ Confirmado':a.status==='cancelado'?'❌ Cancelado':'⏳ Pendente';return'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">👤 '+(a.clienteNome||'Cliente')+'</div><div class="agenda-data">📅 '+(a.data||'N/A')+' • ⏰ '+(a.horario||'N/A')+'</div></div><span class="agenda-status '+sc+'">'+st+'</span>'+(a.status==='pendente'?'<button class="btn btn-small btn-success" onclick="confirmarAgendamento(\''+a.id+'\')">✅</button><button class="btn btn-small btn-danger" onclick="cancelarAgendamento(\''+a.id+'\')">❌</button>':'')+'</div>';}).join('');}catch(e){}}
-async function confirmarAgendamento(id){await db.collection('agendamentos').doc(id).update({status:'confirmado'});carregarAgendamentosBarbeiro();if(clienteLogado)carregarAgendaCliente();}
-async function cancelarAgendamento(id){if(!confirm('Cancelar?'))return;await db.collection('agendamentos').doc(id).update({status:'cancelado'});carregarAgendamentosBarbeiro();if(clienteLogado)carregarAgendaCliente();}
-async function agendarCorte(){if(!clienteLogado){mostrarToast('❌ Faça login!','error');return;}var d=document.getElementById('agendamentoData').value,h=document.getElementById('agendamentoHorario').value,t=document.getElementById('agendamentoTipo').value;if(!d){mostrarToast('❌ Selecione data!','error');return;}var id=Date.now().toString();await db.collection('agendamentos').doc(id).set({id,clienteId:clienteLogado.id,clienteNome:clienteLogado.nome,clienteEmail:clienteLogado.email,data:d,horario:h,tipo:t,status:'pendente',dataCriacao:new Date().toISOString()});mostrarToast('✅ Agendado!','success');document.getElementById('agendamentoData').value='';carregarAgendaCliente();mostrarTela('homeClienteScreen');}
-async function carregarAgendaCliente(){if(!clienteLogado)return;var c=document.getElementById('agendaClienteContainer');if(!c)return;var sn=await db.collection('agendamentos').where('clienteId','==',clienteLogado.id).get();var ag=sn.docs.map(d=>({id:d.id,...d.data()}));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}ag.sort((a,b)=>new Date(b.data+' '+b.horario)-new Date(a.data+' '+a.horario));c.innerHTML=ag.map(function(a){var sc=a.status==='confirmado'?'confirmado':a.status==='cancelado'?'cancelado':'pendente';return'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">'+a.tipo+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+sc+'">'+(a.status==='confirmado'?'✅':a.status==='cancelado'?'❌':'⏳')+'</span></div>';}).join('');}
+    formatCurrency: (valor) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(valor || 0);
+    },
 
-// ==========================================================
-// ===== PLANOS =====
-// ==========================================================
-async function carregarPlanos(){var c=document.getElementById('planosContainer');if(!c)return;var sn=await db.collection('planos').orderBy('dataCriacao','desc').get();var p=sn.docs.map(d=>({id:d.id,...d.data()}));if(p.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=p.map(function(x){return'<div class="plano-card" style="flex-direction:column;align-items:flex-start;">'+(x.imagem?'<img src="'+x.imagem+'" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;">':'')+'<div style="display:flex;justify-content:space-between;width:100%;"><div><div class="plano-nome">'+x.nome+'</div><div class="plano-periodo">📅 '+x.periodo+'</div></div><div class="plano-preco">R$ '+(x.preco?x.preco.toFixed(2):'0,00')+'</div></div><div style="margin-top:8px;"><button class="btn btn-small btn-primary" onclick="editarPlano(\''+x.id+'\')">✏️</button><button class="btn btn-small btn-danger" onclick="excluirPlanoDireto(\''+x.id+'\')">🗑</button></div></div>';}).join('');}
-async function criarPlano(){if(!barbeiroLogado)return;var n=document.getElementById('planoNome').value.trim(),p=document.getElementById('planoPeriodo').value,pr=parseFloat(document.getElementById('planoPreco').value),d=document.getElementById('planoDescricao').value.trim(),img=document.getElementById('planoImagem').value||'';if(!n||!pr||pr<=0){mostrarToast('❌ Preencha!','error');return;}var id=Date.now().toString();await db.collection('planos').doc(id).set({id,barbeiroId:barbeiroLogado.id,nome:n,periodo:p,preco:pr,descricao:d,imagem:img,dataCriacao:new Date().toISOString()});mostrarToast('✅ Plano criado!','success');document.getElementById('planoNome').value='';document.getElementById('planoPreco').value='';document.getElementById('planoDescricao').value='';removerImagemPlano();mostrarTela('homeBarbeiroScreen');}
-function editarPlano(id){db.collection('planos').doc(id).get().then(function(doc){if(doc.exists){var p=doc.data();document.getElementById('editPlanoId').value=id;document.getElementById('editPlanoNome').value=p.nome;document.getElementById('editPlanoPeriodo').value=p.periodo;document.getElementById('editPlanoPreco').value=p.preco;document.getElementById('editPlanoDescricao').value=p.descricao||'';document.getElementById('editPlanoImagem').value=p.imagem||'';if(p.imagem){document.getElementById('editPlanoImagemPreview').src=p.imagem;document.getElementById('editPlanoImagemPreview').style.display='block';}mostrarTela('editarPlanoScreen');}});}
-async function salvarEdicaoPlano(){var id=document.getElementById('editPlanoId').value,img=document.getElementById('editPlanoImagem').value||'';await db.collection('planos').doc(id).update({nome:document.getElementById('editPlanoNome').value.trim(),periodo:document.getElementById('editPlanoPeriodo').value,preco:parseFloat(document.getElementById('editPlanoPreco').value),descricao:document.getElementById('editPlanoDescricao').value.trim(),imagem:img});mostrarToast('✅ Atualizado!','success');mostrarTela('homeBarbeiroScreen');}
-async function excluirPlano(){if(!confirm('Excluir?'))return;await db.collection('planos').doc(document.getElementById('editPlanoId').value).delete();mostrarToast('🗑 Excluído!','success');mostrarTela('homeBarbeiroScreen');}
-async function excluirPlanoDireto(id){if(!confirm('Excluir?'))return;await db.collection('planos').doc(id).delete();mostrarToast('🗑 Excluído!','success');carregarPlanos();}
-function previewImagemPlano(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){imagemPlanoBase64=ev.target.result;document.getElementById('planoImagem').value=imagemPlanoBase64;document.getElementById('planoImagemPreview').src=imagemPlanoBase64;document.getElementById('planoImagemPreview').style.display='block';document.getElementById('btnRemoverImagemPlano').style.display='inline-block';};r.readAsDataURL(f);}
-function removerImagemPlano(){imagemPlanoBase64='';document.getElementById('planoImagem').value='';document.getElementById('planoImagemPreview').style.display='none';document.getElementById('btnRemoverImagemPlano').style.display='none';document.getElementById('planoImagemInput').value='';}
-function previewEditPlanoImagem(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){document.getElementById('editPlanoImagem').value=ev.target.result;document.getElementById('editPlanoImagemPreview').src=ev.target.result;document.getElementById('editPlanoImagemPreview').style.display='block';};r.readAsDataURL(f);}
+    formatDate: (data) => {
+        if (!data) return 'N/A';
+        return new Intl.DateTimeFormat('pt-BR').format(new Date(data));
+    },
 
-// ==========================================================
-// ===== ANÚNCIOS =====
-// ==========================================================
-async function carregarAnuncios(){var c=document.getElementById('anunciosContainer');if(!c)return;var hoje=new Date().toISOString();var sn=await db.collection('anuncios').where('dataExpiracao','>',hoje).get();var a=sn.docs.map(d=>({id:d.id,...d.data()}));if(a.length===0){c.innerHTML='<div style="text-align:center;padding:40px;"><p style="color:#6B7280;">📢 Nenhum anúncio</p></div>';return;}c.innerHTML=a.map(function(x){return'<div class="card" style="border:2px solid #FF6B6B;margin-bottom:12px;"><span style="background:#FF4757;color:white;padding:4px 10px;border-radius:20px;font-size:11px;">📢 ANÚNCIO</span>'+(x.imagem?'<img src="'+x.imagem+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:8px 0;">':'')+'<h3 style="color:#FF6B6B;">'+x.titulo+'</h3><p style="color:#B0B0B0;">'+x.descricao+'</p>'+(x.link?'<a href="'+x.link+'" target="_blank" style="display:inline-block;margin-top:8px;padding:8px 16px;background:linear-gradient(135deg,#FF6B6B,#FF4757);color:white;border-radius:8px;text-decoration:none;font-weight:bold;">🔗 Saiba Mais</a>':'')+(barbeiroLogado?'<button class="btn btn-small btn-danger" onclick="excluirAnuncio(\''+x.id+'\')" style="margin-top:8px;">🗑</button>':'')+'</div>';}).join('');}
-async function criarAnuncio(){if(!barbeiroLogado)return;var t=document.getElementById('anuncioTitulo').value.trim(),d=document.getElementById('anuncioDescricao').value.trim(),l=document.getElementById('anuncioLink').value.trim(),img=document.getElementById('anuncioImagem').value||'',dur=parseInt(document.getElementById('anuncioDuracao').value);if(!t){mostrarToast('❌ Título!','error');return;}var exp=new Date();exp.setDate(exp.getDate()+dur);var id='anuncio_'+Date.now();await db.collection('anuncios').doc(id).set({id,barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo:t,descricao:d,link:l,imagem:img,duracao:dur,dataCriacao:new Date().toISOString(),dataExpiracao:exp.toISOString()});mostrarToast('✅ Publicado!','success');document.getElementById('anuncioTitulo').value='';document.getElementById('anuncioDescricao').value='';document.getElementById('anuncioLink').value='';removerAnuncioImagem();carregarAnuncios();}
-async function excluirAnuncio(id){if(!confirm('Excluir?'))return;await db.collection('anuncios').doc(id).delete();mostrarToast('🗑 Excluído!','success');carregarAnuncios();}
-function previewAnuncioImagem(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){anuncioImagemBase64=ev.target.result;document.getElementById('anuncioImagem').value=anuncioImagemBase64;document.getElementById('anuncioImagemPreview').src=anuncioImagemBase64;document.getElementById('anuncioImagemPreview').style.display='block';document.getElementById('btnRemoverAnuncioImagem').style.display='inline-block';};r.readAsDataURL(f);}
-function removerAnuncioImagem(){anuncioImagemBase64='';document.getElementById('anuncioImagem').value='';document.getElementById('anuncioImagemPreview').style.display='none';document.getElementById('btnRemoverAnuncioImagem').style.display='none';document.getElementById('anuncioImagemInput').value='';}
+    formatDateTime: (data) => {
+        if (!data) return 'N/A';
+        return new Intl.DateTimeFormat('pt-BR', {
+            dateStyle: 'short',
+            timeStyle: 'short'
+        }).format(new Date(data));
+    },
 
-// ==========================================================
-// ===== FEED / POSTS =====
-// ==========================================================
-async function carregarFeedCliente(){var c=document.getElementById('feedClienteContainer');if(!c)return;var sn=await db.collection('posts').orderBy('dataCriacao','desc').get();var posts=sn.docs.map(d=>({id:d.id,...d.data()}));todosPosts=posts;if(posts.length===0){c.innerHTML='<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post</h3></div>';return;}c.innerHTML=posts.map(function(post){var com=post.comentarios||[];return'<div class="feed-post"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+(post.barbeiroNome||'Barbearia RM')+'</div><div class="feed-post-user-time">'+new Date(post.dataCriacao).toLocaleDateString('pt-BR')+'</div></div></div>'+(post.video?'<video class="feed-post-video" controls><source src="'+post.video+'" type="video/mp4"></video>':post.imagem?'<img src="'+post.imagem+'" class="feed-post-image">':'')+'<div class="feed-post-body"><div class="feed-post-title">'+post.titulo+'</div><div class="feed-post-price">R$ '+(post.preco?post.preco.toFixed(2):'0,00')+'</div></div><div class="feed-post-actions"><button onclick="likePost(\''+post.id+'\',this)">❤️ '+(post.likes||0)+'</button><button onclick="abrirComentarios(\''+post.id+'\')">💬 '+com.length+'</button></div></div>';}).join('');}
-async function carregarMeusPosts(){var c=document.getElementById('meusPostsContainer');if(!c||!barbeiroLogado)return;var sn=await db.collection('posts').where('barbeiroId','==',barbeiroLogado.id).get();var posts=[];sn.forEach(function(d){posts.push({id:d.id,...d.data()});});posts.sort(function(a,b){return new Date(b.dataCriacao)-new Date(a.dataCriacao);});if(posts.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum post</p>';return;}c.innerHTML=posts.map(function(post){var com=post.comentarios||[];var h='<div class="feed-post" style="margin-bottom:12px;"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+post.titulo+'</div><div class="feed-post-user-time">R$ '+(post.preco?post.preco.toFixed(2):'0,00')+'</div></div></div>';if(post.imagem)h+='<img src="'+post.imagem+'" class="feed-post-image">';if(post.video)h+='<video class="feed-post-video" controls><source src="'+post.video+'" type="video/mp4"></video>';h+='<div class="feed-post-body"><p>'+post.descricao+'</p><p style="font-size:11px;color:#6B7280;">❤️ '+(post.likes||0)+' • 💬 '+com.length+'</p></div>';if(com.length>0){h+='<div style="padding:0 14px 10px;">';com.forEach(function(c){h+='<div style="font-size:12px;color:#B0B0B0;margin:4px 0;"><strong style="color:#D4A84B;">'+c.autor+':</strong> '+c.texto+'</div>';});h+='</div>';}h+='<button class="btn btn-small btn-danger" onclick="excluirMeuPost(\''+post.id+'\')">🗑</button></div>';return h;}).join('');}
-async function criarPost(){if(!barbeiroLogado)return;var t=document.getElementById('postTitulo').value.trim(),p=parseFloat(document.getElementById('postPreco').value),d=document.getElementById('postDescricao').value.trim(),img=document.getElementById('postImagem').value||'',vid=document.getElementById('postVideo').value||'';if(!t||!p||p<=0){mostrarToast('❌ Título e preço!','error');return;}var id=Date.now().toString();await db.collection('posts').doc(id).set({id,barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo:t,preco:p,imagem:img,video:vid,descricao:d,likes:0,comentarios:[],dataCriacao:new Date().toISOString()});mostrarToast('✅ Publicado!','success');document.getElementById('postTitulo').value='';document.getElementById('postPreco').value='';document.getElementById('postDescricao').value='';removerImagem();removerVideo();mostrarTela('homeBarbeiroScreen');}
-async function excluirMeuPost(id){if(!confirm('Excluir?'))return;await db.collection('posts').doc(id).delete();mostrarToast('🗑 Excluído!','success');carregarMeusPosts();carregarFeedCliente();}
-function abrirComentarios(id){postSelecionadoId=id;carregarComentarios(id);document.getElementById('modalComentario').classList.add('active');}
-async function carregarComentarios(id){var c=document.getElementById('comentariosContainer');if(!c)return;var doc=await db.collection('posts').doc(id).get();if(!doc.exists)return;var com=doc.data().comentarios||[];c.innerHTML=com.length===0?'<p style="color:#6B7280;">Nenhum</p>':com.map(function(c){return'<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;"><strong style="color:#D4A84B;">'+c.autor+'</strong><p style="color:#B0B0B0;">'+c.texto+'</p></div>';}).join('');}
-async function adicionarComentario(){var t=document.getElementById('novoComentario').value.trim();if(!t||!clienteLogado&&!barbeiroLogado)return;var autor=clienteLogado?clienteLogado.nome:barbeiroLogado.nome;var doc=await db.collection('posts').doc(postSelecionadoId).get();var com=doc.data().comentarios||[];com.push({autor,texto:t,data:new Date().toISOString()});await db.collection('posts').doc(postSelecionadoId).update({comentarios:com});document.getElementById('novoComentario').value='';carregarComentarios(postSelecionadoId);carregarFeedCliente();}
-function fecharModalComentario(){document.getElementById('modalComentario').classList.remove('active');}
-function previewImagem(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){imagemBase64=ev.target.result;document.getElementById('postImagem').value=imagemBase64;document.getElementById('imagemPreviewImg').src=imagemBase64;document.getElementById('imagemPreview').style.display='block';document.getElementById('imagemUploadArea').style.display='none';};r.readAsDataURL(f);}
-function removerImagem(){imagemBase64='';document.getElementById('postImagem').value='';document.getElementById('imagemPreview').style.display='none';document.getElementById('imagemUploadArea').style.display='block';document.getElementById('postImagemInput').value='';}
-function previewVideo(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){videoBase64=ev.target.result;document.getElementById('postVideo').value=videoBase64;document.getElementById('videoPreviewVideo').src=videoBase64;document.getElementById('videoPreview').style.display='block';document.getElementById('videoUploadArea').style.display='none';};r.readAsDataURL(f);}
-function removerVideo(){videoBase64='';document.getElementById('postVideo').value='';document.getElementById('videoPreview').style.display='none';document.getElementById('videoUploadArea').style.display='block';document.getElementById('postVideoInput').value='';}
+    formatTimeAgo: (dataString) => {
+        const data = new Date(dataString);
+        const agora = new Date();
+        const segundos = Math.floor((agora - data) / 1000);
+        
+        if (segundos < 60) return 'Agora mesmo';
+        const minutos = Math.floor(segundos / 60);
+        if (minutos < 60) return `Há ${minutos} min`;
+        const horas = Math.floor(minutos / 60);
+        if (horas < 24) return `Há ${horas}h`;
+        const dias = Math.floor(horas / 24);
+        if (dias < 7) return `Há ${dias} dias`;
+        return Utils.formatDate(dataString);
+    },
 
-// ==========================================================
-// ===== GALERIA / REELS / PERFIL / HORÁRIOS / FATURAMENTO =====
-// ==========================================================
-async function carregarGaleria(){var c=document.getElementById('galeriaContainer');if(!c)return;var sn=await db.collection('posts').orderBy('dataCriacao','desc').get();todosPosts=sn.docs.map(d=>({id:d.id,...d.data()}));filtrarGaleria();}
-function filtrarGaleria(){var cat=document.getElementById('filtroCategoria').value,c=document.getElementById('galeriaContainer');var f=cat==='todos'?todosPosts:todosPosts.filter(function(p){return p.titulo===cat;});if(f.length===0){c.innerHTML='<p style="color:#6B7280;text-align:center;grid-column:1/-1;">Nenhum</p>';return;}c.innerHTML=f.map(function(post){return'<div class="galeria-item" onclick="verDetalheCorte(\''+post.id+'\')">'+(post.imagem?'<img src="'+post.imagem+'" class="galeria-item-image">':'<div class="galeria-item-image" style="display:flex;align-items:center;justify-content:center;font-size:40px;">✂️</div>')+'<div class="galeria-item-info"><div class="galeria-item-title">'+post.titulo+'</div><div class="galeria-item-price">R$ '+(post.preco?post.preco.toFixed(2):'0,00')+'</div></div></div>';}).join('');}
-function verDetalheCorte(id){var post=todosPosts.find(function(p){return p.id===id;});if(!post)return;document.getElementById('detalhePostConteudo').innerHTML='<div class="card"><h3>'+post.titulo+'</h3>'+(post.video?'<video controls><source src="'+post.video+'" type="video/mp4"></video>':post.imagem?'<img src="'+post.imagem+'" style="width:100%;max-height:300px;object-fit:cover;">':'')+'<p style="font-size:24px;color:var(--primary);">R$ '+(post.preco?post.preco.toFixed(2):'0,00')+'</p><button class="btn btn-outline" onclick="mostrarTela(\'galeriaCortesScreen\')">← Voltar</button></div>';mostrarTela('detalhePostScreen');}
-async function carregarReels(){var c=document.getElementById('reelsContainer');if(!c)return;var sn=await db.collection('posts').orderBy('dataCriacao','desc').get();todosReels=sn.docs.map(d=>({id:d.id,...d.data()}));if(todosReels.length===0){c.innerHTML='<p style="color:#6B7280;padding:40px;">Nenhum</p>';return;}reelsAtual=0;exibirReel(0);}
-function exibirReel(i){if(i<0)i=0;if(i>=todosReels.length)i=todosReels.length-1;reelsAtual=i;var post=todosReels[i];document.getElementById('reelsContainer').innerHTML='<div class="reel-item">'+(post.video?'<video src="'+post.video+'" autoplay loop muted playsinline></video>':post.imagem?'<img src="'+post.imagem+'" class="reel-item-image">':'<div class="reel-item-image" style="display:flex;align-items:center;justify-content:center;font-size:80px;">✂️</div>')+'<div class="reel-item-overlay"><div class="reel-item-title">'+post.titulo+'</div><div class="reel-item-price">R$ '+(post.preco?post.preco.toFixed(2):'0,00')+'</div></div></div>';}
-function reelAnterior(){if(reelsAtual>0){reelsAtual--;exibirReel(reelsAtual);}}
-function reelProximo(){if(reelsAtual<todosReels.length-1){reelsAtual++;exibirReel(reelsAtual);}}
-function likeReel(btn){btn.classList.toggle('liked');mostrarToast('❤️ Curtido!','success');}
-function likePost(id,btn){btn.classList.toggle('liked');}
-function carregarPerfilCliente(){if(!clienteLogado)return;document.getElementById('perfilClienteNome').textContent=clienteLogado.nome;document.getElementById('perfilClienteEmail').textContent=clienteLogado.email;document.getElementById('editClienteNome').value=clienteLogado.nome||'';document.getElementById('editClienteCelular').value=clienteLogado.celular||'';}
-async function salvarPerfilCliente(){if(!clienteLogado)return;var n=document.getElementById('editClienteNome').value.trim(),c=document.getElementById('editClienteCelular').value.trim();await db.collection('clientes').doc(clienteLogado.id).update({nome:n,celular:c});clienteLogado.nome=n;clienteLogado.celular=c;salvarSessao('cliente',clienteLogado);mostrarToast('✅ Salvo!','success');}
-function carregarPerfilBarbeiro(){if(!barbeiroLogado)return;document.getElementById('perfilBarbeiroNome').textContent=barbeiroLogado.nome;document.getElementById('perfilBarbeiroEmail').textContent=barbeiroLogado.email;document.getElementById('editBarbeiroNome').value=barbeiroLogado.nome||'';document.getElementById('editBarbeiroCelular').value=barbeiroLogado.celular||'';document.getElementById('editBarbeiroEmail').value=barbeiroLogado.email||'';}
-async function salvarPerfilBarbeiro(){if(!barbeiroLogado)return;var n=document.getElementById('editBarbeiroNome').value.trim(),c=document.getElementById('editBarbeiroCelular').value.trim(),e=document.getElementById('editBarbeiroEmail').value.trim();await db.collection('barbeiros').doc(barbeiroLogado.id).update({nome:n,celular:c,email:e});barbeiroLogado.nome=n;barbeiroLogado.celular=c;barbeiroLogado.email=e;salvarSessao('barbeiro',barbeiroLogado);mostrarToast('✅ Salvo!','success');}
-function uploadFotoCliente(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=async function(ev){var foto=ev.target.result;var av=document.getElementById('perfilClienteAvatar');if(av){var img=av.querySelector('img');if(img)img.src=foto;}clienteLogado.fotoPerfil=foto;await db.collection('clientes').doc(clienteLogado.id).update({fotoPerfil:foto});salvarSessao('cliente',clienteLogado);};r.readAsDataURL(f);}
-function uploadFotoBarbeiro(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=async function(ev){var foto=ev.target.result;var av=document.getElementById('perfilBarbeiroAvatar');if(av){var img=av.querySelector('img');if(img)img.src=foto;}barbeiroLogado.fotoPerfil=foto;await db.collection('barbeiros').doc(barbeiroLogado.id).update({fotoPerfil:foto});salvarSessao('barbeiro',barbeiroLogado);};r.readAsDataURL(f);}
-function filtrarExtrato(t){mostrarToast('📊 '+t,'info');}
-function copiarPix(){navigator.clipboard.writeText(document.getElementById('pixChave').textContent);mostrarToast('✅ Copiado!','success');}
-function fecharPagamento(){mostrarTela('homeClienteScreen');}
-async function carregarHorarios(){if(!barbeiroLogado)return;var doc=await db.collection('configuracoes').doc('horarios_'+barbeiroLogado.id).get();if(doc.exists)horariosTrabalho=doc.data();['Segunda','Terca','Quarta','Quinta','Sexta','Sabado','Domingo'].forEach(function(d){var cb=document.getElementById('dia'+d);if(cb)cb.checked=horariosTrabalho.diasTrabalho.includes(d.toLowerCase());});document.getElementById('horarioInicio').value=horariosTrabalho.horarioInicio;document.getElementById('horarioFim').value=horariosTrabalho.horarioFim;document.getElementById('intervaloCortes').value=horariosTrabalho.intervaloCortes;carregarFolgas();}
-function carregarFolgas(){var c=document.getElementById('folgasContainer');if(!c)return;if(!horariosTrabalho.folgas||horariosTrabalho.folgas.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhuma</p>';return;}c.innerHTML=horariosTrabalho.folgas.map(function(f,i){return'<div class="folga-item"><span>🏖️ '+new Date(f).toLocaleDateString('pt-BR')+'</span><button onclick="removerFolga('+i+')">❌</button></div>';}).join('');}
-function adicionarFolga(){var d=document.getElementById('folgaData').value;if(!d)return;if(horariosTrabalho.folgas.includes(d)){mostrarToast('❌ Já existe!','error');return;}horariosTrabalho.folgas.push(d);horariosTrabalho.folgas.sort();carregarFolgas();document.getElementById('folgaData').value='';mostrarToast('✅ Adicionada!','success');}
-function removerFolga(i){horariosTrabalho.folgas.splice(i,1);carregarFolgas();}
-async function salvarHorarios(){if(!barbeiroLogado)return;var dias=[];['Segunda','Terca','Quarta','Quinta','Sexta','Sabado','Domingo'].forEach(function(d){var cb=document.getElementById('dia'+d);if(cb&&cb.checked)dias.push(d.toLowerCase());});horariosTrabalho.diasTrabalho=dias;horariosTrabalho.horarioInicio=document.getElementById('horarioInicio').value;horariosTrabalho.horarioFim=document.getElementById('horarioFim').value;horariosTrabalho.intervaloCortes=parseInt(document.getElementById('intervaloCortes').value);await db.collection('configuracoes').doc('horarios_'+barbeiroLogado.id).set(horariosTrabalho);mostrarToast('✅ Salvos!','success');}
-async function calcularFaturamento(){var sn=await db.collection('agendamentos').where('status','==','confirmado').get();var ag=sn.docs.map(function(d){return d.data();});var hoje=new Date().toISOString().split('T')[0],vh=0,vt=0;ag.forEach(function(a){var v=35;if(a.data===hoje)vh+=v;vt+=v;});var eh=document.getElementById('faturamentoHoje');if(eh)eh.textContent='R$ '+vh.toFixed(2);var es=document.getElementById('faturamentoSemana');if(es)es.textContent='R$ '+(vt*0.3).toFixed(2);var em=document.getElementById('faturamentoMes');if(em)em.textContent='R$ '+(vt*0.7).toFixed(2);var ea=document.getElementById('faturamentoAno');if(ea)ea.textContent='R$ '+vt.toFixed(2);}
+    truncateText: (texto, max = 100) => {
+        if (!texto) return '';
+        return texto.length > max ? texto.slice(0, max) + '...' : texto;
+    },
 
-// ==========================================================
-// ===== LIVE (CORRIGIDA - VERIFICA ELEMENTOS) =====
-// ==========================================================
-async function iniciarLive(){
-    if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiros!','error');return;}
-    var titulo=document.getElementById('liveTitulo').value.trim()||'🔴 Live da Barbearia RM';
-    var videoEl=document.getElementById('liveVideo');
-    var videoLocal=document.getElementById('liveVideoLocal');
-    var frameImg=document.getElementById('liveFrameImg');
-    var placeholder=document.getElementById('livePlaceholder');
-    if(!videoEl){console.error('❌ liveVideo não encontrado!');mostrarToast('❌ Erro: atualize o HTML!','error');return;}
-    try{
-        var stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user',frameRate:{ideal:25}},audio:{echoCancellation:true,noiseSuppression:true,sampleRate:44100}});
-        liveLocalStream=stream;
-        videoEl.srcObject=stream;videoEl.muted=true;videoEl.style.display='block';videoEl.style.width='100%';videoEl.style.height='100%';videoEl.style.objectFit='cover';
-        if(frameImg)frameImg.style.display='none';
-        if(videoLocal){videoLocal.srcObject=stream;videoLocal.style.display='block';videoLocal.muted=true;}
-        try{if(liveAudioMonitor)liveAudioMonitor.close();liveAudioMonitor=new(window.AudioContext||window.webkitAudioContext)({sampleRate:44100});var source=liveAudioMonitor.createMediaStreamSource(stream);var gainNode=liveAudioMonitor.createGain();gainNode.gain.value=0.3;source.connect(gainNode);gainNode.connect(liveAudioMonitor.destination);}catch(e){}
-        await db.collection('lives').doc('live_atual').set({id:'live_atual',barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo,ativa:true,chat:[],viewers:0,totalViews:0,likes:0,telaAtiva:1,dataInicio:new Date().toISOString()});
-        liveAtiva=true;liveChatMessages=[];liveLikes=0;liveLiked=false;liveViewersAtivos={};liveUltimoFrameEnviado=0;liveTelaAtiva=1;
-        if(placeholder)placeholder.style.display='none';
-        document.getElementById('livePlayer').style.display='block';
-        var statusEl=document.getElementById('liveStatus');if(statusEl){statusEl.style.display='block';document.getElementById('liveStatusTitulo').textContent=titulo;document.getElementById('liveStatusBarbeiro').textContent='👤 '+barbeiroLogado.nome;}
-        document.getElementById('liveLoginWarning').style.display='none';
-        document.getElementById('liveViewerCount').textContent='👥 0';document.getElementById('liveStatusViewers').textContent='👥 0';
-        document.getElementById('liveAnuncioOverlay').style.display='none';
-        document.getElementById('liveTela1').style.display='block';document.getElementById('liveTela2').style.display='none';
-        var indicador=document.getElementById('liveTelaIndicador');if(indicador){indicador.textContent='🎥 CÂMERA';indicador.style.display=barbeiroLogado?'block':'none';}
-        liveFrameCanvas=document.createElement('canvas');liveFrameCanvas.width=480;liveFrameCanvas.height=270;liveFrameCtx=liveFrameCanvas.getContext('2d');
-        iniciarCapturaFrames();atualizarChat();iniciarChatListener();verificarLiveAtiva();adicionarViewerLive();
-        mostrarToast('🔴 Live iniciada!','success');
-    }catch(error){console.error('❌ Erro câmera:',error);if(error.name==='NotAllowedError')mostrarToast('❌ Permissão negada!','error');else if(error.name==='NotFoundError')mostrarToast('❌ Nenhuma câmera!','error');else mostrarToast('❌ '+error.message,'error');}
-}
+    slugify: (texto) => {
+        return texto.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    },
 
-function iniciarCapturaFrames(){if(liveFrameInterval)clearInterval(liveFrameInterval);liveFrameInterval=setInterval(async function(){if(!liveAtiva||!liveLocalStream||!liveFrameCtx)return;try{var video=document.getElementById('liveVideo');if(!video||!video.videoWidth||video.videoWidth===0)return;var agora=Date.now();if(agora-liveUltimoFrameEnviado<250)return;liveUltimoFrameEnviado=agora;liveFrameCtx.drawImage(video,0,0,480,270);var frameData=liveFrameCanvas.toDataURL('image/jpeg',0.6);db.collection('lives').doc('live_atual').update({ultimoFrame:frameData,frameTimestamp:agora}).catch(function(){});}catch(e){}},250);}
+    generateId: () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
 
-function alternarParaTela1(){if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiro!','error');return;}document.getElementById('liveTela1').style.display='block';document.getElementById('liveTela2').style.display='none';liveTelaAtiva=1;var ind=document.getElementById('liveTelaIndicador');if(ind)ind.textContent='🎥 CÂMERA';mostrarToast('🎥 Câmera ativada','info');}
-function alternarParaTela2(){if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiro!','error');return;}document.getElementById('liveTela1').style.display='none';document.getElementById('liveTela2').style.display='block';liveTelaAtiva=2;var ind=document.getElementById('liveTelaIndicador');if(ind)ind.textContent='📺 COMERCIAL';mostrarToast('📺 Comercial ativado','info');}
+    // Compressão de imagem
+    compressImage: (base64, larguraMax = 800) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let largura = img.width;
+                let altura = img.height;
+                
+                if (largura > larguraMax) {
+                    altura = (larguraMax / largura) * altura;
+                    largura = larguraMax;
+                }
+                
+                canvas.width = largura;
+                canvas.height = altura;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, largura, altura);
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            img.src = base64;
+        });
+    },
 
-function carregarVideoComercial(event){
-    var file=event.target.files[0];if(!file)return;
-    var tamanhoMB=(file.size/(1024*1024)).toFixed(1);
-    var url=URL.createObjectURL(file);
-    var videoEl=document.getElementById('liveVideoComercial');if(!videoEl)return;
-    videoEl.src=url;videoEl.loop=true;videoEl.muted=true;videoEl.style.display='block';videoEl.style.width='100%';videoEl.style.height='100%';videoEl.style.objectFit='cover';
-    document.getElementById('liveImagemComercial').style.display='none';document.getElementById('liveTela2Placeholder').style.display='none';
-    var st=document.getElementById('comercialStatus');if(st)st.textContent='✅ '+file.name+' ('+tamanhoMB+' MB)';
-    mostrarToast('🎬 Vídeo carregado! '+tamanhoMB+' MB','success');
-}
-function carregarImagemComercial(event){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){document.getElementById('liveImagemComercial').src=e.target.result;document.getElementById('liveImagemComercial').style.display='block';document.getElementById('liveVideoComercial').style.display='none';document.getElementById('liveTela2Placeholder').style.display='none';var st=document.getElementById('comercialStatus');if(st)st.textContent='✅ '+file.name;mostrarToast('🖼️ Imagem carregada!','success');};reader.readAsDataURL(file);}
-function adicionarLinkComercial(){var link=prompt('Cole o link do vídeo:');if(!link)return;document.getElementById('liveImagemComercial').style.display='none';document.getElementById('liveTela2Placeholder').style.display='none';if(link.includes('youtube.com')||link.includes('youtu.be')){var videoId=link.split('v=')[1]||link.split('youtu.be/')[1];if(videoId){videoId=videoId.split('&')[0];link='https://www.youtube.com/embed/'+videoId+'?autoplay=1&mute=1&loop=1&playlist='+videoId;}document.getElementById('liveVideoComercial').style.display='none';var iframe=document.createElement('iframe');iframe.src=link;iframe.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:none;';iframe.allow='autoplay;encrypted-media';iframe.allowFullscreen=true;var c=document.getElementById('liveTela2');var old=c.querySelector('iframe');if(old)old.remove();c.appendChild(iframe);document.getElementById('comercialStatus').textContent='✅ YouTube';}else{document.getElementById('liveVideoComercial').src=link;document.getElementById('liveVideoComercial').loop=true;document.getElementById('liveVideoComercial').muted=true;document.getElementById('liveVideoComercial').style.display='block';var c=document.getElementById('liveTela2');var old=c.querySelector('iframe');if(old)old.remove();document.getElementById('comercialStatus').textContent='✅ Link';}mostrarToast('🔗 Link adicionado!','success');}
-function removerVideoComercial(){document.getElementById('liveVideoComercial').src='';document.getElementById('liveVideoComercial').style.display='none';document.getElementById('liveImagemComercial').style.display='none';document.getElementById('liveTela2Placeholder').style.display='flex';document.getElementById('comercialStatus').textContent='Nenhum';var c=document.getElementById('liveTela2');var old=c.querySelector('iframe');if(old)old.remove();document.getElementById('comercialVideoInput').value='';document.getElementById('comercialImagemInput').value='';mostrarToast('🗑 Removido','info');}
-function carregarAnuncioLive(event){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){document.getElementById('liveAnuncioImg').src=e.target.result;document.getElementById('liveAnuncioOverlay').style.display='flex';liveAnuncioAtivo=true;mostrarToast('📢 Anúncio exibido!','success');setTimeout(function(){removerAnuncioLive();},10000);};reader.readAsDataURL(file);}
-function removerAnuncioLive(){document.getElementById('liveAnuncioOverlay').style.display='none';liveAnuncioAtivo=false;}
-function fecharAnuncioLive(){removerAnuncioLive();mostrarToast('📢 Removido','info');}
-function gerarViewerId(){return'v_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);}
-async function adicionarViewerLive(){if(!liveAtiva||liveViewerId)return;liveViewerId=gerarViewerId();var nome=clienteLogado?'💇 '+clienteLogado.nome:(barbeiroLogado?'✂️ '+barbeiroLogado.nome:'👤 Visitante');try{var doc=await db.collection('lives').doc('live_atual').get();if(!doc.exists||!doc.data().ativa)return;var va=doc.data().viewersAtivos||{};va[liveViewerId]={nome:nome,entrou:new Date().toISOString(),ultimoPing:Date.now()};var agora=Date.now(),vl={},count=0;Object.keys(va).forEach(function(k){if(agora-va[k].ultimoPing<8000){vl[k]=va[k];count++;}});await db.collection('lives').doc('live_atual').update({viewersAtivos:vl,viewers:count,totalViews:firebase.firestore.FieldValue.increment(1)});iniciarViewerPing();}catch(e){}}
-function iniciarViewerPing(){if(liveViewerInterval)clearInterval(liveViewerInterval);liveViewerInterval=setInterval(async function(){if(!liveAtiva||!liveViewerId){clearInterval(liveViewerInterval);return;}try{var doc=await db.collection('lives').doc('live_atual').get();if(!doc.exists||!doc.data().ativa){removerViewerLive();return;}var va=doc.data().viewersAtivos||{};if(va[liveViewerId]){va[liveViewerId].ultimoPing=Date.now();await db.collection('lives').doc('live_atual').update({viewersAtivos:va});}}catch(e){}},4000);}
-async function removerViewerLive(){if(liveViewerInterval){clearInterval(liveViewerInterval);liveViewerInterval=null;}if(!liveViewerId)return;try{var doc=await db.collection('lives').doc('live_atual').get();if(!doc.exists)return;var va=doc.data().viewersAtivos||{};delete va[liveViewerId];var count=Object.keys(va).length;await db.collection('lives').doc('live_atual').update({viewersAtivos:va,viewers:count});liveViewerId=null;}catch(e){}}
+    // Debounce para limitar chamadas
+    debounce: (func, wait = 300) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+};
 
-async function carregarLive(){
-    if(liveCarregandoLive)return;liveCarregandoLive=true;
-    var placeholder=document.getElementById('livePlaceholder'),player=document.getElementById('livePlayer'),status=document.getElementById('liveStatus'),warning=document.getElementById('liveLoginWarning'),controls=document.getElementById('liveControls');
-    try{
-        var doc=await db.collection('lives').doc('live_atual').get();
-        if(doc.exists&&doc.data().ativa){var live=doc.data();liveAtiva=true;
-            if(placeholder)placeholder.style.display='none';
-            if(status){status.style.display='block';document.getElementById('liveStatusTitulo').textContent=live.titulo;document.getElementById('liveStatusBarbeiro').textContent='👤 '+live.barbeiroNome;var va=live.viewersAtivos||{};var count=Object.keys(va).length;document.getElementById('liveStatusViewers').textContent='👥 '+count+' • 👁 '+(live.totalViews||0)+' • ❤️ '+(live.likes||0);}
-            liveChatMessages=live.chat||[];atualizarChat();liveLikes=live.likes||0;
-            var ind=document.getElementById('liveTelaIndicador');if(ind){ind.style.display=(!barbeiroLogado||barbeiroLogado.id!==live.barbeiroId)?'none':'block';}
-            if(live.telaAtiva===2){document.getElementById('liveTela1').style.display='none';document.getElementById('liveTela2').style.display='block';}else{document.getElementById('liveTela1').style.display='block';document.getElementById('liveTela2').style.display='none';}
-            if(barbeiroLogado&&barbeiroLogado.id===live.barbeiroId){if(controls)controls.style.display='block';if(player)player.style.display='block';if(warning)warning.style.display='none';document.getElementById('liveTitulo').value=live.titulo;document.getElementById('liveViewerCount').textContent='👥 '+count;if(liveLocalStream){document.getElementById('liveVideo').srcObject=liveLocalStream;document.getElementById('liveVideo').style.display='block';document.getElementById('liveVideo').muted=true;document.getElementById('liveFrameImg').style.display='none';document.getElementById('liveVideoLocal').style.display='block';}}
-            else if(clienteLogado){if(controls)controls.style.display='none';if(player)player.style.display='block';if(warning)warning.style.display='none';document.getElementById('liveViewerCount').textContent='👥 '+count;document.getElementById('liveVideo').style.display='none';document.getElementById('liveVideoLocal').style.display='none';if(live.ultimoFrame){var imgEl=document.getElementById('liveFrameImg');if(imgEl.src!==live.ultimoFrame){imgEl.src=live.ultimoFrame;}imgEl.style.display='block';}setTimeout(function(){liveCarregandoLive=false;if(liveAtiva&&clienteLogado)carregarLive();},350);adicionarViewerLive();liveCarregandoLive=false;return;}
-            else{if(player)player.style.display='none';if(warning)warning.style.display='block';if(controls)controls.style.display='none';}
-            iniciarChatListener();
-        }else{liveAtiva=false;removerViewerLive();if(placeholder)placeholder.style.display='block';if(player)player.style.display='none';if(status)status.style.display='none';if(warning)warning.style.display='none';if(barbeiroLogado){if(controls)controls.style.display='block';}else{if(controls)controls.style.display='none';}pararChatListener();if(liveFrameInterval)clearInterval(liveFrameInterval);}
-    }catch(e){liveAtiva=false;}
-    liveCarregandoLive=false;
-}
-
-async function encerrarLive(){if(!barbeiroLogado)return;if(!confirm('Encerrar?'))return;if(liveFrameInterval)clearInterval(liveFrameInterval);if(liveAudioMonitor)liveAudioMonitor.close();removerViewerLive();if(liveLocalStream){liveLocalStream.getTracks().forEach(function(t){t.stop();});liveLocalStream=null;}await db.collection('lives').doc('live_atual').update({ativa:false,dataFim:new Date().toISOString()});liveAtiva=false;liveChatMessages=[];document.getElementById('livePlaceholder').style.display='block';document.getElementById('livePlayer').style.display='none';document.getElementById('liveStatus').style.display='none';document.getElementById('liveVideo').srcObject=null;document.getElementById('liveFrameImg').style.display='none';document.getElementById('liveLoginWarning').style.display='none';document.getElementById('liveAnuncioOverlay').style.display='none';document.getElementById('liveTela1').style.display='block';document.getElementById('liveTela2').style.display='none';pararChatListener();atualizarChat();verificarLiveAtiva();mostrarToast('⏹ Live encerrada!','info');}
-function pararTransmissao(){if(liveFrameInterval)clearInterval(liveFrameInterval);if(liveAudioMonitor)liveAudioMonitor.close();if(liveLocalStream){liveLocalStream.getTracks().forEach(function(t){t.stop();});liveLocalStream=null;}document.getElementById('liveVideo').srcObject=null;document.getElementById('liveFrameImg').style.display='none';document.getElementById('liveAnuncioOverlay').style.display='none';}
-async function likeLive(){if(!liveAtiva||liveLiked)return;await db.collection('lives').doc('live_atual').update({likes:firebase.firestore.FieldValue.increment(1)});liveLiked=true;liveLikes++;mostrarToast('❤️ Curtido!','success');}
-function compartilharLive(){if(!liveAtiva)return;var url=window.location.href.split('?')[0]+'?live=1';if(navigator.share){navigator.share({title:'Barbearia RM',text:'🔴 Live ao vivo!',url:url});}else{navigator.clipboard.writeText(url);mostrarToast('📋 Link copiado!','success');}}
-function iniciarChatListener(){pararChatListener();liveChatInterval=setInterval(async function(){var doc=await db.collection('lives').doc('live_atual').get();if(doc.exists&&doc.data().ativa){var novas=doc.data().chat||[];if(novas.length!==liveChatMessages.length){liveChatMessages=novas;atualizarChat();}var va=doc.data().viewersAtivos||{};var count=Object.keys(va).length;var el=document.getElementById('liveStatusViewers');var el2=document.getElementById('liveViewerCount');if(el)el.textContent='👥 '+count+' • 👁 '+(doc.data().totalViews||0)+' • ❤️ '+(doc.data().likes||0);if(el2)el2.textContent='👥 '+count+' • 👁 '+(doc.data().totalViews||0);}},1500);}
-function pararChatListener(){if(liveChatInterval){clearInterval(liveChatInterval);liveChatInterval=null;}}
-async function enviarMensagemLive(){var input=document.getElementById('liveChatInput');if(!input)return;var texto=input.value.trim();if(!texto||!liveAtiva)return;var autor='👤 Visitante';var fotoPerfil='';if(clienteLogado){autor=clienteLogado.nome;fotoPerfil=clienteLogado.fotoPerfil||'';}if(barbeiroLogado){autor=barbeiroLogado.nome;fotoPerfil=barbeiroLogado.fotoPerfil||'';}var doc=await db.collection('lives').doc('live_atual').get();if(!doc.exists||!doc.data().ativa)return;var chat=doc.data().chat||[];chat.push({autor,texto,fotoPerfil,data:new Date().toISOString()});if(chat.length>100)chat=chat.slice(-100);await db.collection('lives').doc('live_atual').update({chat});liveChatMessages=chat;atualizarChat();input.value='';}
-function atualizarChat(){var c=document.getElementById('liveChatContainer');if(!c)return;if(!liveChatMessages||liveChatMessages.length===0){c.innerHTML='<p style="color:#6B7280;text-align:center;">💬 Chat vazio</p>';return;}c.innerHTML=liveChatMessages.map(function(msg){var h=new Date(msg.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});var avatar=msg.fotoPerfil?'<img src="'+msg.fotoPerfil+'" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:6px;vertical-align:middle;">':'<span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#D4A84B;text-align:center;line-height:24px;font-size:12px;margin-right:6px;color:#1A1A1A;">👤</span>';return'<div class="live-chat-message" style="display:flex;align-items:flex-start;">'+avatar+'<div><span class="autor" style="color:#D4A84B;font-weight:700;font-size:12px;">'+msg.autor+'</span> <span style="font-size:10px;color:#6B7280;">'+h+'</span><div class="texto" style="color:#B0B0B0;">'+msg.texto+'</div></div></div>';}).join('');c.scrollTop=c.scrollHeight;}
-async function verificarLiveAtiva(){var doc=await db.collection('lives').doc('live_atual').get();var ativa=doc.exists&&doc.data().ativa;var b1=document.getElementById('liveBadgeCliente'),b2=document.getElementById('liveBadgeBarbeiro');if(b1)b1.style.display=ativa?'inline-block':'none';if(b2)b2.style.display=ativa?'inline-block':'none';}
-
-// ==========================================================
-// ===== NAVEGAÇÃO =====
-// ==========================================================
-function mostrarTela(id){
-    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-    var el=document.getElementById(id);if(el)el.classList.add('active');
-    var nc=document.getElementById('bottomNavCliente'),nb=document.getElementById('bottomNavBarbeiro');
-    var tc=['homeClienteScreen','agendamentoScreen','galeriaCortesScreen','reelsScreen','anunciosScreen','liveScreen','perfilClienteScreen','detalhePostScreen','pagamentoScreen'];
-    var tb=['homeBarbeiroScreen','criarPostScreen','extratoScreen','criarPlanoScreen','editarPlanoScreen','horariosTrabalhoScreen','anunciosScreen','liveScreen','perfilBarbeiroScreen'];
-    if(tc.includes(id)){if(nc)nc.style.display='flex';if(nb)nb.style.display='none';}
-    else if(tb.includes(id)){if(nb)nb.style.display='flex';if(nc)nc.style.display='none';}
-    else{if(nc)nc.style.display='none';if(nb)nb.style.display='none';}
-    if(id==='homeClienteScreen'){carregarFeedCliente();carregarAgendaCliente();verificarLiveAtiva();}
-    if(id==='homeBarbeiroScreen'){carregarAgendamentosBarbeiro();carregarPlanos();calcularFaturamento();carregarMeusPosts();verificarLiveAtiva();}
-    if(id==='anunciosScreen'){carregarAnuncios();if(barbeiroLogado)document.getElementById('formAnuncio').style.display='block';else document.getElementById('formAnuncio').style.display='none';}
-    if(id==='liveScreen'){carregarLive();}
-    if(id==='perfilClienteScreen')carregarPerfilCliente();if(id==='perfilBarbeiroScreen')carregarPerfilBarbeiro();
-    if(id==='galeriaCortesScreen')carregarGaleria();if(id==='reelsScreen')carregarReels();
-    if(id==='horariosTrabalhoScreen')carregarHorarios();
-    window.scrollTo(0,0);
+// Função auxiliar para gerar horários
+function gerarHorarios(inicio, fim, intervaloMinutos) {
+    const horarios = [];
+    const [hInicio, mInicio] = inicio.split(':').map(Number);
+    const [hFim, mFim] = fim.split(':').map(Number);
+    
+    let hora = hInicio;
+    let minuto = mInicio;
+    
+    while (hora < hFim || (hora === hFim && minuto <= mFim)) {
+        const h = String(hora).padStart(2, '0');
+        const m = String(minuto).padStart(2, '0');
+        horarios.push(`${h}:${m}`);
+        
+        minuto += intervaloMinutos;
+        if (minuto >= 60) {
+            hora++;
+            minuto -= 60;
+        }
+    }
+    
+    return horarios;
 }
 
 // ==========================================================
-// ===== INICIALIZAÇÃO =====
+// SERVIÇO DO FIREBASE
 // ==========================================================
-document.addEventListener('DOMContentLoaded',function(){
-    console.log('🚀 Barbearia RM');
-    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-    document.getElementById('bottomNavCliente').style.display='none';
-    document.getElementById('bottomNavBarbeiro').style.display='none';
-    document.getElementById('loginFormCliente').style.display='none';
-    document.getElementById('loginFormBarbeiro').style.display='none';
-    restaurarSessao().then(function(r){if(!r)document.getElementById('loginScreen').classList.add('active');});
-    verificarLiveAtiva();
-    if(window.location.search.includes('live=1')){setTimeout(function(){mostrarTela('liveScreen');},1000);}
-    console.log('✅ Pronto!');
+const FirebaseDB = {
+    db: null,
+    cache: new Map(),
+
+    inicializar() {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        this.db = firebase.firestore();
+        this.db.settings({ ignoreUndefinedProperties: true });
+        console.log('✅ Firebase conectado');
+    },
+
+    // CRUD genérico
+    async criar(colecao, dados) {
+        try {
+            const docRef = this.db.collection(colecao).doc(dados.id || Utils.generateId());
+            const dadosCompletos = {
+                ...dados,
+                id: docRef.id,
+                dataCriacao: dados.dataCriacao || new Date().toISOString(),
+                dataAtualizacao: new Date().toISOString()
+            };
+            await docRef.set(dadosCompletos);
+            return dadosCompletos;
+        } catch (erro) {
+            console.error(`Erro ao criar em ${colecao}:`, erro);
+            throw erro;
+        }
+    },
+
+    async atualizar(colecao, id, dados) {
+        try {
+            await this.db.collection(colecao).doc(id).update({
+                ...dados,
+                dataAtualizacao: new Date().toISOString()
+            });
+            return true;
+        } catch (erro) {
+            console.error(`Erro ao atualizar ${colecao}/${id}:`, erro);
+            throw erro;
+        }
+    },
+
+    async deletar(colecao, id) {
+        try {
+            await this.db.collection(colecao).doc(id).delete();
+            return true;
+        } catch (erro) {
+            console.error(`Erro ao deletar ${colecao}/${id}:`, erro);
+            throw erro;
+        }
+    },
+
+    async buscar(colecao, id) {
+        try {
+            const doc = await this.db.collection(colecao).doc(id).get();
+            return doc.exists ? { id: doc.id, ...doc.data() } : null;
+        } catch (erro) {
+            console.error(`Erro ao buscar ${colecao}/${id}:`, erro);
+            return null;
+        }
+    },
+
+    async listar(colecao, ordenarPor = 'dataCriacao', direcao = 'desc', limite = 50) {
+        const cacheKey = `${colecao}_${ordenarPor}_${direcao}_${limite}`;
+        
+        // Verificar cache
+        if (this.cache.has(cacheKey)) {
+            const cached = this.cache.get(cacheKey);
+            if (Date.now() - cached.timestamp < APP_CONFIG.cacheTimeout) {
+                return cached.data;
+            }
+        }
+
+        try {
+            const snapshot = await this.db.collection(colecao)
+                .orderBy(ordenarPor, direcao)
+                .limit(limite)
+                .get();
+
+            const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Atualizar cache
+            this.cache.set(cacheKey, { data: dados, timestamp: Date.now() });
+            
+            return dados;
+        } catch (erro) {
+            console.error(`Erro ao listar ${colecao}:`, erro);
+            return [];
+        }
+    },
+
+    async buscarPorFiltro(colecao, campo, operador, valor) {
+        try {
+            const snapshot = await this.db.collection(colecao)
+                .where(campo, operador, valor)
+                .get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (erro) {
+            console.error(`Erro ao filtrar ${colecao}:`, erro);
+            return [];
+        }
+    },
+
+    limparCache() {
+        this.cache.clear();
+    }
+};
+
+// ==========================================================
+// SERVIÇO DE AUTENTICAÇÃO
+// ==========================================================
+const AuthService = {
+    usuarioAtual: null,
+    tipoUsuario: null, // 'cliente' ou 'barbeiro'
+
+    async cadastrar(dados, tipo) {
+        // Validar
+        if (!dados.nome || dados.nome.trim().length < 3) {
+            throw new Error('Nome deve ter pelo menos 3 caracteres');
+        }
+        if (!Utils.isValidEmail(dados.email)) {
+            throw new Error('E-mail inválido');
+        }
+        if (!Utils.isValidPassword(dados.senha)) {
+            throw new Error('Senha deve ter pelo menos 6 caracteres');
+        }
+        if (!Utils.isValidPhone(dados.celular)) {
+            throw new Error('Celular inválido');
+        }
+
+        const colecao = tipo === 'cliente' ? 'clientes' : 'barbeiros';
+        
+        // Verificar duplicidade
+        const existentes = await FirebaseDB.buscarPorFiltro(
+            colecao, 'email', '==', dados.email.toLowerCase().trim()
+        );
+        
+        if (existentes.length > 0) {
+            throw new Error('E-mail já cadastrado');
+        }
+
+        // Criar usuário
+        const novoUsuario = await FirebaseDB.criar(colecao, {
+            nome: dados.nome.trim(),
+            email: dados.email.toLowerCase().trim(),
+            celular: dados.celular.replace(/\D/g, ''),
+            senha: Utils.hashPassword(dados.senha),
+            fotoPerfil: '',
+            ultimoAcesso: new Date().toISOString()
+        });
+
+        // Login automático
+        await this.login(dados.email, dados.senha, tipo);
+        
+        return novoUsuario;
+    },
+
+    async login(email, senha, tipo) {
+        const colecao = tipo === 'cliente' ? 'clientes' : 'barbeiros';
+        const hashSenha = Utils.hashPassword(senha);
+        
+        const usuarios = await FirebaseDB.buscarPorFiltro(
+            colecao, 'email', '==', email.toLowerCase().trim()
+        );
+
+        if (usuarios.length === 0 || usuarios[0].senha !== hashSenha) {
+            throw new Error('E-mail ou senha inválidos');
+        }
+
+        const usuario = usuarios[0];
+        
+        // Atualizar último acesso
+        await FirebaseDB.atualizar(colecao, usuario.id, {
+            ultimoAcesso: new Date().toISOString()
+        });
+
+        this.usuarioAtual = usuario;
+        this.tipoUsuario = tipo;
+        this.salvarSessao();
+
+        return usuario;
+    },
+
+    salvarSessao() {
+        const sessao = {
+            usuario: this.usuarioAtual,
+            tipo: this.tipoUsuario,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('barbearia_session', btoa(JSON.stringify(sessao)));
+    },
+
+    carregarSessao() {
+        try {
+            const dados = localStorage.getItem('barbearia_session');
+            if (!dados) return false;
+            
+            const sessao = JSON.parse(atob(dados));
+            
+            if (Date.now() - sessao.timestamp > APP_CONFIG.sessionDuration) {
+                this.logout();
+                return false;
+            }
+            
+            this.usuarioAtual = sessao.usuario;
+            this.tipoUsuario = sessao.tipo;
+            return true;
+        } catch (erro) {
+            this.logout();
+            return false;
+        }
+    },
+
+    async restaurarSessao() {
+        if (!this.carregarSessao()) return false;
+        
+        // Verificar se usuário ainda existe no banco
+        const colecao = this.tipoUsuario === 'cliente' ? 'clientes' : 'barbeiros';
+        const usuario = await FirebaseDB.buscar(colecao, this.usuarioAtual.id);
+        
+        if (!usuario) {
+            this.logout();
+            return false;
+        }
+        
+        this.usuarioAtual = usuario;
+        return true;
+    },
+
+    logout() {
+        this.usuarioAtual = null;
+        this.tipoUsuario = null;
+        localStorage.removeItem('barbearia_session');
+    },
+
+    isAuthenticated() {
+        return this.usuarioAtual !== null;
+    },
+
+    isCliente() {
+        return this.tipoUsuario === 'cliente';
+    },
+
+    isBarbeiro() {
+        return this.tipoUsuario === 'barbeiro';
+    }
+};
+
+// ==========================================================
+// GERENCIADOR DE UI (Telas e Navegação)
+// ==========================================================
+const UIManager = {
+    telaAtual: null,
+
+    // Cache de elementos DOM
+    elementos: {},
+
+    init() {
+        // Cache de elementos frequentemente usados
+        this.elementos = {
+            screens: document.querySelectorAll('.screen'),
+            bottomNavCliente: document.getElementById('bottomNavCliente'),
+            bottomNavBarbeiro: document.getElementById('bottomNavBarbeiro'),
+            toast: document.getElementById('toast'),
+            modalComentario: document.getElementById('modalComentario')
+        };
+    },
+
+    navegarPara(nomeTela) {
+        // Esconder todas as telas
+        this.elementos.screens.forEach(tela => tela.classList.remove('active'));
+        
+        // Mostrar tela alvo
+        const tela = document.getElementById(nomeTela + 'Screen') || 
+                     document.getElementById(nomeTela);
+        
+        if (tela) {
+            tela.classList.add('active');
+            this.telaAtual = nomeTela;
+            
+            // Atualizar navegação inferior
+            this.atualizarBottomNav();
+            
+            // Carregar dados da tela
+            ScreenLoader.carregar(nomeTela);
+        }
+        
+        window.scrollTo(0, 0);
+    },
+
+    atualizarBottomNav() {
+        if (!AuthService.isAuthenticated()) {
+            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'none';
+            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'none';
+            return;
+        }
+
+        if (AuthService.isCliente()) {
+            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'flex';
+            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'none';
+        } else {
+            if (this.elementos.bottomNavCliente) this.elementos.bottomNavCliente.style.display = 'none';
+            if (this.elementos.bottomNavBarbeiro) this.elementos.bottomNavBarbeiro.style.display = 'flex';
+        }
+    },
+
+    mostrarToast(mensagem, tipo = 'info') {
+        const toast = this.elementos.toast;
+        if (!toast) return;
+        
+        toast.textContent = mensagem;
+        toast.className = `toast ${tipo}`;
+        toast.style.display = 'block';
+        
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    },
+
+    mostrarLoading(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Carregando...</p>
+                </div>
+            `;
+        }
+    },
+
+    mostrarVazio(containerId, mensagem = 'Nenhum item encontrado') {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>${mensagem}</p>
+                </div>
+            `;
+        }
+    },
+
+    mostrarErro(containerId, mensagem = 'Erro ao carregar') {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <p>${mensagem}</p>
+                    <button class="btn btn-small btn-outline" onclick="location.reload()">
+                        🔄 Tentar novamente
+                    </button>
+                </div>
+            `;
+        }
+    }
+};
+
+// ==========================================================
+// CARREGADOR DE TELAS
+// ==========================================================
+const ScreenLoader = {
+    async carregar(nomeTela) {
+        switch(nomeTela) {
+            case 'homeCliente':
+                await this.carregarHomeCliente();
+                break;
+            case 'homeBarbeiro':
+                await this.carregarHomeBarbeiro();
+                break;
+            case 'agendamento':
+                this.carregarAgendamento();
+                break;
+            case 'anuncios':
+                await this.carregarAnuncios();
+                break;
+            case 'live':
+                await LiveManager.carregar();
+                break;
+            case 'perfilCliente':
+                this.carregarPerfilCliente();
+                break;
+            case 'perfilBarbeiro':
+                this.carregarPerfilBarbeiro();
+                break;
+            case 'galeriaCortes':
+                await this.carregarGaleria();
+                break;
+            case 'reels':
+                await this.carregarReels();
+                break;
+            case 'horariosTrabalho':
+                await this.carregarHorarios();
+                break;
+        }
+    },
+
+    async carregarHomeCliente() {
+        if (!AuthService.isAuthenticated()) return;
+        
+        // Atualizar nome
+        const nomeEl = document.getElementById('welcomeClienteNome');
+        if (nomeEl) nomeEl.textContent = AuthService.usuarioAtual.nome;
+        
+        // Carregar feed
+        UIManager.mostrarLoading('feedClienteContainer');
+        
+        try {
+            const posts = await PostService.listar();
+            
+            if (posts.length === 0) {
+                UIManager.mostrarVazio('feedClienteContainer', 'Nenhum post ainda');
+            } else {
+                const html = posts.map(post => PostService.renderizarCard(post)).join('');
+                document.getElementById('feedClienteContainer').innerHTML = html;
+            }
+        } catch (erro) {
+            UIManager.mostrarErro('feedClienteContainer');
+        }
+        
+        // Carregar agendamentos
+        await AgendamentoService.carregarAgendaCliente();
+    },
+
+    async carregarHomeBarbeiro() {
+        if (!AuthService.isAuthenticated()) return;
+        
+        // Atualizar nome
+        const nomeEl = document.getElementById('welcomeBarbeiroNome');
+        if (nomeEl) nomeEl.textContent = AuthService.usuarioAtual.nome;
+        
+        // Carregar dados
+        await Promise.all([
+            AgendamentoService.carregarAgendamentosBarbeiro(),
+            PlanoService.carregarPlanos(),
+            PostService.carregarMeusPosts(),
+            FinanceiroService.calcularFaturamento()
+        ]);
+    },
+
+    carregarAgendamento() {
+        // Popular horários
+        const selectHorario = document.getElementById('agendamentoHorario');
+        if (selectHorario) {
+            selectHorario.innerHTML = APP_CONFIG.horariosDisponiveis
+                .map(h => `<option value="${h}">${h}</option>`)
+                .join('');
+        }
+        
+        // Popular tipos de corte
+        const selectTipo = document.getElementById('agendamentoTipo');
+        if (selectTipo) {
+            selectTipo.innerHTML = APP_CONFIG.tiposCorte
+                .map(t => `<option value="${t}">${t}</option>`)
+                .join('');
+        }
+        
+        // Setar data mínima como hoje
+        const inputData = document.getElementById('agendamentoData');
+        if (inputData) {
+            inputData.min = new Date().toISOString().split('T')[0];
+        }
+    },
+
+    async carregarAnuncios() {
+        UIManager.mostrarLoading('anunciosContainer');
+        
+        try {
+            const hoje = new Date().toISOString();
+            const anuncios = await FirebaseDB.listar('anuncios');
+            
+            const ativos = anuncios.filter(a => a.dataExpiracao > hoje);
+            
+            if (ativos.length === 0) {
+                UIManager.mostrarVazio('anunciosContainer', 'Nenhum anúncio ativo');
+            } else {
+                const html = ativos.map(anuncio => `
+                    <div class="card anuncio-card">
+                        <span class="badge badge-anuncio">📢 ANÚNCIO</span>
+                        ${anuncio.imagem ? `
+                            <img src="${anuncio.imagem}" alt="${anuncio.titulo}" 
+                                 class="anuncio-imagem" loading="lazy">
+                        ` : ''}
+                        <h3 class="anuncio-titulo">${anuncio.titulo}</h3>
+                        <p class="anuncio-descricao">${anuncio.descricao}</p>
+                        ${anuncio.link ? `
+                            <a href="${anuncio.link}" target="_blank" rel="noopener" 
+                               class="btn btn-small btn-anuncio">
+                                🔗 Saiba Mais
+                            </a>
+                        ` : ''}
+                        ${AuthService.isBarbeiro() ? `
+                            <button class="btn btn-small btn-danger" 
+                                    onclick="AnuncioService.excluir('${anuncio.id}')">
+                                🗑 Excluir
+                            </button>
+                        ` : ''}
+                    </div>
+                `).join('');
+                
+                document.getElementById('anunciosContainer').innerHTML = html;
+            }
+        } catch (erro) {
+            UIManager.mostrarErro('anunciosContainer');
+        }
+    },
+
+    carregarPerfilCliente() {
+        if (!AuthService.isAuthenticated()) return;
+        
+        const user = AuthService.usuarioAtual;
+        document.getElementById('perfilClienteNome').textContent = user.nome;
+        document.getElementById('perfilClienteEmail').textContent = user.email;
+        document.getElementById('editClienteNome').value = user.nome || '';
+        document.getElementById('editClienteCelular').value = user.celular || '';
+        
+        // Atualizar avatar
+        const avatar = document.getElementById('perfilClienteAvatar');
+        if (avatar && user.fotoPerfil) {
+            avatar.querySelector('img').src = user.fotoPerfil;
+        }
+    },
+
+    carregarPerfilBarbeiro() {
+        if (!AuthService.isAuthenticated()) return;
+        
+        const user = AuthService.usuarioAtual;
+        document.getElementById('perfilBarbeiroNome').textContent = user.nome;
+        document.getElementById('perfilBarbeiroEmail').textContent = user.email;
+        document.getElementById('editBarbeiroNome').value = user.nome || '';
+        document.getElementById('editBarbeiroCelular').value = user.celular || '';
+        document.getElementById('editBarbeiroEmail').value = user.email || '';
+        
+        // Atualizar avatar
+        const avatar = document.getElementById('perfilBarbeiroAvatar');
+        if (avatar && user.fotoPerfil) {
+            avatar.querySelector('img').src = user.fotoPerfil;
+        }
+    },
+
+    async carregarGaleria() {
+        UIManager.mostrarLoading('galeriaContainer');
+        
+        try {
+            const posts = await PostService.listar();
+            
+            if (posts.length === 0) {
+                UIManager.mostrarVazio('galeriaContainer', 'Nenhum corte na galeria');
+            } else {
+                const html = posts.map(post => `
+                    <div class="galeria-item" onclick="PostService.verDetalhe('${post.id}')">
+                        ${post.imagem ? 
+                            `<img src="${post.imagem}" alt="${post.titulo}" loading="lazy">` :
+                            `<div class="galeria-placeholder">✂️</div>`
+                        }
+                        <div class="galeria-info">
+                            <h4>${post.titulo}</h4>
+                            <span class="preco">${Utils.formatCurrency(post.preco)}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('galeriaContainer').innerHTML = html;
+            }
+        } catch (erro) {
+            UIManager.mostrarErro('galeriaContainer');
+        }
+    },
+
+    async carregarReels() {
+        UIManager.mostrarLoading('reelsContainer');
+        
+        try {
+            const posts = await PostService.listar();
+            
+            if (posts.length === 0) {
+                UIManager.mostrarVazio('reelsContainer', 'Nenhum reel disponível');
+            } else {
+                window.reelsData = posts;
+                window.reelsIndex = 0;
+                ReelsManager.exibir(0);
+            }
+        } catch (erro) {
+            UIManager.mostrarErro('reelsContainer');
+        }
+    },
+
+    async carregarHorarios() {
+        if (!AuthService.isBarbeiro()) return;
+        
+        const config = await FirebaseDB.buscar('configuracoes', 'horarios_' + AuthService.usuarioAtual.id);
+        
+        if (config) {
+            // Popular checkboxes de dias
+            const dias = config.diasTrabalho || [];
+            ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'].forEach(dia => {
+                const cb = document.getElementById('dia' + dia);
+                if (cb) cb.checked = dias.includes(dia.toLowerCase());
+            });
+            
+            document.getElementById('horarioInicio').value = config.horarioInicio || '09:00';
+            document.getElementById('horarioFim').value = config.horarioFim || '18:00';
+            document.getElementById('intervaloCortes').value = config.intervaloCortes || '30';
+        }
+    }
+};
+
+// ==========================================================
+// SERVIÇO DE POSTS
+// ==========================================================
+const PostService = {
+    async criar(dados) {
+        if (!AuthService.isBarbeiro()) throw new Error('Apenas barbeiros podem postar');
+        
+        const { titulo, preco, descricao, imagem, video } = dados;
+        
+        if (!titulo || titulo.trim().length < 3) {
+            throw new Error('Título deve ter pelo menos 3 caracteres');
+        }
+        if (!Utils.isValidPrice(preco)) {
+            throw new Error('Preço inválido');
+        }
+        
+        // Comprimir imagem se existir
+        let imagemFinal = imagem;
+        if (imagem && imagem.startsWith('data:image')) {
+            imagemFinal = await Utils.compressImage(imagem);
+        }
+        
+        const post = await FirebaseDB.criar('posts', {
+            barbeiroId: AuthService.usuarioAtual.id,
+            barbeiroNome: AuthService.usuarioAtual.nome,
+            titulo: titulo.trim(),
+            preco: Number(preco),
+            descricao: descricao?.trim() || '',
+            imagem: imagemFinal,
+            video: video || '',
+            likes: 0,
+            likedBy: [],
+            comentarios: []
+        });
+        
+        FirebaseDB.limparCache();
+        return post;
+    },
+
+    async listar(limite = 20) {
+        return await FirebaseDB.listar('posts', 'dataCriacao', 'desc', limite);
+    },
+
+    async listarPorBarbeiro(barbeiroId) {
+        return await FirebaseDB.buscarPorFiltro('posts', 'barbeiroId', '==', barbeiroId);
+    },
+
+    async curtir(postId) {
+        if (!AuthService.isAuthenticated()) {
+            throw new Error('Faça login para curtir');
+        }
+        
+        const userId = AuthService.usuarioAtual.id;
+        const postRef = FirebaseDB.db.collection('posts').doc(postId);
+        
+        await FirebaseDB.db.runTransaction(async (transaction) => {
+            const doc = await transaction.get(postRef);
+            if (!doc.exists) throw new Error('Post não encontrado');
+            
+            const data = doc.data();
+            const likedBy = data.likedBy || [];
+            
+            if (likedBy.includes(userId)) {
+                transaction.update(postRef, {
+                    likes: firebase.firestore.FieldValue.increment(-1),
+                    likedBy: firebase.firestore.FieldValue.arrayRemove(userId)
+                });
+                return false; // descurtiu
+            } else {
+                transaction.update(postRef, {
+                    likes: firebase.firestore.FieldValue.increment(1),
+                    likedBy: firebase.firestore.FieldValue.arrayUnion(userId)
+                });
+                return true; // curtiu
+            }
+        });
+        
+        FirebaseDB.limparCache();
+    },
+
+    async comentar(postId, texto) {
+        if (!AuthService.isAuthenticated()) throw new Error('Faça login para comentar');
+        if (!texto || texto.trim().length === 0) throw new Error('Comentário vazio');
+        
+        const comentario = {
+            autor: AuthService.usuarioAtual.nome,
+            autorId: AuthService.usuarioAtual.id,
+            texto: texto.trim(),
+            data: new Date().toISOString()
+        };
+        
+        await FirebaseDB.db.collection('posts').doc(postId).update({
+            comentarios: firebase.firestore.FieldValue.arrayUnion(comentario)
+        });
+        
+        return comentario;
+    },
+
+    async excluir(postId) {
+        await FirebaseDB.deletar('posts', postId);
+        FirebaseDB.limparCache();
+    },
+
+    async carregarMeusPosts() {
+        if (!AuthService.isBarbeiro()) return;
+        
+        const container = document.getElementById('meusPostsContainer');
+        if (!container) return;
+        
+        UIManager.mostrarLoading('meusPostsContainer');
+        
+        try {
+            const posts = await this.listarPorBarbeiro(AuthService.usuarioAtual.id);
+            
+            if (posts.length === 0) {
+                UIManager.mostrarVazio('meusPostsContainer', 'Você ainda não publicou');
+            } else {
+                container.innerHTML = posts.map(post => `
+                    <div class="meu-post">
+                        <div class="post-header">
+                            <h4>${post.titulo}</h4>
+                            <span class="preco">${Utils.formatCurrency(post.preco)}</span>
+                        </div>
+                        ${post.imagem ? `<img src="${post.imagem}" alt="${post.titulo}">` : ''}
+                        <div class="post-stats">
+                            ❤️ ${post.likes || 0} • 💬 ${post.comentarios?.length || 0}
+                        </div>
+                        <button class="btn btn-small btn-danger" 
+                                onclick="PostService.excluir('${post.id}')">
+                            🗑 Excluir
+                        </button>
+                    </div>
+                `).join('');
+            }
+        } catch (erro) {
+            UIManager.mostrarErro('meusPostsContainer');
+        }
+    },
+
+    verDetalhe(postId) {
+        // Implementar visualização detalhada
+        console.log('Ver detalhe:', postId);
+    },
+
+    renderizarCard(post) {
+        const isLiked = AuthService.isAuthenticated() && 
+                       post.likedBy?.includes(AuthService.usuarioAtual.id);
+        
+        return `
+            <article class="feed-post" data-id="${post.id}">
+                <header class="feed-post-header">
+                    <div class="avatar">✂️</div>
+                    <div class="user-info">
+                        <strong>${post.barbeiroNome || 'Barbearia RM'}</strong>
+                        <time>${Utils.formatTimeAgo(post.dataCriacao)}</time>
+                    </div>
+                </header>
+                
+                ${post.imagem ? `
+                    <img src="${post.imagem}" alt="${post.titulo}" class="post-imagem" loading="lazy">
+                ` : ''}
+                
+                ${post.video ? `
+                    <video controls preload="metadata" class="post-video">
+                        <source src="${post.video}" type="video/mp4">
+                    </video>
+                ` : ''}
+                
+                <div class="feed-post-body">
+                    <h3>${post.titulo}</h3>
+                    <p class="preco">${Utils.formatCurrency(post.preco)}</p>
+                    ${post.descricao ? `<p class="descricao">${Utils.truncateText(post.descricao)}</p>` : ''}
+                </div>
+                
+                <footer class="feed-post-actions">
+                    <button class="btn-like ${isLiked ? 'active' : ''}" 
+                            onclick="PostService.curtir('${post.id}')">
+                        ❤️ <span>${post.likes || 0}</span>
+                    </button>
+                    <button onclick="ComentarioService.abrir('${post.id}')">
+                        💬 <span>${post.comentarios?.length || 0}</span>
+                    </button>
+                </footer>
+            </article>
+        `;
+    }
+};
+
+// ==========================================================
+// SERVIÇO DE AGENDAMENTOS
+// ==========================================================
+const AgendamentoService = {
+    async criar(dados) {
+        if (!AuthService.isCliente()) throw new Error('Apenas clientes podem agendar');
+        
+        const { data, horario, tipo } = dados;
+        
+        if (!Utils.isValidDate(data)) throw new Error('Data inválida');
+        if (!horario) throw new Error('Horário inválido');
+        if (!tipo) throw new Error('Tipo de corte inválido');
+        
+        const agendamento = await FirebaseDB.criar('agendamentos', {
+            clienteId: AuthService.usuarioAtual.id,
+            clienteNome: AuthService.usuarioAtual.nome,
+            clienteEmail: AuthService.usuarioAtual.email,
+            data,
+            horario,
+            tipo,
+            status: 'pendente'
+        });
+        
+        return agendamento;
+    },
+
+    async confirmar(id) {
+        await FirebaseDB.atualizar('agendamentos', id, { status: 'confirmado' });
+    },
+
+    async cancelar(id) {
+        await FirebaseDB.atualizar('agendamentos', id, { status: 'cancelado' });
+    },
+
+    async carregarAgendaCliente() {
+        if (!AuthService.isCliente()) return;
+        
+        const container = document.getElementById('agendaClienteContainer');
+        if (!container) return;
+        
+        try {
+            const agendamentos = await FirebaseDB.buscarPorFiltro(
+                'agendamentos', 'clienteId', '==', AuthService.usuarioAtual.id
+            );
+            
+            if (agendamentos.length === 0) {
+                UIManager.mostrarVazio('agendaClienteContainer', 'Nenhum agendamento');
+                return;
+            }
+            
+            agendamentos.sort((a, b) => new Date(b.data + ' ' + b.horario) - new Date(a.data + ' ' + a.horario));
+            
+            container.innerHTML = agendamentos.map(a => `
+                <div class="agenda-item">
+                    <div class="agenda-info">
+                        <strong>${a.tipo}</strong>
+                        <span>📅 ${Utils.formatDate(a.data)} • ⏰ ${a.horario}</span>
+                    </div>
+                    <span class="badge badge-${a.status}">
+                        ${a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳'}
+                        ${a.status}
+                    </span>
+                </div>
+            `).join('');
+        } catch (erro) {
+            UIManager.mostrarErro('agendaClienteContainer');
+        }
+    },
+
+    async carregarAgendamentosBarbeiro() {
+        if (!AuthService.isBarbeiro()) return;
+        
+        const container = document.getElementById('agendamentosBarbeiroContainer');
+        if (!container) return;
+        
+        try {
+            const agendamentos = await FirebaseDB.listar('agendamentos');
+            
+            if (agendamentos.length === 0) {
+                UIManager.mostrarVazio('agendamentosBarbeiroContainer', 'Nenhum agendamento');
+                return;
+            }
+            
+            container.innerHTML = agendamentos.map(a => `
+                <div class="agenda-item">
+                    <div class="agenda-info">
+                        <strong>👤 ${a.clienteNome || 'Cliente'}</strong>
+                        <span>📅 ${Utils.formatDate(a.data)} • ⏰ ${a.horario}</span>
+                        <span>✂️ ${a.tipo}</span>
+                    </div>
+                    <span class="badge badge-${a.status}">
+                        ${a.status === 'confirmado' ? '✅' : a.status === 'cancelado' ? '❌' : '⏳'}
+                        ${a.status}
+                    </span>
+                    ${a.status === 'pendente' ? `
+                        <div class="btn-group">
+                            <button class="btn btn-small btn-success" 
+                                    onclick="AgendamentoService.confirmar('${a.id}')">
+                                ✅
+                            </button>
+                            <button class="btn btn-small btn-danger" 
+                                    onclick="AgendamentoService.cancelar('${a.id}')">
+                                ❌
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        } catch (erro) {
+            UIManager.mostrarErro('agendamentosBarbeiroContainer');
+        }
+    }
+};
+
+// ==========================================================
+// SERVIÇO FINANCEIRO
+// ==========================================================
+const FinanceiroService = {
+    async calcularFaturamento() {
+        if (!AuthService.isBarbeiro()) return;
+        
+        try {
+            const hoje = new Date();
+            const hojeStr = hoje.toISOString().split('T')[0];
+            
+            const agendamentos = await FirebaseDB.buscarPorFiltro(
+                'agendamentos', 'status', '==', 'confirmado'
+            );
+            
+            let totalHoje = 0;
+            let totalSemana = 0;
+            let totalMes = 0;
+            let totalAno = 0;
+            
+            agendamentos.forEach(a => {
+                const valor = 35; // Valor base - idealmente viria do banco
+                const dataAgendamento = new Date(a.data);
+                
+                if (a.data === hojeStr) totalHoje += valor;
+                
+                // Calcular semana
+                const inicioSemana = new Date(hoje);
+                inicioSemana.setDate(hoje.getDate() - hoje.getDay());
+                if (dataAgendamento >= inicioSemana) totalSemana += valor;
+                
+                // Calcular mês
+                if (dataAgendamento.getMonth() === hoje.getMonth() && 
+                    dataAgendamento.getFullYear() === hoje.getFullYear()) {
+                    totalMes += valor;
+                }
+                
+                // Calcular ano
+                if (dataAgendamento.getFullYear() === hoje.getFullYear()) {
+                    totalAno += valor;
+                }
+            });
+            
+            document.getElementById('faturamentoHoje').textContent = Utils.formatCurrency(totalHoje);
+            document.getElementById('faturamentoSemana').textContent = Utils.formatCurrency(totalSemana);
+            document.getElementById('faturamentoMes').textContent = Utils.formatCurrency(totalMes);
+            document.getElementById('faturamentoAno').textContent = Utils.formatCurrency(totalAno);
+            
+        } catch (erro) {
+            console.error('Erro ao calcular faturamento:', erro);
+        }
+    }
+};
+
+// ==========================================================
+// GERENCIADOR DE LIVE
+// ==========================================================
+const LiveManager = {
+    ativa: false,
+    stream: null,
+    viewerId: null,
+    chatInterval: null,
+    frameInterval: null,
+
+    async carregar() {
+        try {
+            const doc = await FirebaseDB.db.collection('lives').doc('live_atual').get();
+            
+            if (doc.exists && doc.data().ativa) {
+                this.ativa = true;
+                this.mostrarPlayer();
+                this.iniciarChatListener();
+                
+                if (AuthService.isAuthenticated()) {
+                    this.adicionarViewer();
+                }
+            } else {
+                this.ativa = false;
+                this.mostrarPlaceholder();
+            }
+        } catch (erro) {
+            console.error('Erro ao carregar live:', erro);
+            this.mostrarPlaceholder();
+        }
+    },
+
+    mostrarPlayer() {
+        document.getElementById('livePlaceholder').style.display = 'none';
+        document.getElementById('livePlayer').style.display = 'block';
+        document.getElementById('liveStatus').style.display = 'block';
+        
+        if (AuthService.isBarbeiro()) {
+            document.getElementById('liveControls').style.display = 'block';
+        }
+    },
+
+    mostrarPlaceholder() {
+        document.getElementById('livePlaceholder').style.display = 'flex';
+        document.getElementById('livePlayer').style.display = 'none';
+        document.getElementById('liveStatus').style.display = 'none';
+        document.getElementById('liveControls').style.display = 'none';
+    },
+
+    async iniciar() {
+        if (!AuthService.isBarbeiro()) {
+            UIManager.mostrarToast('Apenas barbeiros podem iniciar live', 'error');
+            return;
+        }
+        
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: true
+            });
+            
+            const videoEl = document.getElementById('liveVideo');
+            videoEl.srcObject = this.stream;
+            videoEl.style.display = 'block';
+            
+            // Criar live no banco
+            const titulo = document.getElementById('liveTitulo').value || 'Live da Barbearia RM';
+            
+            await FirebaseDB.db.collection('lives').doc('live_atual').set({
+                id: 'live_atual',
+                barbeiroId: AuthService.usuarioAtual.id,
+                barbeiroNome: AuthService.usuarioAtual.nome,
+                titulo,
+                ativa: true,
+                chat: [],
+                viewers: 0,
+                likes: 0,
+                dataInicio: new Date().toISOString()
+            });
+            
+            this.ativa = true;
+            this.mostrarPlayer();
+            UIManager.mostrarToast('🔴 Live iniciada!', 'success');
+            
+        } catch (erro) {
+            console.error('Erro ao iniciar live:', erro);
+            UIManager.mostrarToast('Erro ao acessar câmera', 'error');
+        }
+    },
+
+    async encerrar() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+        
+        if (this.chatInterval) clearInterval(this.chatInterval);
+        if (this.frameInterval) clearInterval(this.frameInterval);
+        
+        await FirebaseDB.db.collection('lives').doc('live_atual').update({
+            ativa: false,
+            dataFim: new Date().toISOString()
+        });
+        
+        this.ativa = false;
+        this.mostrarPlaceholder();
+        UIManager.mostrarToast('Live encerrada', 'info');
+    },
+
+    iniciarChatListener() {
+        this.chatInterval = setInterval(async () => {
+            const doc = await FirebaseDB.db.collection('lives').doc('live_atual').get();
+            if (doc.exists && doc.data().ativa) {
+                this.atualizarChat(doc.data().chat || []);
+            }
+        }, 2000);
+    },
+
+    atualizarChat(mensagens) {
+        const container = document.getElementById('liveChatContainer');
+        if (!container) return;
+        
+        container.innerHTML = mensagens.map(msg => `
+            <div class="chat-message">
+                <strong>${msg.autor}</strong>
+                <span>${msg.texto}</span>
+            </div>
+        `).join('');
+        
+        container.scrollTop = container.scrollHeight;
+    },
+
+    async enviarMensagem(texto) {
+        if (!this.ativa) return;
+        
+        const autor = AuthService.isAuthenticated() ? 
+            AuthService.usuarioAtual.nome : 'Visitante';
+        
+        await FirebaseDB.db.collection('lives').doc('live_atual').update({
+            chat: firebase.firestore.FieldValue.arrayUnion({
+                autor,
+                texto,
+                data: new Date().toISOString()
+            })
+        });
+    },
+
+    adicionarViewer() {
+        // Implementar contagem de viewers
+    }
+};
+
+// ==========================================================
+// INICIALIZAÇÃO DA APLICAÇÃO
+// ==========================================================
+async function iniciarApp() {
+    console.log('🚀 Iniciando Barbearia RM...');
+    
+    // Inicializar Firebase
+    FirebaseDB.inicializar();
+    
+    // Inicializar UI
+    UIManager.init();
+    
+    // Tentar restaurar sessão
+    const sessaoRestaurada = await AuthService.restaurarSessao();
+    
+    if (sessaoRestaurada) {
+        console.log('✅ Sessão restaurada:', AuthService.usuarioAtual.nome);
+        UIManager.navegarPara(AuthService.isCliente() ? 'homeCliente' : 'homeBarbeiro');
+    } else {
+        console.log('👋 Nenhuma sessão ativa');
+        UIManager.navegarPara('login');
+    }
+}
+
+// Iniciar quando DOM estiver pronto
+document.addEventListener('DOMContentLoaded', iniciarApp);
+
+// Limpar recursos ao sair
+window.addEventListener('beforeunload', () => {
+    if (LiveManager.ativa) {
+        LiveManager.encerrar();
+    }
 });
-window.addEventListener('beforeunload',function(){removerViewerLive();});
+
+console.log('✅ Script carregado com sucesso!');
