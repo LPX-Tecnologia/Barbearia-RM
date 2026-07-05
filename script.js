@@ -28,7 +28,8 @@ function mostrarTela(t){
 function atualizarBottomNav(t){
     let nc=document.getElementById('bottomNavCliente'),nb=document.getElementById('bottomNavBarbeiro');
     if(nc)nc.style.display='none';if(nb)nb.style.display='none';
-    let tc=['homeCliente','agendamento','galeriaCortes','reels','anuncios','live','perfilCliente','socialCliente'],tb=['homeBarbeiro','criarPost','extrato','criarPlano','horariosTrabalho','perfilBarbeiro','socialBarbeiro'];
+    let tc=['homeCliente','agendamento','galeriaCortes','reels','anuncios','live','perfilCliente','socialCliente'];
+    let tb=['homeBarbeiro','criarPost','extrato','criarPlano','horariosTrabalho','perfilBarbeiro','socialBarbeiro'];
     if(tc.includes(t)&&clienteLogado){if(nc)nc.style.display='flex';}
     else if(tb.includes(t)&&barbeiroLogado){if(nb)nb.style.display='flex';}
 }
@@ -157,9 +158,7 @@ function sairBarbeiro(){
 // CLIENTES ONLINE
 // ==========================================================
 async function marcarClienteOnline(cliente){
-    try{
-        await db.collection('clientes').doc(cliente.id).update({online:!0,ultimoAcesso:new Date().toISOString()});
-    }catch(e){}
+    try{await db.collection('clientes').doc(cliente.id).update({online:!0,ultimoAcesso:new Date().toISOString()});}catch(e){}
 }
 async function removerClienteOnline(id){
     try{await db.collection('clientes').doc(id).update({online:!1});}catch(e){}
@@ -349,16 +348,20 @@ async function enviarMensagemChat(){
 function carregarLiveTela(){
     let controls=document.getElementById('liveControlsCard');
     let btnIniciar=document.getElementById('btnIniciarLiveNaTela');
+    let placeholder=document.getElementById('livePlaceholder');
+    
     if(barbeiroLogado){
         // BARBEIRO: pode fazer live
         if(controls)controls.style.display='none';
         if(btnIniciar)btnIniciar.style.display='inline-block';
+        if(placeholder){
+            placeholder.innerHTML='<div style="text-align:center;color:white;"><div style="font-size:50px;">🔴</div><p style="margin-top:8px;color:#B0B0B0;">Estúdio offline</p><button class="btn btn-small btn-primary" id="btnIniciarLiveNaTela" style="margin-top:8px;">🎥 INICIAR LIVE</button></div>';
+            document.getElementById('btnIniciarLiveNaTela')?.addEventListener('click',iniciarLive);
+        }
     }else if(clienteLogado){
         // CLIENTE: só assiste
         if(controls)controls.style.display='none';
         if(btnIniciar)btnIniciar.style.display='none';
-        // Mostrar mensagem que é só para assistir
-        let placeholder=document.getElementById('livePlaceholder');
         if(placeholder){
             placeholder.innerHTML='<div style="text-align:center;color:white;"><div style="font-size:50px;">👀</div><p style="margin-top:8px;color:#B0B0B0;">Assista a live do barbeiro</p><p style="color:#aaa;font-size:11px;">Apenas barbeiros podem transmitir</p></div>';
         }
@@ -403,7 +406,7 @@ function pararLive(){
     if(liveStream){liveStream.getTracks().forEach(t=>t.stop());liveStream=null;}
     liveAtiva=!1;
     let v=document.getElementById('liveVideo');if(v)v.srcObject=null;
-    let p=document.getElementById('livePlaceholder');if(p){p.style.display='flex';p.innerHTML='<div style="text-align:center;color:white;"><div style="font-size:50px;">🔴</div><p style="margin-top:8px;color:#B0B0B0;">Estúdio offline</p><button class="btn btn-small btn-primary" id="btnIniciarLiveNaTela" style="margin-top:8px;">🎥 INICIAR LIVE</button></div>';if(!barbeiroLogado){let b=document.getElementById('btnIniciarLiveNaTela');if(b)b.style.display='none';}}
+    let p=document.getElementById('livePlaceholder');if(p){p.style.display='flex';carregarLiveTela();}
     let ct=document.getElementById('liveControlsCard');if(ct)ct.style.display='none';
     let cl=document.getElementById('clipsCard');if(cl)cl.style.display='none';
     let st=document.getElementById('liveStatus');if(st)st.style.display='none';
@@ -456,6 +459,7 @@ function pararAnuncioAutomatico(){anuncioAutoAtivo=!1;if(anuncioAutoInterval){cl
 // EVENT LISTENERS
 // ==========================================================
 function setupEventListeners(){
+    // Login
     document.getElementById('btnMostrarLoginCliente')?.addEventListener('click',()=>mostrarFormularioLogin('cliente'));
     document.getElementById('btnMostrarLoginBarbeiro')?.addEventListener('click',()=>mostrarFormularioLogin('barbeiro'));
     document.getElementById('btnEntrarCliente')?.addEventListener('click',loginCliente);
@@ -464,47 +468,66 @@ function setupEventListeners(){
     document.getElementById('btnCriarContaBarbeiro')?.addEventListener('click',()=>mostrarTela('cadastroBarbeiro'));
     document.getElementById('btnVoltarLoginCliente')?.addEventListener('click',fecharFormulariosLogin);
     document.getElementById('btnVoltarLoginBarbeiro')?.addEventListener('click',fecharFormulariosLogin);
+    
+    // Cadastro
     document.getElementById('btnFinalizarCadastroCliente')?.addEventListener('click',cadastrarCliente);
     document.getElementById('btnFinalizarCadastroBarbeiro')?.addEventListener('click',cadastrarBarbeiro);
     document.getElementById('btnVoltarCadastroCliente')?.addEventListener('click',()=>mostrarTela('login'));
     document.getElementById('btnVoltarCadastroBarbeiro')?.addEventListener('click',()=>mostrarTela('login'));
+    
+    // Home Cliente
     document.getElementById('btnAgendarCorte')?.addEventListener('click',()=>mostrarTela('agendamento'));
     document.getElementById('btnGaleriaCliente')?.addEventListener('click',()=>mostrarTela('galeriaCortes'));
     document.getElementById('btnReelsCliente')?.addEventListener('click',()=>mostrarTela('reels'));
     document.getElementById('btnAnunciosCliente')?.addEventListener('click',()=>mostrarTela('anuncios'));
     document.getElementById('btnLiveCliente')?.addEventListener('click',()=>mostrarTela('live'));
-    document.getElementById('btnSocialCliente')?.addEventListener('click',()=>mostrarTela('socialCliente'));
+    
+    // Home Barbeiro
     document.getElementById('btnCriarPlano')?.addEventListener('click',()=>mostrarTela('criarPlano'));
     document.getElementById('btnNovoPost')?.addEventListener('click',()=>mostrarTela('criarPost'));
     document.getElementById('btnExtratoBarbeiro')?.addEventListener('click',()=>mostrarTela('extrato'));
     document.getElementById('btnHorariosBarbeiro')?.addEventListener('click',()=>mostrarTela('horariosTrabalho'));
     document.getElementById('btnAnunciosBarbeiro')?.addEventListener('click',()=>mostrarTela('anuncios'));
     document.getElementById('btnLiveBarbeiro')?.addEventListener('click',()=>mostrarTela('live'));
-    document.getElementById('btnSocialBarbeiro')?.addEventListener('click',()=>mostrarTela('socialBarbeiro'));
+    
+    // Agendamento
     document.getElementById('btnConfirmarAgendamento')?.addEventListener('click',agendarCorte);
     document.getElementById('btnVoltarAgendamento')?.addEventListener('click',()=>mostrarTela('homeCliente'));
+    
+    // Perfis
     document.getElementById('btnSalvarPerfilCliente')?.addEventListener('click',salvarPerfilCliente);
     document.getElementById('btnSairCliente')?.addEventListener('click',sairCliente);
     document.getElementById('btnSalvarPerfilBarbeiro')?.addEventListener('click',salvarPerfilBarbeiro);
     document.getElementById('btnSairBarbeiro')?.addEventListener('click',sairBarbeiro);
+    
+    // Avatar upload
     document.getElementById('perfilClienteAvatar')?.addEventListener('click',()=>document.getElementById('fotoClienteInput').click());
     document.getElementById('perfilBarbeiroAvatar')?.addEventListener('click',()=>document.getElementById('fotoBarbeiroInput').click());
     document.getElementById('fotoClienteInput')?.addEventListener('change',function(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async function(ev){let foto=ev.target.result;document.querySelector('#perfilClienteAvatar img').src=foto;if(clienteLogado){clienteLogado.fotoPerfil=foto;await db.collection('clientes').doc(clienteLogado.id).update({fotoPerfil:foto});salvarSessao('cliente',clienteLogado);}};r.readAsDataURL(f);});
     document.getElementById('fotoBarbeiroInput')?.addEventListener('change',function(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=async function(ev){let foto=ev.target.result;document.querySelector('#perfilBarbeiroAvatar img').src=foto;if(barbeiroLogado){barbeiroLogado.fotoPerfil=foto;await db.collection('barbeiros').doc(barbeiroLogado.id).update({fotoPerfil:foto});salvarSessao('barbeiro',barbeiroLogado);}};r.readAsDataURL(f);});
+    
+    // Comentários
     document.getElementById('btnEnviarComentario')?.addEventListener('click',adicionarComentario);
     document.getElementById('btnFecharComentario')?.addEventListener('click',fecharModalComentario);
+    
+    // Navegação Cliente
     document.getElementById('navHomeCliente')?.addEventListener('click',()=>mostrarTela('homeCliente'));
     document.getElementById('navAgendarCliente')?.addEventListener('click',()=>mostrarTela('agendamento'));
-    document.getElementById('navGaleriaCliente')?.addEventListener('click',()=>mostrarTela('galeriaCortes'));
-    document.getElementById('navLiveCliente')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('navSocialCliente')?.addEventListener('click',()=>mostrarTela('socialCliente'));
+    document.getElementById('navLiveCliente')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('navPerfilCliente')?.addEventListener('click',()=>mostrarTela('perfilCliente'));
+    
+    // Navegação Barbeiro
     document.getElementById('navHomeBarbeiro')?.addEventListener('click',()=>mostrarTela('homeBarbeiro'));
     document.getElementById('navPostarBarbeiro')?.addEventListener('click',()=>mostrarTela('criarPost'));
-    document.getElementById('navExtratoBarbeiro')?.addEventListener('click',()=>mostrarTela('extrato'));
-    document.getElementById('navLiveBarbeiro')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('navSocialBarbeiro')?.addEventListener('click',()=>mostrarTela('socialBarbeiro'));
+    document.getElementById('navLiveBarbeiro')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('navPerfilBarbeiro')?.addEventListener('click',()=>mostrarTela('perfilBarbeiro'));
+    
+    // Social
+    document.getElementById('btnVoltarSocialCliente')?.addEventListener('click',()=>mostrarTela('homeCliente'));
+    document.getElementById('btnVoltarSocialBarbeiro')?.addEventListener('click',()=>mostrarTela('homeBarbeiro'));
+    
     // Live
     document.getElementById('btnIniciarLiveNaTela')?.addEventListener('click',iniciarLive);
     document.getElementById('btnRecordClip')?.addEventListener('click',iniciarGravacaoTrecho);
@@ -516,20 +539,35 @@ function setupEventListeners(){
     document.getElementById('btnTelaAnuncio')?.addEventListener('click',()=>mostrarTelaLive('anuncio'));
     document.getElementById('btnFinalizarLive')?.addEventListener('click',finalizarLive);
     document.getElementById('btnSendLiveChat')?.addEventListener('click',enviarChatLive);
-    document.getElementById('btnVoltarLive')?.addEventListener('click',()=>{if(liveAtiva)pararLive();mostrarTela('homeCliente');});
+    
+    // Voltar da Live - CORRIGIDO: volta pra tela certa
+    document.getElementById('btnVoltarLive')?.addEventListener('click',()=>{
+        if(liveAtiva)pararLive();
+        if(barbeiroLogado)mostrarTela('homeBarbeiro');
+        else if(clienteLogado)mostrarTela('homeCliente');
+        else mostrarTela('login');
+    });
+    
     document.getElementById('liveChatInput')?.addEventListener('keypress',e=>{if(e.key==='Enter')enviarChatLive();});
+    
     // Sorteio
     document.getElementById('btnIniciarSorteio')?.addEventListener('click',function(){let p=document.getElementById('premioSorteioInput').value.trim()||'Corte Grátis';iniciarSorteio(p);document.getElementById('sorteioStatus').textContent='🎉 Ativo!';document.getElementById('sorteioStatus').style.color='#00cc66';});
     document.getElementById('btnRealizarSorteio')?.addEventListener('click',function(){realizarSorteio();document.getElementById('sorteioStatus').textContent='Pronto';document.getElementById('sorteioStatus').style.color='#aaa';});
+    
     // Anúncio auto
     document.getElementById('btnIniciarAnuncioAuto')?.addEventListener('click',iniciarAnuncioAutomatico);
     document.getElementById('btnPararAnuncioAuto')?.addEventListener('click',pararAnuncioAutomatico);
-    // Chat cliente
+    
+    // Chat privado
     document.getElementById('btnFecharChatCliente')?.addEventListener('click',fecharChatCliente);
     document.getElementById('btnEnviarChatCliente')?.addEventListener('click',enviarMensagemChat);
 }
 
+// ==========================================================
+// INICIALIZAÇÃO
+// ==========================================================
 document.addEventListener('DOMContentLoaded',async function(){
+    console.log('🚀 Barbearia RM iniciando...');
     setupEventListeners();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     let nc=document.getElementById('bottomNavCliente'),nb=document.getElementById('bottomNavBarbeiro');
@@ -542,4 +580,9 @@ document.addEventListener('DOMContentLoaded',async function(){
     }else{document.getElementById('loginScreen').classList.add('active');}
     if(clienteLogado||barbeiroLogado)verificarLiveBadge();
     console.log('✅ Pronto!');
+});
+
+// Limpar ao sair da página
+window.addEventListener('beforeunload',()=>{
+    if(clienteLogado)removerClienteOnline(clienteLogado.id);
 });
