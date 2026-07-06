@@ -22,6 +22,8 @@
         @keyframes brilhoAnuncio{0%,100%{box-shadow:0 0 20px rgba(255,215,0,.3)}50%{box-shadow:0 0 60px rgba(255,215,0,.8),0 0 100px rgba(255,165,0,.4)}}
         @keyframes floatHeart{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-200px) scale(1.5)}}
         @keyframes floatReaction{0%{opacity:1;transform:translateY(0) scale(0.5)}50%{opacity:1;transform:translateY(-100px) scale(1.2)}100%{opacity:0;transform:translateY(-250px) scale(0.3)}}
+        @keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes typingDot{0%,60%,100%{opacity:0.3;transform:scale(0.8)}30%{opacity:1;transform:scale(1.2)}}
         
         .live-badge{display:inline-block;background:#F00;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;animation:livePulse 2s infinite}
         .login-form-container{display:none;margin-top:16px}
@@ -43,11 +45,35 @@
         .galeria-item-price{color:#D4A84B;font-weight:700;font-size:16px}
         #livePlayerContainer{border:2px solid #F00;box-shadow:0 0 20px rgba(255,0,0,.3)}
         .anuncio-ativo{animation:brilhoAnuncio 2s ease-in-out infinite}
-        
         .cliente-online-card{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:12px;cursor:pointer;transition:0.3s;border:1px solid rgba(0,200,100,0.2);margin-bottom:6px}
         .cliente-online-card:hover{background:rgba(0,200,100,0.08);border-color:#00cc66;transform:translateY(-2px)}
         .cliente-online-card img{width:45px;height:45px;border-radius:50%;object-fit:cover;border:2px solid #00cc66}
         .cliente-online-card strong{color:white;font-size:14px}
+
+        /* CHAT MESSENGER */
+        .chat-messenger{display:flex;flex-direction:column;height:350px;background:#1a1a1a;border-radius:16px;overflow:hidden}
+        .chat-messenger-header{padding:12px 16px;background:#222;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:10px}
+        .chat-messenger-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:4px;background:#111}
+        .chat-bubble{max-width:80%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.4;position:relative;word-wrap:break-word;animation:msgIn 0.3s ease-out}
+        .chat-bubble.sent{align-self:flex-end;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;border-bottom-right-radius:4px}
+        .chat-bubble.received{align-self:flex-start;background:#2a2a2a;color:#fff;border-bottom-left-radius:4px}
+        .chat-bubble .msg-time{font-size:9px;opacity:0.7;margin-top:4px;text-align:right}
+        .chat-bubble .msg-sender{font-size:10px;font-weight:700;color:#D4A84B;margin-bottom:2px}
+        .chat-bubble.audio-bubble{display:flex;align-items:center;gap:8px;min-width:150px}
+        .chat-bubble.audio-bubble audio{height:30px;width:160px}
+        .typing-indicator{align-self:flex-start;padding:8px 14px;background:#2a2a2a;border-radius:18px;font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px}
+        .typing-dots{display:flex;gap:3px}
+        .typing-dots span{width:6px;height:6px;background:#aaa;border-radius:50%;animation:typingDot 1.4s infinite}
+        .typing-dots span:nth-child(2){animation-delay:0.2s}
+        .typing-dots span:nth-child(3){animation-delay:0.4s}
+        .chat-messenger-footer{padding:10px;background:#222;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,0.1)}
+        .chat-messenger-footer input{flex:1;padding:10px 16px;background:#333;border:1px solid rgba(255,255,255,0.1);border-radius:25px;color:#fff;font-size:13px;font-family:inherit;outline:none}
+        .chat-messenger-footer input:focus{border-color:#D4A84B}
+        .btn-mic{width:40px;height:40px;border-radius:50%;border:none;background:#333;color:#fff;font-size:18px;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center}
+        .btn-mic:hover{background:#D4A84B;color:#1a1a1a}
+        .btn-mic.recording{background:#F00;animation:pulse 1s infinite}
+        .btn-send{width:40px;height:40px;border-radius:50%;border:none;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;font-size:16px;cursor:pointer;transition:0.3s}
+        .btn-send:hover{transform:scale(1.1)}
     </style>
 </head>
 <body>
@@ -153,7 +179,7 @@
     <!-- EXTRATO -->
     <section class="screen" id="extratoScreen"><h2 class="screen-title">📊 EXTRATO</h2><div class="card"><p style="color:#6B7280;">Extrato</p></div><button class="btn btn-outline" id="btnVoltarExtrato">← Voltar</button></section>
 
-    <!-- LIVE ESTÚDIO COMPLETO -->
+    <!-- ==================== LIVE ESTÚDIO COMPLETO ==================== -->
     <section class="screen" id="liveScreen">
         <h2 class="screen-title">🔴 ESTÚDIO AO VIVO</h2>
         <div class="card" id="livePlayerContainer" style="padding:0;overflow:hidden;background:#000;position:relative;">
@@ -171,6 +197,7 @@
         </div>
         <div id="liveStatus" class="card" style="text-align:center;display:none;"><span style="color:#F00;font-weight:700;">🔴 AO VIVO</span><span id="liveDuration" style="color:#aaa;font-size:12px;margin-left:8px;">00:00:00</span></div>
         
+        <!-- CONTROLES BARBEIRO -->
         <div class="card" id="liveControlsCard" style="display:none;">
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="btn btn-small btn-primary" id="btnRecordClip">⏺️ Gravar</button><button class="btn btn-small btn-danger" id="btnStopClip" style="display:none;">⏹️ Parar</button><button class="btn btn-small btn-outline" id="btnSaveClipsLive">💾 Salvar</button><button class="btn btn-small btn-outline" id="btnSwitchCamera">🔄 Câmera</button></div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="btn btn-small btn-outline" id="btnTelaCamera">🎥 Câmera</button><button class="btn btn-small btn-outline" id="btnTelaComercial">📺 Comercial</button><button class="btn btn-small btn-outline" id="btnTelaAnuncio">📢 Anúncio</button><button class="btn btn-small btn-danger" id="btnFinalizarLive">⏹️ Finalizar</button></div>
@@ -179,27 +206,42 @@
             <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;"><span style="font-size:10px;color:#aaa;">✨</span><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('none')" style="font-size:10px;padding:4px 8px;">Normal</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('bw')" style="font-size:10px;padding:4px 8px;">⬛ P&B</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('sepia')" style="font-size:10px;padding:4px 8px;">🟫 Sépia</button><button class="btn btn-small btn-outline" onclick="aplicarEfeitoLive('neon')" style="font-size:10px;padding:4px 8px;">💜 Neon</button></div>
         </div>
         
+        <!-- INTERAÇÕES -->
         <div class="card" style="text-align:center;"><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-small btn-danger" onclick="curtirLive()">❤️ <span id="liveLikeCount">0</span></button><button class="btn btn-small btn-outline" onclick="reagirLive('🔥')" style="font-size:18px;">🔥</button><button class="btn btn-small btn-outline" onclick="reagirLive('👏')" style="font-size:18px;">👏</button><button class="btn btn-small btn-outline" onclick="reagirLive('😍')" style="font-size:18px;">😍</button><button class="btn btn-small btn-outline" onclick="reagirLive('🎉')" style="font-size:18px;">🎉</button></div></div>
         
-        <div class="card"><h4>💬 Chat Ao Vivo</h4><div id="liveChatMessages" style="max-height:200px;min-height:80px;overflow-y:auto;margin-bottom:8px;background:rgba(0,0,0,0.3);border-radius:8px;padding:10px;"><p style="color:#aaa;text-align:center;">💬 Chat vazio</p></div><div style="display:flex;gap:6px;"><input type="text" id="liveChatInput" placeholder="Mensagem..." style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12px;"><button class="btn btn-small btn-primary" id="btnSendLiveChat">📤</button></div><div style="margin-top:6px;font-size:9px;color:#666;text-align:center;">💡 Digite <span style="color:#FFD700;">!PARTICIPAR</span> para sorteio</div></div>
+        <!-- CHAT ESTILO MESSENGER -->
+        <div class="card" style="padding:0;overflow:hidden;">
+            <div class="chat-messenger">
+                <div class="chat-messenger-header">
+                    <span style="font-size:18px;">💬</span>
+                    <span style="font-weight:700;">Chat Ao Vivo</span>
+                    <span id="chatOnlineBadge" style="font-size:10px;color:#00cc66;margin-left:auto;"></span>
+                </div>
+                <div class="chat-messenger-body" id="liveChatMessages">
+                    <p style="color:#aaa;text-align:center;font-size:12px;align-self:center;">💬 Seja o primeiro a comentar!</p>
+                </div>
+                <div id="typingIndicator" class="typing-indicator" style="display:none;">
+                    <span style="font-size:10px;">digitando</span>
+                    <div class="typing-dots"><span></span><span></span><span></span></div>
+                </div>
+                <div class="chat-messenger-footer">
+                    <button class="btn-mic" id="btnMic" title="Gravar áudio">🎤</button>
+                    <input type="text" id="liveChatInput" placeholder="Digite uma mensagem..." autocomplete="off">
+                    <button class="btn-send" id="btnSendLiveChat">➤</button>
+                </div>
+            </div>
+        </div>
         
+        <!-- COMPARTILHAR -->
         <div class="card"><h4>📤 Compartilhar</h4><div style="display:flex;gap:6px;"><button class="btn btn-small btn-outline" onclick="compartilharLive('whatsapp')">💬 WhatsApp</button><button class="btn btn-small btn-outline" onclick="compartilharLive('link')">🔗 Copiar Link</button></div></div>
         <button class="btn btn-outline" id="btnVoltarLive" style="margin-top:10px;">← Voltar</button>
     </section>
 
-    <!-- SOCIAL CLIENTE -->
+    <!-- SOCIAL CLIENTE / BARBEIRO / PERFIS / DEMAIS TELAS -->
     <section class="screen" id="socialClienteScreen"><h2 class="screen-title">👥 CLIENTES ONLINE</h2><div class="card"><div id="socialClientesOnline"></div></div><button class="btn btn-outline" id="btnVoltarSocialCliente">← Voltar</button></section>
-
-    <!-- SOCIAL BARBEIRO -->
     <section class="screen" id="socialBarbeiroScreen"><h2 class="screen-title">👥 REDE SOCIAL</h2><div class="card"><div class="financeiro-resumo"><div class="financeiro-item"><span>👤 Total</span><strong id="totalClientesSocial">0</strong></div><div class="financeiro-item"><span>🟢 Online</span><strong id="onlineAgora" style="color:#0c6;">0</strong></div></div></div><div class="card"><h3>🟢 Online</h3><div id="socialBarbeiroOnline"></div></div><div class="card"><h3>👤 Todos</h3><div id="socialBarbeiroTodos"></div></div><button class="btn btn-outline" id="btnVoltarSocialBarbeiro">← Voltar</button></section>
-
-    <!-- PERFIL CLIENTE -->
     <section class="screen" id="perfilClienteScreen"><div class="profile-header"><div class="profile-avatar" id="perfilClienteAvatar"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoClienteInput" accept="image/*" style="display:none"><h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail"></p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" id="btnSalvarPerfilCliente">💾 SALVAR</button></div><div class="card"><h3>💬 Minhas Conversas</h3><div id="perfilClienteConversas"><p style="color:#6B7280;">Carregando...</p></div></div><button class="btn btn-danger" id="btnSairCliente">🚪 SAIR</button></section>
-
-    <!-- PERFIL BARBEIRO -->
     <section class="screen" id="perfilBarbeiroScreen"><div class="profile-header"><div class="profile-avatar" id="perfilBarbeiroAvatar"><img src="logobarbearia-rm.png" style="width:100%;height:100%;object-fit:cover;"><div class="camera-icon">📷</div></div><input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none"><h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail"></p><p style="color:#D4A84B;">👥 <span id="totalClientesBarbeiro">0</span> cadastrados</p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" id="btnSalvarPerfilBarbeiro">💾 SALVAR</button></div><button class="btn btn-danger" id="btnSairBarbeiro">🚪 SAIR</button></section>
-
-    <!-- DEMAIS TELAS -->
     <section class="screen" id="galeriaCortesScreen"><h2 class="screen-title">💇 GALERIA</h2><div id="galeriaContainer" class="galeria-grid"></div><button class="btn btn-outline" id="btnVoltarGaleria">← Voltar</button></section>
     <section class="screen" id="reelsScreen"><h2 class="screen-title">🎬 REELS</h2><div id="reelsContainer"></div><button class="btn btn-outline" id="btnVoltarReels">← Voltar</button></section>
     <section class="screen" id="horariosTrabalhoScreen"><h2 class="screen-title">⏰ HORÁRIOS</h2><div class="card"><label class="checkbox-label"><input type="checkbox" id="diaSegunda" checked> Segunda</label><label class="checkbox-label"><input type="checkbox" id="diaTerca" checked> Terça</label><label class="checkbox-label"><input type="checkbox" id="diaQuarta" checked> Quarta</label><label class="checkbox-label"><input type="checkbox" id="diaQuinta" checked> Quinta</label><label class="checkbox-label"><input type="checkbox" id="diaSexta" checked> Sexta</label><label class="checkbox-label"><input type="checkbox" id="diaSabado" checked> Sábado</label></div><div class="card"><div class="input-group"><label>⏰ Início</label><input type="time" id="horarioInicio" value="09:00"></div><div class="input-group"><label>⏰ Fim</label><input type="time" id="horarioFim" value="18:00"></div></div><button class="btn btn-primary" id="btnSalvarHorarios">💾 SALVAR</button><button class="btn btn-outline" id="btnVoltarHorarios">← Voltar</button></section>
