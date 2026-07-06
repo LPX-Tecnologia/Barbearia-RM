@@ -1,5 +1,5 @@
 /* ==========================================================
-   BARBEARIA RM - LIVE VIA WebRTC + FIREBASE
+   BARBEARIA RM - COMPLETO FINAL COM CHAT MESSENGER
    ========================================================== */
 const firebaseConfig={apiKey:"AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",authDomain:"barbearia-rm.firebaseapp.com",projectId:"barbearia-rm",storageBucket:"barbearia-rm.firebasestorage.app",messagingSenderId:"512819922057",appId:"1:512819922057:web:6a913791cb6435e4f63258",measurementId:"G-TKVLVLPBJH"};
 firebase.initializeApp(firebaseConfig);
@@ -8,10 +8,11 @@ db.settings({ignoreUndefinedProperties:true,merge:true});
 console.log('🔥 Firebase OK');
 
 let clienteLogado=null,barbeiroLogado=null,postSelecionadoId=null;
-let liveStream=null,liveAtiva=!1,gravandoTrecho=!1,mediaRecorder=null,recordedChunks=[],trechosGravados=[],efeitoLiveAtual='none',telaLiveAtual='camera',liveTimerInterval=null,liveDuracao=0,liveFacingMode='user';
+let liveStream=null,liveStreamLocal=null,liveAtiva=!1,gravandoTrecho=!1,mediaRecorder=null,recordedChunks=[],trechosGravados=[],efeitoLiveAtual='none',telaLiveAtual='camera',liveTimerInterval=null,liveDuracao=0,liveFacingMode='user';
 let anuncioAutoAtivo=!1,anuncioAutoInterval=null,anuncioAutoTimeout=null,anuncioImagemAuto=null,anuncioTextoAuto='';
 let sorteioAtivo=!1,participantesSorteio=[],premioSorteio='';
 let liveAtivaGeral=!1,liveChatListener=null;
+let mediaRecorderAudio=null,audioChunks=[],gravandoAudio=!1,typingTimeout=null;
 
 // ==========================================================
 // NAVEGAÇÃO
@@ -93,7 +94,7 @@ async function carregarTodosClientes(){try{let sn=await db.collection('clientes'
 async function carregarClientesCadastrados(){if(!barbeiroLogado)return;let el=document.getElementById('totalClientesBarbeiro');if(!el)return;try{let sn=await db.collection('clientes').get();el.textContent=sn.size+' clientes';}catch(e){}}
 
 // ==========================================================
-// FEED / POSTS / AGENDAMENTOS / PLANOS / ANÚNCIOS / PERFIL
+// FEED / POSTS
 // ==========================================================
 async function carregarFeedCliente(){let c=document.getElementById('feedClienteContainer');if(!c)return;try{let sn=await db.collection('posts').orderBy('dataCriacao','desc').get();let posts=sn.docs.map(d=>({id:d.id,...d.data()}));if(posts.length===0){c.innerHTML='<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post</h3></div>';return;}c.innerHTML=posts.map(p=>'<div class="feed-post"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+(p.barbeiroNome||'Barbearia RM')+'</div><div class="feed-post-user-time">'+new Date(p.dataCriacao).toLocaleDateString('pt-BR')+'</div></div></div>'+(p.imagem?'<img src="'+p.imagem+'" class="feed-post-image">':'')+'<div class="feed-post-body"><div class="feed-post-title">'+p.titulo+'</div><div class="feed-post-price">R$ '+(p.preco||0).toFixed(2)+'</div></div><div class="feed-post-actions"><button>❤️ '+(p.likes||0)+'</button><button class="btn-comentar" data-id="'+p.id+'">💬 '+(p.comentarios||[]).length+'</button></div></div>').join('');document.querySelectorAll('.btn-comentar').forEach(b=>b.addEventListener('click',function(){abrirComentarios(this.dataset.id);}));}catch(e){}}
 async function carregarMeusPosts(){let c=document.getElementById('meusPostsContainer');if(!c||!barbeiroLogado)return;try{let sn=await db.collection('posts').where('barbeiroId','==',barbeiroLogado.id).get();let posts=[];sn.forEach(d=>posts.push({id:d.id,...d.data()}));posts.sort((a,b)=>new Date(b.dataCriacao)-new Date(a.dataCriacao));if(posts.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum post</p>';return;}c.innerHTML=posts.map(p=>'<div class="feed-post" style="margin-bottom:12px;"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+p.titulo+'</div><div class="feed-post-user-time">R$ '+(p.preco||0).toFixed(2)+'</div></div></div>'+(p.imagem?'<img src="'+p.imagem+'" class="feed-post-image">':'')+'<button class="btn btn-small btn-danger btn-excluir" data-id="'+p.id+'">🗑</button></div>').join('');document.querySelectorAll('.btn-excluir').forEach(b=>b.addEventListener('click',function(){excluirMeuPost(this.dataset.id);}));}catch(e){}}
@@ -102,6 +103,10 @@ function abrirComentarios(id){postSelecionadoId=id;carregarComentarios(id);docum
 async function carregarComentarios(id){let c=document.getElementById('comentariosContainer');if(!c)return;let doc=await db.collection('posts').doc(id).get();if(!doc.exists)return;let com=doc.data().comentarios||[];c.innerHTML=com.length===0?'<p style="color:#6B7280;">Nenhum</p>':com.map(x=>'<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;"><strong style="color:#D4A84B;">'+x.autor+'</strong><p style="color:#B0B0B0;">'+x.texto+'</p></div>').join('');}
 async function adicionarComentario(){let t=document.getElementById('novoComentario').value.trim();if(!t)return;let autor=clienteLogado?clienteLogado.nome:(barbeiroLogado?barbeiroLogado.nome:'Anônimo');let doc=await db.collection('posts').doc(postSelecionadoId).get();let com=doc.data().comentarios||[];com.push({autor,texto:t,data:new Date().toISOString()});await db.collection('posts').doc(postSelecionadoId).update({comentarios:com});document.getElementById('novoComentario').value='';carregarComentarios(postSelecionadoId);}
 function fecharModalComentario(){document.getElementById('modalComentario').classList.remove('active');}
+
+// ==========================================================
+// AGENDAMENTOS
+// ==========================================================
 function carregarOpcoesAgendamento(){let sh=document.getElementById('agendamentoHorario'),st=document.getElementById('agendamentoTipo');if(sh){let h=[];for(let i=9;i<=18;i++)for(let j=0;j<60;j+=30){if(i===18&&j>0)break;h.push(String(i).padStart(2,'0')+':'+String(j).padStart(2,'0'));}sh.innerHTML=h.map(x=>'<option value="'+x+'">'+x+'</option>').join('');}if(st){let t=['Corte Social','Corte Degradê','Corte Navalhado','Corte Máquina','Barba','Barba + Corte'];st.innerHTML=t.map(x=>'<option value="'+x+'">'+x+'</option>').join('');}let d=document.getElementById('agendamentoData');if(d)d.min=new Date().toISOString().split('T')[0];}
 async function agendarCorte(){if(!clienteLogado){mostrarToast('❌ Faça login!','error');return;}let d=document.getElementById('agendamentoData').value,h=document.getElementById('agendamentoHorario').value,t=document.getElementById('agendamentoTipo').value;if(!d){mostrarToast('❌ Selecione data!','error');return;}try{let id=Date.now().toString();await db.collection('agendamentos').doc(id).set({id,clienteId:clienteLogado.id,clienteNome:clienteLogado.nome,data:d,horario:h,tipo:t,status:'pendente',dataCriacao:new Date().toISOString()});mostrarToast('✅ Agendado!','success');document.getElementById('agendamentoData').value='';carregarAgendaCliente();mostrarTela('homeCliente');}catch(e){}}
 async function carregarAgendaCliente(){if(!clienteLogado)return;let c=document.getElementById('agendaClienteContainer');if(!c)return;try{let sn=await db.collection('agendamentos').where('clienteId','==',clienteLogado.id).get();let ag=sn.docs.map(d=>({id:d.id,...d.data()}));ag.sort((a,b)=>new Date(b.data)-new Date(a.data));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=ag.map(a=>'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">'+a.tipo+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+a.status+'">'+(a.status==='confirmado'?'✅':'⏳')+' '+a.status+'</span></div>').join('');}catch(e){}}
@@ -116,7 +121,7 @@ async function calcularFaturamento(){try{let sn=await db.collection('agendamento
 async function verificarLiveBadge(){try{let doc=await db.collection('lives').doc('live_atual').get();liveAtivaGeral=doc.exists&&doc.data().ativa;let bc=document.getElementById('liveBadgeCliente'),bb=document.getElementById('liveBadgeBarbeiro');if(bc)bc.style.display=liveAtivaGeral?'inline-block':'none';if(bb)bb.style.display=liveAtivaGeral?'inline-block':'none';}catch(e){}}
 
 // ==========================================================
-// SOCIAL / CHAT
+// SOCIAL / CHAT PRIVADO
 // ==========================================================
 async function carregarSocialCliente(){let c=document.getElementById('socialClientesOnline');if(!c)return;let online=await carregarClientesOnline();online=online.filter(x=>x.id!==(clienteLogado?clienteLogado.id:''));if(online.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum online</p>';return;}c.innerHTML=online.map(x=>'<div class="cliente-online-card" onclick="abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:#0c6;font-size:10px;">● Online</span></div></div>').join('');}
 async function carregarSocialBarbeiro(){let co=document.getElementById('socialBarbeiroOnline'),ct=document.getElementById('socialBarbeiroTodos');if(!co)return;let online=await carregarClientesOnline();document.getElementById('onlineAgora').textContent=online.length;co.innerHTML=online.length===0?'<p style="color:#6B7280;">Nenhum online</p>':online.map(x=>'<div class="cliente-online-card" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:#0c6;font-size:10px;">● Online</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');if(ct){let todos=await carregarTodosClientes();document.getElementById('totalClientesSocial').textContent=todos.length;ct.innerHTML=todos.map(x=>'<div class="cliente-online-card" style="border-color:rgba(255,255,255,0.1);" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'" style="border-color:'+(x.online?'#0c6':'#666')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:'+(x.online?'#0c6':'#aaa')+';font-size:10px;">'+(x.online?'● Online':'○ Offline')+'</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');}}
@@ -130,242 +135,14 @@ async function carregarConversasPerfil(){if(!clienteLogado)return;let c=document
 function abrirChatPerfil(chatId){let partes=chatId.split('_');let outroId=partes.find(p=>p!==clienteLogado.id);if(outroId){db.collection('clientes').doc(outroId).get().then(doc=>{if(doc.exists){let c=doc.data();abrirChatCliente(c.id,c.nome);}});}}
 
 // ==========================================================
-// 🔴 LIVE VIA WebRTC (FUNCIONA DE VERDADE!)
+// LIVE - CARREGAR TELA
 // ==========================================================
-let peerConnection = null;
-let liveStreamLocal = null;
-
-async function iniciarLive(){
-    if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiros!','error');return;}
-    try{
-        console.log('🎥 Iniciando câmera...');
-        // 1. Pegar câmera
-        liveStreamLocal = await navigator.mediaDevices.getUserMedia({
-            video: {width:{ideal:640},height:{ideal:480},facingMode:liveFacingMode},
-            audio: {echoCancellation:!0,noiseSuppression:!0}
-        });
-        liveStream = liveStreamLocal;
-        liveAtiva = !0;
-        liveAtivaGeral = !0;
-        
-        // 2. Mostrar na tela do barbeiro
-        let videoEl = document.getElementById('liveVideo');
-        videoEl.srcObject = liveStreamLocal;
-        videoEl.muted = !0;
-        videoEl.style.display = 'block';
-        
-        document.getElementById('livePlaceholder').style.display = 'none';
-        document.getElementById('liveControlsCard').style.display = 'block';
-        document.getElementById('liveStatus').style.display = 'block';
-        
-        // Timer
-        liveDuracao = 0;
-        if(liveTimerInterval)clearInterval(liveTimerInterval);
-        liveTimerInterval = setInterval(()=>{
-            liveDuracao++;
-            let h=Math.floor(liveDuracao/3600),m=Math.floor((liveDuracao%3600)/60),s=liveDuracao%60;
-            document.getElementById('liveDuration').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-        },1000);
-        
-        // 3. Salvar no Firebase que a live está ativa
-        await db.collection('lives').doc('live_atual').set({
-            id:'live_atual',
-            titulo:'Live Barbearia RM',
-            barbeiroNome:barbeiroLogado.nome,
-            barbeiroFoto:barbeiroLogado.fotoPerfil||'',
-            ativa:!0,
-            chat:[],
-            viewers:0,
-            likes:0,
-            dataInicio:new Date().toISOString()
-        });
-        
-        // 4. NOTIFICAR TODOS OS CLIENTES
-        await notificarClientesLive();
-        
-        // 5. Iniciar chat listener
-        iniciarChatListenerLive();
-        
-        mostrarToast('🔴 Live iniciada! Clientes foram notificados!','success');
-        console.log('✅ Live iniciada com sucesso!');
-        
-    }catch(er){
-        console.error('❌ Erro:',er);
-        if(er.name==='NotAllowedError')mostrarToast('❌ Permissão de câmera negada!','error');
-        else if(er.name==='NotFoundError')mostrarToast('❌ Nenhuma câmera encontrada!','error');
-        else mostrarToast('❌ '+er.message,'error');
-    }
-}
-
-// NOTIFICAR CLIENTES - FUNÇÃO PRINCIPAL
-async function notificarClientesLive(){
-    try{
-        let sn = await db.collection('clientes').get();
-        let total = sn.size;
-        let notificados = 0;
-        
-        sn.forEach(async (doc) => {
-            let cliente = doc.data();
-            if(cliente.notificacoes !== false){ // notificar todos por padrão
-                await db.collection('notificacoes').add({
-                    clienteId: cliente.id,
-                    clienteNome: cliente.nome,
-                    titulo: '🔴 LIVE AO VIVO!',
-                    mensagem: 'Barbearia RM está transmitindo agora! Clique para assistir!',
-                    tipo: 'live',
-                    lida: false,
-                    data: new Date().toISOString()
-                });
-                notificados++;
-            }
-        });
-        
-        console.log('📢 Notificações enviadas: ' + notificados + ' de ' + total + ' clientes');
-        mostrarToast('📢 '+notificados+' clientes notificados!','success');
-        
-        // Também atualizar o documento da live com a contagem
-        await db.collection('lives').doc('live_atual').update({
-            totalNotificados: notificados,
-            totalClientes: total
-        });
-        
-    }catch(e){
-        console.error('Erro ao notificar:',e);
-    }
-}
-
-// Cliente assistindo - PUXA O VÍDEO EM TEMPO REAL
-function iniciarVisualizacaoLive(){
-    console.log('👀 Cliente assistindo live...');
-    
-    // Mostrar o vídeo (o stream local do barbeiro não aparece aqui,
-    // mas como estamos no mesmo dispositivo, vamos simular com a câmera)
-    document.getElementById('livePlaceholder').style.display = 'none';
-    document.getElementById('liveStatus').style.display = 'block';
-    
-    // Tentar ver se a live está ativa
-    db.collection('lives').doc('live_atual').get().then(doc => {
-        if(doc.exists && doc.data().ativa){
-            console.log('✅ Live ativa encontrada!');
-            document.getElementById('liveViewerCount').textContent = '👥 ' + (doc.data().viewers || 0);
-            document.getElementById('liveLikeCount').textContent = doc.data().likes || 0;
-            
-            // Incrementar viewer
-            db.collection('lives').doc('live_atual').update({
-                viewers: firebase.firestore.FieldValue.increment(1)
-            });
-        }
-    });
-    
-    // Iniciar chat
-    iniciarChatListenerLive();
-}
-
-// Chat da live em tempo real
-function iniciarChatListenerLive(){
-    if(liveChatListener)liveChatListener();
-    liveChatListener = db.collection('lives').doc('live_atual')
-        .onSnapshot((doc) => {
-            if(!doc.exists || !doc.data().ativa) return;
-            let chat = doc.data().chat || [];
-            let container = document.getElementById('liveChatMessages');
-            if(!container) return;
-            
-            if(chat.length === 0){
-                container.innerHTML = '<p style="color:#aaa;text-align:center;font-size:12px;">💬 Chat vazio - Seja o primeiro!</p>';
-                return;
-            }
-            
-            container.innerHTML = chat.slice(-50).map(m => `
-                <div style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;">
-                    <img src="${m.foto||'logobarbearia-rm.png'}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;" onerror="this.src='logobarbearia-rm.png'">
-                    <div>
-                        <span style="font-weight:700;color:#D4A84B;font-size:11px;">${m.autor}</span>
-                        <span style="font-size:9px;color:#666;margin-left:4px;">${new Date(m.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span>
-                        <div style="color:#ccc;font-size:12px;">${m.texto}</div>
-                    </div>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-            
-            document.getElementById('liveLikeCount').textContent = doc.data().likes || 0;
-        });
-}
-
-// Enviar mensagem no chat
-async function enviarChatLive(){
-    let input = document.getElementById('liveChatInput');
-    if(!input) return;
-    let msg = input.value.trim();
-    if(!msg) return;
-    
-    let nome = 'Visitante';
-    let foto = 'logobarbearia-rm.png';
-    if(clienteLogado){nome=clienteLogado.nome;foto=clienteLogado.fotoPerfil||'logobarbearia-rm.png';}
-    else if(barbeiroLogado){nome='✂️ '+barbeiroLogado.nome;foto=barbeiroLogado.fotoPerfil||'logobarbearia-rm.png';}
-    
-    try{
-        await db.collection('lives').doc('live_atual').update({
-            chat: firebase.firestore.FieldValue.arrayUnion({
-                autor:nome,foto,texto:msg,data:new Date().toISOString()
-            })
-        });
-        input.value = '';
-        if(msg.toUpperCase()==='!PARTICIPAR'&&sorteioAtivo)participarSorteio(nome);
-    }catch(e){}
-}
-
-// Curtir
-async function curtirLive(){
-    try{
-        await db.collection('lives').doc('live_atual').update({likes:firebase.firestore.FieldValue.increment(1)});
-        let heart=document.createElement('div');heart.textContent='❤️';
-        heart.style.cssText='position:absolute;font-size:30px;pointer-events:none;z-index:20;animation:floatHeart 2s ease-out forwards;left:'+(Math.random()*80+10)+'%;bottom:20%;';
-        document.getElementById('livePlayerContainer').appendChild(heart);
-        setTimeout(()=>heart.remove(),2000);
-    }catch(e){}
-}
-
-async function reagirLive(emoji){
-    try{
-        await db.collection('lives').doc('live_atual').update({reactions:firebase.firestore.FieldValue.arrayUnion({emoji,time:Date.now()})});
-        let r=document.createElement('div');r.textContent=emoji;
-        r.style.cssText='position:absolute;font-size:35px;pointer-events:none;z-index:20;animation:floatReaction 3s ease-out forwards;left:'+(Math.random()*80+10)+'%;bottom:30%;';
-        document.getElementById('livePlayerContainer').appendChild(r);
-        setTimeout(()=>r.remove(),3000);
-    }catch(e){}
-}
-
-// Parar live
-async function pararLive(){
-    if(anuncioAutoAtivo)pararAnuncioAutomatico();
-    if(gravandoTrecho)pararGravacaoTrecho();
-    if(liveTimerInterval){clearInterval(liveTimerInterval);liveTimerInterval=null;}
-    if(liveChatListener){liveChatListener();liveChatListener=null;}
-    if(liveStreamLocal){liveStreamLocal.getTracks().forEach(t=>t.stop());liveStreamLocal=null;}
-    liveStream=null;liveAtiva=!1;liveAtivaGeral=!1;
-    
-    let v=document.getElementById('liveVideo');if(v){v.srcObject=null;v.style.display='none';}
-    document.getElementById('livePlaceholder').style.display='flex';
-    document.getElementById('liveControlsCard').style.display='none';
-    document.getElementById('liveStatus').style.display='none';
-    document.getElementById('liveDuration').textContent='00:00:00';
-    document.getElementById('overlayComercial').style.display='none';
-    document.getElementById('overlayAnuncio').style.display='none';
-    
-    await db.collection('lives').doc('live_atual').update({ativa:!1,dataFim:new Date().toISOString()});
-    carregarLiveTela();
-}
-
-// Carregar tela da live
 function carregarLiveTela(){
     let controls=document.getElementById('liveControlsCard');
     let btnIniciar=document.getElementById('btnIniciarLiveNaTela');
     let placeholder=document.getElementById('livePlaceholder');
     let placeholderText=document.getElementById('livePlaceholderText');
-    
     if(btnIniciar)btnIniciar.style.display='none';
-    
     if(barbeiroLogado){
         if(controls)controls.style.display='none';
         if(btnIniciar)btnIniciar.style.display='inline-block';
@@ -373,15 +150,118 @@ function carregarLiveTela(){
         if(!liveAtiva&&placeholder)placeholder.style.display='flex';
     }else if(clienteLogado){
         if(controls)controls.style.display='none';
-        if(liveAtivaGeral){
-            if(placeholder)placeholder.style.display='none';
-            iniciarVisualizacaoLive();
-        }else{
-            if(placeholder)placeholder.style.display='flex';
-            if(placeholderText)placeholderText.textContent='Nenhuma live no momento';
-        }
+        if(liveAtivaGeral){if(placeholder)placeholder.style.display='none';iniciarVisualizacaoLive();}
+        else{if(placeholder)placeholder.style.display='flex';if(placeholderText)placeholderText.textContent='Nenhuma live no momento';}
     }
     verificarLiveBadge();
+}
+
+// ==========================================================
+// LIVE - INICIAR (BARBEIRO)
+// ==========================================================
+async function iniciarLive(){
+    if(!barbeiroLogado){mostrarToast('❌ Apenas barbeiros!','error');return;}
+    try{
+        let stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:liveFacingMode},audio:{echoCancellation:!0,noiseSuppression:!0}});
+        liveStreamLocal=stream;liveStream=stream;liveAtiva=!0;liveAtivaGeral=!0;
+        let videoEl=document.getElementById('liveVideo');videoEl.srcObject=stream;videoEl.muted=!0;videoEl.style.display='block';
+        document.getElementById('livePlaceholder').style.display='none';
+        document.getElementById('liveControlsCard').style.display='block';
+        document.getElementById('liveStatus').style.display='block';
+        liveDuracao=0;if(liveTimerInterval)clearInterval(liveTimerInterval);
+        liveTimerInterval=setInterval(()=>{liveDuracao++;let h=Math.floor(liveDuracao/3600),m=Math.floor((liveDuracao%3600)/60),s=liveDuracao%60;let el=document.getElementById('liveDuration');if(el)el.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');},1000);
+        await db.collection('lives').doc('live_atual').set({id:'live_atual',titulo:'Live Barbearia RM',barbeiroNome:barbeiroLogado.nome,barbeiroFoto:barbeiroLogado.fotoPerfil||'',ativa:!0,chat:[],viewers:0,likes:0,dataInicio:new Date().toISOString()});
+        iniciarChatListenerLive();
+        notificarClientesLive();
+        mostrarToast('🔴 Live iniciada! Clientes notificados!','success');
+    }catch(er){if(er.name==='NotAllowedError')mostrarToast('❌ Permissão negada!','error');else if(er.name==='NotFoundError')mostrarToast('❌ Nenhuma câmera!','error');else mostrarToast('❌ '+er.message,'error');}
+}
+
+async function notificarClientesLive(){
+    try{let sn=await db.collection('clientes').get();let total=sn.size,notificados=0;
+    sn.forEach(async(doc)=>{let cliente=doc.data();if(cliente.notificacoes!==!1){await db.collection('notificacoes').add({clienteId:cliente.id,clienteNome:cliente.nome,titulo:'🔴 LIVE AO VIVO!',mensagem:'Barbearia RM está transmitindo agora!',tipo:'live',lida:!1,data:new Date().toISOString()});notificados++;}});
+    console.log('📢 Notificados: '+notificados+'/'+total);mostrarToast('📢 '+notificados+' clientes notificados!','success');}catch(e){}
+}
+
+function iniciarVisualizacaoLive(){
+    document.getElementById('livePlaceholder').style.display='none';
+    document.getElementById('liveStatus').style.display='block';
+    db.collection('lives').doc('live_atual').get().then(doc=>{if(doc.exists&&doc.data().ativa){document.getElementById('liveViewerCount').textContent='👥 '+(doc.data().viewers||0);document.getElementById('liveLikeCount').textContent=doc.data().likes||0;db.collection('lives').doc('live_atual').update({viewers:firebase.firestore.FieldValue.increment(1)});}});
+    iniciarChatListenerLive();
+}
+
+// ==========================================================
+// CHAT MESSENGER INSTANTÂNEO + ÁUDIO
+// ==========================================================
+function iniciarChatListenerLive(){
+    if(liveChatListener)liveChatListener();
+    liveChatListener=db.collection('lives').doc('live_atual').onSnapshot((doc)=>{
+        if(!doc.exists||!doc.data().ativa)return;
+        let chat=doc.data().chat||[];
+        let container=document.getElementById('liveChatMessages');
+        if(!container)return;
+        let meuNome=clienteLogado?.nome||barbeiroLogado?.nome||'';
+        if(chat.length===0){container.innerHTML='<p style="color:#aaa;text-align:center;font-size:12px;align-self:center;">💬 Seja o primeiro a comentar!</p>';return;}
+        container.innerHTML=chat.map(m=>{
+            let isSent=m.autor===meuNome||m.autor==='✂️ '+meuNome;
+            let bubbleClass=isSent?'sent':'received';
+            let time=m.data?new Date(m.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+            if(m.audio){return '<div class="chat-bubble '+bubbleClass+' audio-bubble">'+(!isSent?'<div class="msg-sender">'+m.autor+'</div>':'')+'<audio controls src="'+m.audio+'" style="height:30px;width:160px;"></audio><span class="msg-time">🎤 '+time+'</span></div>';}
+            return '<div class="chat-bubble '+bubbleClass+'">'+(!isSent?'<div class="msg-sender">'+m.autor+'</div>':'')+m.texto+'<div class="msg-time">'+time+'</div></div>';
+        }).join('');
+        container.scrollTop=container.scrollHeight;
+        let likeEl=document.getElementById('liveLikeCount');if(likeEl)likeEl.textContent=doc.data().likes||0;
+        let typingEl=document.getElementById('typingIndicator');if(typingEl)typingEl.style.display='none';
+    });
+}
+
+async function enviarChatLive(){
+    let input=document.getElementById('liveChatInput');if(!input)return;let msg=input.value.trim();if(!msg)return;
+    let nome='Visitante',foto='logobarbearia-rm.png';
+    if(clienteLogado){nome=clienteLogado.nome;foto=clienteLogado.fotoPerfil||'logobarbearia-rm.png';}
+    else if(barbeiroLogado){nome='✂️ '+barbeiroLogado.nome;foto=barbeiroLogado.fotoPerfil||'logobarbearia-rm.png';}
+    try{await db.collection('lives').doc('live_atual').update({chat:firebase.firestore.FieldValue.arrayUnion({autor:nome,foto,texto:msg,data:new Date().toISOString()})});input.value='';if(msg.toUpperCase()==='!PARTICIPAR'&&sorteioAtivo)participarSorteio(nome);pararDigitando();}catch(e){}
+}
+
+function iniciarDigitando(){let typingEl=document.getElementById('typingIndicator');if(typingEl)typingEl.style.display='flex';if(typingTimeout)clearTimeout(typingTimeout);typingTimeout=setTimeout(()=>{pararDigitando();},3000);}
+function pararDigitando(){let typingEl=document.getElementById('typingIndicator');if(typingEl)typingEl.style.display='none';}
+
+async function iniciarGravacaoAudio(){
+    if(gravandoAudio)return;
+    try{let stream=await navigator.mediaDevices.getUserMedia({audio:!0});mediaRecorderAudio=new MediaRecorder(stream);audioChunks=[];
+    mediaRecorderAudio.ondataavailable=(e)=>{if(e.data.size>0)audioChunks.push(e.data);};
+    mediaRecorderAudio.onstop=async()=>{let audioBlob=new Blob(audioChunks,{type:'audio/webm'});let reader=new FileReader();reader.onload=async(e)=>{await enviarAudioLive(e.target.result);};reader.readAsDataURL(audioBlob);stream.getTracks().forEach(t=>t.stop());};
+    mediaRecorderAudio.start();gravandoAudio=!0;let btnMic=document.getElementById('btnMic');if(btnMic){btnMic.classList.add('recording');btnMic.textContent='⏹️';}
+    mostrarToast('🎤 Gravando áudio...','info');setTimeout(()=>{if(gravandoAudio)pararGravacaoAudio();},30000);}catch(e){mostrarToast('❌ Erro ao acessar microfone','error');}
+}
+
+function pararGravacaoAudio(){if(!gravandoAudio||!mediaRecorderAudio)return;mediaRecorderAudio.stop();gravandoAudio=!1;let btnMic=document.getElementById('btnMic');if(btnMic){btnMic.classList.remove('recording');btnMic.textContent='🎤';}mostrarToast('✅ Áudio enviado!','success');}
+
+async function enviarAudioLive(base64Audio){
+    let nome='Visitante',foto='logobarbearia-rm.png';
+    if(clienteLogado){nome=clienteLogado.nome;foto=clienteLogado.fotoPerfil||'logobarbearia-rm.png';}
+    else if(barbeiroLogado){nome='✂️ '+barbeiroLogado.nome;foto=barbeiroLogado.fotoPerfil||'logobarbearia-rm.png';}
+    try{await db.collection('lives').doc('live_atual').update({chat:firebase.firestore.FieldValue.arrayUnion({autor:nome,foto,audio:base64Audio,data:new Date().toISOString()})});}catch(e){}
+}
+
+async function curtirLive(){try{await db.collection('lives').doc('live_atual').update({likes:firebase.firestore.FieldValue.increment(1)});let heart=document.createElement('div');heart.textContent='❤️';heart.style.cssText='position:absolute;font-size:30px;pointer-events:none;z-index:20;animation:floatHeart 2s ease-out forwards;left:'+(Math.random()*80+10)+'%;bottom:20%;';document.getElementById('livePlayerContainer').appendChild(heart);setTimeout(()=>heart.remove(),2000);}catch(e){}}
+async function reagirLive(emoji){try{await db.collection('lives').doc('live_atual').update({reactions:firebase.firestore.FieldValue.arrayUnion({emoji,time:Date.now()})});let r=document.createElement('div');r.textContent=emoji;r.style.cssText='position:absolute;font-size:35px;pointer-events:none;z-index:20;animation:floatReaction 3s ease-out forwards;left:'+(Math.random()*80+10)+'%;bottom:30%;';document.getElementById('livePlayerContainer').appendChild(r);setTimeout(()=>r.remove(),3000);}catch(e){}}
+
+async function pararLive(){
+    if(anuncioAutoAtivo)pararAnuncioAutomatico();if(gravandoTrecho)pararGravacaoTrecho();if(gravandoAudio)pararGravacaoAudio();
+    if(liveTimerInterval){clearInterval(liveTimerInterval);liveTimerInterval=null;}
+    if(liveChatListener){liveChatListener();liveChatListener=null;}
+    if(liveStreamLocal){liveStreamLocal.getTracks().forEach(t=>t.stop());liveStreamLocal=null;}
+    liveStream=null;liveAtiva=!1;liveAtivaGeral=!1;
+    let v=document.getElementById('liveVideo');if(v){v.srcObject=null;v.style.display='none';}
+    document.getElementById('livePlaceholder').style.display='flex';
+    document.getElementById('liveControlsCard').style.display='none';
+    document.getElementById('liveStatus').style.display='none';
+    document.getElementById('liveDuration').textContent='00:00:00';
+    document.getElementById('overlayComercial').style.display='none';
+    document.getElementById('overlayAnuncio').style.display='none';
+    await db.collection('lives').doc('live_atual').update({ativa:!1,dataFim:new Date().toISOString()});
+    carregarLiveTela();
 }
 
 // Gravação / Efeitos / Telas
@@ -398,9 +278,9 @@ async function finalizarLive(){if(!confirm('Finalizar live?'))return;await parar
 // ==========================================================
 // SORTEIO / ANÚNCIO AUTO
 // ==========================================================
-function iniciarSorteio(premio){if(!barbeiroLogado)return;participantesSorteio=[];premioSorteio=premio;sorteioAtivo=!0;let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="background:rgba(255,215,0,0.15);padding:12px;border-radius:8px;margin:8px 0;border:2px solid #FFD700;text-align:center;"><div style="font-size:20px;">🎉</div><strong style="color:#FFD700;">SORTEIO INICIADO!</strong><br><span style="color:white;">Prêmio: '+premio+'</span><br><span style="font-size:11px;color:#aaa;">Digite !PARTICIPAR</span></div>';c.scrollTop=c.scrollHeight;}}
-function participarSorteio(nome){if(!sorteioAtivo)return;if(participantesSorteio.includes(nome))return;participantesSorteio.push(nome);let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="font-size:10px;color:#FFD700;text-align:center;">🎯 '+participantesSorteio.length+' participante(s)</div>';c.scrollTop=c.scrollHeight;}}
-function realizarSorteio(){if(participantesSorteio.length===0)return;let vencedor=participantesSorteio[Math.floor(Math.random()*participantesSorteio.length)];sorteioAtivo=!1;let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="background:rgba(0,200,100,0.2);padding:16px;border-radius:12px;margin:8px 0;border:3px solid #00cc66;text-align:center;"><div style="font-size:30px;">🏆</div><strong style="color:#00cc66;font-size:18px;">VENCEDOR!</strong><br><span style="color:white;font-size:16px;">🎉 '+vencedor+' 🎉</span><br><span style="color:#FFD700;">Ganhou: '+premioSorteio+'</span></div>';c.scrollTop=c.scrollHeight;}participantesSorteio=[];}
+function iniciarSorteio(premio){if(!barbeiroLogado)return;participantesSorteio=[];premioSorteio=premio;sorteioAtivo=!0;let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="background:rgba(255,215,0,0.15);padding:12px;border-radius:8px;margin:8px 0;border:2px solid #FFD700;text-align:center;align-self:stretch;"><div style="font-size:20px;">🎉</div><strong style="color:#FFD700;">SORTEIO INICIADO!</strong><br><span style="color:white;">Prêmio: '+premio+'</span><br><span style="font-size:11px;color:#aaa;">Digite !PARTICIPAR</span></div>';c.scrollTop=c.scrollHeight;}}
+function participarSorteio(nome){if(!sorteioAtivo)return;if(participantesSorteio.includes(nome))return;participantesSorteio.push(nome);let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="font-size:10px;color:#FFD700;text-align:center;align-self:stretch;">🎯 '+participantesSorteio.length+' participante(s)</div>';c.scrollTop=c.scrollHeight;}}
+function realizarSorteio(){if(participantesSorteio.length===0)return;let vencedor=participantesSorteio[Math.floor(Math.random()*participantesSorteio.length)];sorteioAtivo=!1;let c=document.getElementById('liveChatMessages');if(c){c.innerHTML+='<div style="background:rgba(0,200,100,0.2);padding:16px;border-radius:12px;margin:8px 0;border:3px solid #00cc66;text-align:center;align-self:stretch;"><div style="font-size:30px;">🏆</div><strong style="color:#00cc66;font-size:18px;">VENCEDOR!</strong><br><span style="color:white;font-size:16px;">🎉 '+vencedor+' 🎉</span><br><span style="color:#FFD700;">Ganhou: '+premioSorteio+'</span></div>';c.scrollTop=c.scrollHeight;}participantesSorteio=[];}
 function carregarAnuncioAuto(event){let f=event.target.files[0];if(!f)return;let r=new FileReader();r.onload=e=>{anuncioImagemAuto=e.target.result;};r.readAsDataURL(f);}
 function iniciarAnuncioAutomatico(){if(!anuncioImagemAuto)return;let texto=document.getElementById('anuncioTextoInput').value.trim();let intervalo=parseInt(document.getElementById('anuncioIntervalo').value)*1000;anuncioTextoAuto=texto||'🔥 Oferta!';anuncioAutoAtivo=!0;document.getElementById('btnIniciarAnuncioAuto').style.display='none';document.getElementById('btnPararAnuncioAuto').style.display='inline-block';mostrarAnuncioAuto();anuncioAutoInterval=setInterval(mostrarAnuncioAuto,intervalo);}
 function mostrarAnuncioAuto(){let overlay=document.getElementById('overlayAnuncio'),img=document.getElementById('anuncioImg'),txt=document.getElementById('anuncioTexto');if(!overlay||!img)return;img.src=anuncioImagemAuto;txt.textContent=anuncioTextoAuto;overlay.style.display='flex';overlay.style.opacity='1';if(anuncioAutoTimeout)clearTimeout(anuncioAutoTimeout);anuncioAutoTimeout=setTimeout(esconderAnuncioAuto,5000);}
@@ -471,11 +351,15 @@ function setupEventListeners(){
     document.getElementById('btnTelaComercial')?.addEventListener('click',()=>mostrarTelaLive('comercial'));
     document.getElementById('btnTelaAnuncio')?.addEventListener('click',()=>mostrarTelaLive('anuncio'));
     document.getElementById('btnFinalizarLive')?.addEventListener('click',finalizarLive);
-    document.getElementById('btnSendLiveChat')?.addEventListener('click',enviarChatLive);
     document.getElementById('btnVoltarLive')?.addEventListener('click',()=>{if(liveAtiva&&barbeiroLogado)pararLive();if(barbeiroLogado)mostrarTela('homeBarbeiro');else if(clienteLogado)mostrarTela('homeCliente');else mostrarTela('login');});
-    document.getElementById('liveChatInput')?.addEventListener('keypress',e=>{if(e.key==='Enter')enviarChatLive();});
+    // Chat Messenger
+    document.getElementById('btnSendLiveChat')?.addEventListener('click',enviarChatLive);
+    document.getElementById('liveChatInput')?.addEventListener('keypress',e=>{if(e.key==='Enter'){enviarChatLive();}else{iniciarDigitando();}});
+    document.getElementById('btnMic')?.addEventListener('click',()=>{if(gravandoAudio){pararGravacaoAudio();}else{iniciarGravacaoAudio();}});
+    // Sorteio
     document.getElementById('btnIniciarSorteio')?.addEventListener('click',function(){let p=document.getElementById('premioSorteioInput').value.trim()||'Corte Grátis';iniciarSorteio(p);});
     document.getElementById('btnRealizarSorteio')?.addEventListener('click',realizarSorteio);
+    // Anúncio
     document.getElementById('btnIniciarAnuncioAuto')?.addEventListener('click',iniciarAnuncioAutomatico);
     document.getElementById('btnPararAnuncioAuto')?.addEventListener('click',pararAnuncioAutomatico);
 }
