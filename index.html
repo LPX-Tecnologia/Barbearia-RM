@@ -57,7 +57,6 @@
         .btn-mic{width:40px;height:40px;border-radius:50%;border:none;background:#333;color:#fff;font-size:18px;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center}
         .btn-mic:hover{background:#D4A84B;color:#1a1a1a}.btn-mic.recording{background:#F00;animation:pulse 1s infinite}
         .btn-send{width:40px;height:40px;border-radius:50%;border:none;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;font-size:16px;cursor:pointer;transition:0.3s}
-        
         .tab-btn{padding:10px;background:none;border:none;color:#aaa;font-weight:700;font-size:11px;cursor:pointer;transition:0.3s;flex:1;text-align:center}
         .tab-btn:hover{color:#D4A84B}.tab-btn.active{color:#D4A84B;border-bottom:2px solid #D4A84B}
     </style>
@@ -129,8 +128,23 @@
         <div style="display:flex;gap:10px;margin-top:10px;"><button class="btn-live" style="flex:1;" id="btnLiveBarbeiro">🔴 AO VIVO <span id="liveBadgeBarbeiro" class="live-badge" style="display:none;">ON</span></button></div>
     </section>
 
-    <!-- AGENDAMENTO -->
-    <section class="screen" id="agendamentoScreen"><h2 class="screen-title">📅 AGENDAR CORTE</h2><div class="card"><div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div><div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"></select></div><div class="input-group"><label>✂️ Tipo</label><select id="agendamentoTipo"></select></div><button class="btn btn-primary" id="btnConfirmarAgendamento">✅ AGENDAR</button><button class="btn btn-outline" id="btnVoltarAgendamento">← Voltar</button></div></section>
+    <!-- AGENDAMENTO COM SELEÇÃO DE BARBEIRO -->
+    <section class="screen" id="agendamentoScreen">
+        <h2 class="screen-title">📅 AGENDAR CORTE</h2>
+        <div class="card">
+            <div class="input-group">
+                <label>✂️ Escolha o Barbeiro</label>
+                <select id="agendamentoBarbeiro" onchange="selecionarBarbeiroAgendamento()">
+                    <option value="">Selecione um barbeiro...</option>
+                </select>
+            </div>
+            <div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div>
+            <div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"></select></div>
+            <div class="input-group"><label>✂️ Tipo de Corte</label><select id="agendamentoTipo"></select></div>
+            <button class="btn btn-primary" id="btnConfirmarAgendamento">✅ AGENDAR</button>
+            <button class="btn btn-outline" id="btnVoltarAgendamento">← Voltar</button>
+        </div>
+    </section>
 
     <!-- BARBEIROS -->
     <section class="screen" id="barbeirosScreen"><h2 class="screen-title">✂️ NOSSOS BARBEIROS</h2><div id="listaBarbeirosContainer"><p style="color:#6B7280;text-align:center;">Carregando...</p></div><button class="btn btn-outline" id="btnVoltarBarbeiros">← Voltar</button></section>
@@ -178,10 +192,10 @@
     <section class="screen" id="perfilClienteScreen"><div class="profile-header"><div class="profile-avatar" id="perfilClienteAvatar"><img src="logobarbearia-rm.png"><div class="camera-icon">📷</div></div><input type="file" id="fotoClienteInput" accept="image/*" style="display:none"><h2 id="perfilClienteNome">Cliente</h2><p id="perfilClienteEmail"></p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editClienteNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editClienteCelular"></div><button class="btn btn-primary" id="btnSalvarPerfilCliente">💾 SALVAR</button></div><button class="btn btn-danger" id="btnSairCliente">🚪 SAIR</button></section>
     <section class="screen" id="perfilBarbeiroScreen"><div class="profile-header"><div class="profile-avatar" id="perfilBarbeiroAvatar"><img src="logobarbearia-rm.png"><div class="camera-icon">📷</div></div><input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none"><h2 id="perfilBarbeiroNome">Barbeiro</h2><p id="perfilBarbeiroEmail"></p><p style="color:#D4A84B;">👥 <span id="totalClientesBarbeiro">0</span> clientes</p></div><div class="card"><h3>✏️ EDITAR</h3><div class="input-group"><label>👤 Nome</label><input type="text" id="editBarbeiroNome"></div><div class="input-group"><label>📱 Celular</label><input type="tel" id="editBarbeiroCelular"></div><div class="input-group"><label>📧 E-mail</label><input type="email" id="editBarbeiroEmail"></div><button class="btn btn-primary" id="btnSalvarPerfilBarbeiro">💾 SALVAR</button></div><button class="btn btn-danger" id="btnSairBarbeiro">🚪 SAIR</button></section>
 
-    <!-- MODAL PERFIL COMPLETO DO BARBEIRO -->
+    <!-- MODAL PERFIL BARBEIRO -->
     <div class="modal" id="modalPerfilBarbeiro" style="z-index:250;">
         <div class="modal-content" style="max-width:500px;max-height:90vh;overflow-y:auto;padding:0;">
-            <div style="position:relative;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);padding:20px;text-align:center;border-radius:20px 20px 0 0;">
+            <div style="background:linear-gradient(135deg,#1a1a1a,#0a0a0a);padding:20px;text-align:center;border-radius:20px 20px 0 0;">
                 <img id="perfilBarbeiroVistoAvatar" src="logobarbearia-rm.png" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:4px solid #D4A84B;margin-bottom:8px;">
                 <h2 id="perfilBarbeiroVistoNome" style="color:#D4A84B;margin:0;"></h2>
                 <p id="perfilBarbeiroVistoEspecialidade" style="color:#aaa;font-size:12px;"></p>
@@ -201,7 +215,7 @@
             <div style="padding:16px;background:#0a0a0a;min-height:200px;">
                 <div id="tabPortfolio" class="tab-content"><h4 style="color:#D4A84B;">💇 Cortes</h4><div id="perfilBarbeiroVistoPosts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;"></div></div>
                 <div id="tabPlanos" class="tab-content" style="display:none;"><h4 style="color:#D4A84B;">📋 Planos</h4><div id="perfilBarbeiroVistoPlanos"></div></div>
-                <div id="tabChat" class="tab-content" style="display:none;"><h4 style="color:#D4A84B;">💬 Chat Privado</h4><div id="chatPrivadoBarbeiro" style="max-height:250px;overflow-y:auto;margin-bottom:8px;"><p style="color:#6B7280;">Inicie uma conversa</p></div><div style="display:flex;gap:6px;"><input type="text" id="chatPrivadoInput" placeholder="Digite..." style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12px;"><button class="btn btn-small btn-primary" id="btnEnviarChatPrivado">📤</button></div></div>
+                <div id="tabChat" class="tab-content" style="display:none;"><h4 style="color:#D4A84B;">💬 Chat</h4><div id="chatPrivadoBarbeiro" style="max-height:250px;overflow-y:auto;margin-bottom:8px;"><p style="color:#6B7280;">Inicie uma conversa</p></div><div style="display:flex;gap:6px;"><input type="text" id="chatPrivadoInput" placeholder="Digite..." style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12px;"><button class="btn btn-small btn-primary" id="btnEnviarChatPrivado">📤</button></div></div>
                 <div id="tabGrupo" class="tab-content" style="display:none;"><h4 style="color:#D4A84B;">👥 Grupo</h4><div id="chatGrupoBarbeiro" style="max-height:200px;overflow-y:auto;margin-bottom:8px;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px;"><p style="color:#6B7280;">Grupo vazio</p></div><div id="membrosGrupo" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;"></div><div style="display:flex;gap:6px;"><input type="text" id="chatGrupoInput" placeholder="Mensagem..." style="flex:1;padding:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12px;"><button class="btn btn-small btn-primary" id="btnEnviarChatGrupo">📤</button></div></div>
             </div>
             <button class="btn btn-outline" id="btnFecharPerfilBarbeiro" style="margin:10px;">Fechar</button>
