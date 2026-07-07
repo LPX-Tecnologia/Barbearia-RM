@@ -47,8 +47,6 @@
         .chat-messenger-footer input{flex:1;padding:10px 14px;background:#333;border:1px solid rgba(255,255,255,0.1);border-radius:25px;color:#fff;font-size:12px;font-family:inherit;outline:none}
         .btn-send{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;font-size:16px;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center}
         .btn-send:hover{transform:scale(1.1)}
-        
-        /* Avatar padrão quando não tem foto */
         .avatar-placeholder{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#D4A84B,#B8923A);display:flex;align-items:center;justify-content:center;font-size:30px;color:#1a1a1a;font-weight:700}
     </style>
 </head>
@@ -57,10 +55,12 @@
     <!-- ==================== TELA INICIAL ==================== -->
     <section class="screen active" id="inicioScreen">
         <div style="text-align:center;padding:30px 16px;">
-            <img src="clube-do-barbeiro.PNG" alt="Clube do Barbeiro" 
-                 style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);margin-bottom:12px;background:#1a1a1a;"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-            <div class="avatar-placeholder" style="display:none;width:100px;height:100px;margin:0 auto 12px;font-size:40px;">CB</div>
+            <div style="width:100px;height:100px;margin:0 auto 12px;position:relative;">
+                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" 
+                     style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:40px;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);">CB</div>
+            </div>
             <h2 style="color:#D4A84B;font-size:24px;">Clube do Barbeiro</h2>
             <p style="color:#aaa;font-size:12px;letter-spacing:3px;">ATITUDE, ESTILO E CONFIANÇA</p>
             <p style="color:#B0B0B0;font-size:13px;margin-top:8px;">Escolha um barbeiro para começar</p>
@@ -77,10 +77,12 @@
     <!-- ==================== LOGIN/REGISTRO CLIENTE ==================== -->
     <section class="screen" id="loginRegisterScreen">
         <div style="text-align:center;padding:20px;">
-            <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" 
-                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;margin-bottom:10px;background:#1a1a1a;"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-            <div class="avatar-placeholder" style="display:none;width:80px;height:80px;margin:0 auto 10px;font-size:32px;">CB</div>
+            <div style="width:80px;height:80px;margin:0 auto 10px;position:relative;">
+                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" 
+                     style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:32px;border:3px solid #D4A84B;">CB</div>
+            </div>
             <h3 style="color:#D4A84B;">Clube do Barbeiro</h3>
             <p id="loginBarbeiroNome" style="color:#aaa;font-size:12px;"></p>
         </div>
@@ -113,10 +115,12 @@
     <!-- ==================== LOGIN/REGISTRO BARBEIRO ==================== -->
     <section class="screen" id="loginBarbeiroScreen">
         <div style="text-align:center;padding:20px;">
-            <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" 
-                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;background:#1a1a1a;"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-            <div class="avatar-placeholder" style="display:none;width:80px;height:80px;margin:0 auto;font-size:32px;">CB</div>
+            <div style="width:80px;height:80px;margin:0 auto 10px;position:relative;">
+                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" 
+                     style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:32px;border:3px solid #D4A84B;">CB</div>
+            </div>
             <h3 style="color:#D4A84B;">✂️ Área do Barbeiro</h3>
         </div>
         <div class="card">
@@ -149,7 +153,7 @@
     <section class="screen" id="homeClienteScreen">
         <div class="welcome-banner">
             <div style="display:flex;align-items:center;gap:12px;">
-                <div id="homeBarbeiroAvatarContainer" style="width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid #D4A84B;flex-shrink:0;">
+                <div id="homeBarbeiroAvatarContainer" style="width:50px;height:50px;border-radius:50%;overflow:hidden;border:2px solid #D4A84B;flex-shrink:0;background:#1a1a1a;">
                     <div class="avatar-placeholder" style="font-size:20px;">✂️</div>
                 </div>
                 <div>
