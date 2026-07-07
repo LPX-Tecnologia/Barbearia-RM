@@ -1,5 +1,5 @@
 /* ==========================================================
-   BARBEARIA RM - COMPLETO FINAL
+   BARBEARIA RM - MULTI-BARBEIROS COMPLETO
    ========================================================== */
 const firebaseConfig={apiKey:"AIzaSyAqN0DZ3fyV-Ns2kXNdwBMAXQgWLy1_jE0",authDomain:"barbearia-rm.firebaseapp.com",projectId:"barbearia-rm",storageBucket:"barbearia-rm.firebasestorage.app",messagingSenderId:"512819922057",appId:"1:512819922057:web:6a913791cb6435e4f63258",measurementId:"G-TKVLVLPBJH"};
 if(!firebase.apps.length){firebase.initializeApp(firebaseConfig);}
@@ -26,7 +26,7 @@ function mostrarTela(t){
 function atualizarBottomNav(t){
     let nc=document.getElementById('bottomNavCliente'),nb=document.getElementById('bottomNavBarbeiro');
     if(nc)nc.style.display='none';if(nb)nb.style.display='none';
-    let tc=['homeCliente','agendamento','galeriaCortes','reels','anuncios','live','perfilCliente','socialCliente'];
+    let tc=['homeCliente','agendamento','galeriaCortes','reels','anuncios','live','perfilCliente','socialCliente','barbeiros'];
     let tb=['homeBarbeiro','criarPost','extrato','criarPlano','horariosTrabalho','perfilBarbeiro','socialBarbeiro'];
     if(tc.includes(t)&&clienteLogado){if(nc)nc.style.display='flex';}
     else if(tb.includes(t)&&barbeiroLogado){if(nb)nb.style.display='flex';}
@@ -43,6 +43,7 @@ function carregarDadosTela(t){
         case 'socialCliente':carregarSocialCliente();carregarConversasSocial();break;
         case 'socialBarbeiro':carregarSocialBarbeiro();carregarConversasSocialBarbeiro();break;
         case 'extrato':calcularExtrato('hoje');break;
+        case 'barbeiros':carregarListaBarbeiros();break;
     }
 }
 function mostrarToast(m,tp){
@@ -69,13 +70,8 @@ function limparSessao(){localStorage.removeItem('barbeariaRM_sessao');}
 async function restaurarSessao(){
     let s=carregarSessao();if(!s)return!1;
     try{
-        if(s.tipo==='cliente'){
-            let sn=await db.collection('clientes').where('email','==',s.email).where('senha','==',s.senha).get();
-            if(!sn.empty){let d=sn.docs[0];clienteLogado={id:d.id,...d.data()};marcarClienteOnline(clienteLogado);return!0;}
-        }else{
-            let sn=await db.collection('barbeiros').where('email','==',s.email).where('senha','==',s.senha).get();
-            if(!sn.empty){let d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};return!0;}
-        }
+        if(s.tipo==='cliente'){let sn=await db.collection('clientes').where('email','==',s.email).where('senha','==',s.senha).get();if(!sn.empty){let d=sn.docs[0];clienteLogado={id:d.id,...d.data()};marcarClienteOnline(clienteLogado);return!0;}}
+        else{let sn=await db.collection('barbeiros').where('email','==',s.email).where('senha','==',s.senha).get();if(!sn.empty){let d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};return!0;}}
     }catch(e){}
     limparSessao();return!1;
 }
@@ -83,179 +79,91 @@ async function restaurarSessao(){
 // ==========================================================
 // LOGIN / CADASTRO
 // ==========================================================
-async function loginCliente(){
-    let e=document.getElementById('loginEmailCliente').value.trim(),s=document.getElementById('loginSenhaCliente').value;
-    if(!e||!s){mostrarToast('❌ Preencha!','error');return;}
-    try{
-        let sn=await db.collection('clientes').where('email','==',e).where('senha','==',s).get();
-        if(sn.empty){mostrarToast('❌ Inválido!','error');return;}
-        let d=sn.docs[0];clienteLogado={id:d.id,...d.data()};
-        salvarSessao('cliente',clienteLogado);
-        marcarClienteOnline(clienteLogado);
-        document.getElementById('loginEmailCliente').value='';document.getElementById('loginSenhaCliente').value='';
-        fecharFormulariosLogin();document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;
-        mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeCliente');
-    }catch(er){mostrarToast('❌ Erro!','error');}
-}
-async function loginBarbeiro(){
-    let e=document.getElementById('loginEmailBarbeiro').value.trim(),s=document.getElementById('loginSenhaBarbeiro').value;
-    if(!e||!s){mostrarToast('❌ Preencha!','error');return;}
-    try{
-        let sn=await db.collection('barbeiros').where('email','==',e).where('senha','==',s).get();
-        if(sn.empty){mostrarToast('❌ Inválido!','error');return;}
-        let d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};
-        salvarSessao('barbeiro',barbeiroLogado);
-        document.getElementById('loginEmailBarbeiro').value='';document.getElementById('loginSenhaBarbeiro').value='';
-        fecharFormulariosLogin();document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;
-        mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeBarbeiro');
-    }catch(er){mostrarToast('❌ Erro!','error');}
-}
-async function cadastrarCliente(){
-    let n=document.getElementById('cadNomeCliente').value.trim(),e=document.getElementById('cadEmailCliente').value.trim(),c=document.getElementById('cadCelularCliente').value.trim(),s=document.getElementById('cadSenhaCliente').value;
-    if(!n||!e||!c||!s){mostrarToast('❌ Preencha!','error');return;}
-    if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}
-    try{
-        let sn=await db.collection('clientes').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email existe!','error');return;}
-        let id=Date.now().toString(),cl={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',online:!0,notificacoes:!0,dataCriacao:new Date().toISOString()};
-        await db.collection('clientes').doc(id).set(cl);clienteLogado=cl;
-        salvarSessao('cliente',cl);
-        marcarClienteOnline(cl);
-        document.getElementById('cadNomeCliente').value='';document.getElementById('cadEmailCliente').value='';document.getElementById('cadCelularCliente').value='';document.getElementById('cadSenhaCliente').value='';
-        mostrarToast('✅ OK!','success');mostrarTela('homeCliente');
-    }catch(er){mostrarToast('❌ Erro!','error');}
-}
-async function cadastrarBarbeiro(){
-    let n=document.getElementById('cadNomeBarbeiro').value.trim(),e=document.getElementById('cadEmailBarbeiro').value.trim(),c=document.getElementById('cadCelularBarbeiro').value.trim(),s=document.getElementById('cadSenhaBarbeiro').value;
-    if(!n||!e||!c||!s){mostrarToast('❌ Preencha!','error');return;}
-    if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}
-    try{
-        let sn=await db.collection('barbeiros').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email existe!','error');return;}
-        let id=Date.now().toString(),bb={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',dataCriacao:new Date().toISOString()};
-        await db.collection('barbeiros').doc(id).set(bb);barbeiroLogado=bb;
-        salvarSessao('barbeiro',bb);
-        document.getElementById('cadNomeBarbeiro').value='';document.getElementById('cadEmailBarbeiro').value='';document.getElementById('cadCelularBarbeiro').value='';document.getElementById('cadSenhaBarbeiro').value='';
-        mostrarToast('✅ OK!','success');mostrarTela('homeBarbeiro');
-    }catch(er){mostrarToast('❌ Erro!','error');}
-}
-function sairCliente(){
-    if(!confirm('Tem certeza?'))return;
-    if(clienteLogado&&clienteLogado.id)removerClienteOnline(clienteLogado.id);
-    clienteLogado=null;limparSessao();fecharFormulariosLogin();
-    mostrarTela('login');mostrarToast('👋 Até logo!','info');
-}
-function sairBarbeiro(){
-    if(!confirm('Tem certeza?'))return;
-    barbeiroLogado=null;limparSessao();fecharFormulariosLogin();
-    mostrarTela('login');mostrarToast('👋 Até logo!','info');
-}
+async function loginCliente(){let e=document.getElementById('loginEmailCliente').value.trim(),s=document.getElementById('loginSenhaCliente').value;if(!e||!s){mostrarToast('❌ Preencha!','error');return;}try{let sn=await db.collection('clientes').where('email','==',e).where('senha','==',s).get();if(sn.empty){mostrarToast('❌ Inválido!','error');return;}let d=sn.docs[0];clienteLogado={id:d.id,...d.data()};salvarSessao('cliente',clienteLogado);marcarClienteOnline(clienteLogado);document.getElementById('loginEmailCliente').value='';document.getElementById('loginSenhaCliente').value='';fecharFormulariosLogin();document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeCliente');}catch(er){mostrarToast('❌ Erro!','error');}}
+async function loginBarbeiro(){let e=document.getElementById('loginEmailBarbeiro').value.trim(),s=document.getElementById('loginSenhaBarbeiro').value;if(!e||!s){mostrarToast('❌ Preencha!','error');return;}try{let sn=await db.collection('barbeiros').where('email','==',e).where('senha','==',s).get();if(sn.empty){mostrarToast('❌ Inválido!','error');return;}let d=sn.docs[0];barbeiroLogado={id:d.id,...d.data()};salvarSessao('barbeiro',barbeiroLogado);document.getElementById('loginEmailBarbeiro').value='';document.getElementById('loginSenhaBarbeiro').value='';fecharFormulariosLogin();document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;mostrarToast('✅ Bem-vindo!','success');mostrarTela('homeBarbeiro');}catch(er){mostrarToast('❌ Erro!','error');}}
+async function cadastrarCliente(){let n=document.getElementById('cadNomeCliente').value.trim(),e=document.getElementById('cadEmailCliente').value.trim(),c=document.getElementById('cadCelularCliente').value.trim(),s=document.getElementById('cadSenhaCliente').value;if(!n||!e||!c||!s){mostrarToast('❌ Preencha!','error');return;}if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}try{let sn=await db.collection('clientes').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email existe!','error');return;}let id=Date.now().toString(),cl={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',online:!0,notificacoes:!0,dataCriacao:new Date().toISOString()};await db.collection('clientes').doc(id).set(cl);clienteLogado=cl;salvarSessao('cliente',cl);marcarClienteOnline(cl);document.getElementById('cadNomeCliente').value='';document.getElementById('cadEmailCliente').value='';document.getElementById('cadCelularCliente').value='';document.getElementById('cadSenhaCliente').value='';mostrarToast('✅ OK!','success');mostrarTela('homeCliente');}catch(er){mostrarToast('❌ Erro!','error');}}
+async function cadastrarBarbeiro(){let n=document.getElementById('cadNomeBarbeiro').value.trim(),e=document.getElementById('cadEmailBarbeiro').value.trim(),c=document.getElementById('cadCelularBarbeiro').value.trim(),esp=document.getElementById('cadEspecialidadeBarbeiro')?.value||'Corte Social',desc=document.getElementById('cadDescricaoBarbeiro')?.value||'',s=document.getElementById('cadSenhaBarbeiro').value;if(!n||!e||!c||!s){mostrarToast('❌ Preencha!','error');return;}if(s.length<6){mostrarToast('❌ Senha 6+','error');return;}try{let sn=await db.collection('barbeiros').where('email','==',e).get();if(!sn.empty){mostrarToast('❌ Email existe!','error');return;}let id=Date.now().toString(),bb={id,nome:n,email:e,celular:c,senha:s,fotoPerfil:'',especialidades:[esp],descricao:desc,avaliacao:0,totalCortes:0,dataCriacao:new Date().toISOString()};await db.collection('barbeiros').doc(id).set(bb);barbeiroLogado=bb;salvarSessao('barbeiro',bb);document.getElementById('cadNomeBarbeiro').value='';document.getElementById('cadEmailBarbeiro').value='';document.getElementById('cadCelularBarbeiro').value='';document.getElementById('cadSenhaBarbeiro').value='';mostrarToast('✅ OK!','success');mostrarTela('homeBarbeiro');}catch(er){mostrarToast('❌ Erro!','error');}}
+function sairCliente(){if(!confirm('Tem certeza?'))return;if(clienteLogado&&clienteLogado.id)removerClienteOnline(clienteLogado.id);clienteLogado=null;limparSessao();fecharFormulariosLogin();mostrarTela('login');mostrarToast('👋 Até logo!','info');}
+function sairBarbeiro(){if(!confirm('Tem certeza?'))return;barbeiroLogado=null;limparSessao();fecharFormulariosLogin();mostrarTela('login');mostrarToast('👋 Até logo!','info');}
 
 // ==========================================================
-// CLIENTES ONLINE (LOCALSTORAGE + FIREBASE)
+// CLIENTES ONLINE
 // ==========================================================
-async function marcarClienteOnline(cliente){
-    if(!cliente||!cliente.id)return;
-    let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');
-    onlineList[cliente.id]={id:cliente.id,nome:cliente.nome,email:cliente.email,celular:cliente.celular||'',fotoPerfil:cliente.fotoPerfil||'',dataCriacao:cliente.dataCriacao||'',online:!0,ultimoAcesso:new Date().toISOString()};
-    localStorage.setItem('barbearia_online',JSON.stringify(onlineList));
-    try{await db.collection('clientes').doc(cliente.id).update({online:!0,ultimoAcesso:new Date().toISOString()});}catch(e){}
-    console.log('🟢 Online:',cliente.nome);
-}
-async function removerClienteOnline(id){
-    if(!id)return;
-    let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');
-    if(onlineList[id]){onlineList[id].online=!1;localStorage.setItem('barbearia_online',JSON.stringify(onlineList));}
-    try{await db.collection('clientes').doc(id).update({online:!1});}catch(e){}
-    console.log('⚫ Offline:',id);
-}
-async function carregarClientesOnline(){
-    let online=[];
-    try{
-        let sn=await db.collection('clientes').where('online','==',!0).get();
-        online=sn.docs.map(d=>({id:d.id,...d.data()}));
-        if(online.length>0){console.log('🟢 Firebase:',online.length);return online;}
-    }catch(e){}
-    let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');
-    online=Object.values(onlineList).filter(c=>c.online===!0);
-    console.log('🟢 localStorage:',online.length);
-    try{
-        let sn=await db.collection('clientes').get();
-        let todos=sn.docs.map(d=>({id:d.id,...d.data()}));
-        online=online.map(c=>{let fb=todos.find(t=>t.id===c.id);return fb?{...c,...fb,online:!0}:c;});
-    }catch(e){}
-    return online;
-}
-async function carregarTodosClientes(){
-    try{
-        let sn=await db.collection('clientes').orderBy('nome').get();
-        let todos=sn.docs.map(d=>({id:d.id,...d.data()}));
-        let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');
-        todos=todos.map(c=>({...c,online:onlineList[c.id]?onlineList[c.id].online:(c.online||!1)}));
-        return todos;
-    }catch(e){return[];}
-}
-async function carregarClientesCadastrados(){
-    if(!barbeiroLogado)return;let el=document.getElementById('totalClientesBarbeiro');if(!el)return;
-    try{let sn=await db.collection('clientes').get();el.textContent=sn.size+' clientes';}catch(e){}
-}
-setInterval(()=>{
-    let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');
-    let agora=Date.now(),mudou=!1;
-    Object.keys(onlineList).forEach(id=>{if(agora-new Date(onlineList[id].ultimoAcesso).getTime()>600000){onlineList[id].online=!1;mudou=!0;}});
-    if(mudou)localStorage.setItem('barbearia_online',JSON.stringify(onlineList));
-},60000);
+async function marcarClienteOnline(cliente){if(!cliente||!cliente.id)return;let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');onlineList[cliente.id]={id:cliente.id,nome:cliente.nome,email:cliente.email,celular:cliente.celular||'',fotoPerfil:cliente.fotoPerfil||'',online:!0,ultimoAcesso:new Date().toISOString()};localStorage.setItem('barbearia_online',JSON.stringify(onlineList));try{await db.collection('clientes').doc(cliente.id).update({online:!0});}catch(e){}}
+async function removerClienteOnline(id){if(!id)return;let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');if(onlineList[id]){onlineList[id].online=!1;localStorage.setItem('barbearia_online',JSON.stringify(onlineList));}try{await db.collection('clientes').doc(id).update({online:!1});}catch(e){}}
+async function carregarClientesOnline(){let online=[];try{let sn=await db.collection('clientes').where('online','==',!0).get();online=sn.docs.map(d=>({id:d.id,...d.data()}));if(online.length>0)return online;}catch(e){}let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');online=Object.values(onlineList).filter(c=>c.online===!0);return online;}
+async function carregarTodosClientes(){try{let sn=await db.collection('clientes').orderBy('nome').get();let todos=sn.docs.map(d=>({id:d.id,...d.data()}));let onlineList=JSON.parse(localStorage.getItem('barbearia_online')||'{}');return todos.map(c=>({...c,online:onlineList[c.id]?onlineList[c.id].online:(c.online||!1)}));}catch(e){return[];}}
+async function carregarClientesCadastrados(){if(!barbeiroLogado)return;let el=document.getElementById('totalClientesBarbeiro');if(!el)return;try{let sn=await db.collection('agendamentos').where('barbeiroId','==',barbeiroLogado.id).get();let clientes=new Set();sn.docs.forEach(d=>clientes.add(d.data().clienteId));el.textContent=clientes.size+' clientes';}catch(e){el.textContent='0 clientes';}}
 
 // ==========================================================
-// UPLOAD IMAGEM/VIDEO POST
+// LISTA DE BARBEIROS
+// ==========================================================
+async function carregarListaBarbeiros(){let c=document.getElementById('listaBarbeirosContainer');if(!c)return;try{let sn=await db.collection('barbeiros').orderBy('nome').get();let barbeiros=sn.docs.map(d=>({id:d.id,...d.data()}));if(barbeiros.length===0){c.innerHTML='<p style="color:#6B7280;text-align:center;padding:40px;">Nenhum barbeiro cadastrado</p>';return;}c.innerHTML=barbeiros.map(b=>'<div class="card" onclick="verPerfilBarbeiro(\''+b.id+'\')" style="cursor:pointer;"><div style="display:flex;align-items:center;gap:12px;"><img src="'+(b.fotoPerfil||'logobarbearia-rm.png')+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;"><div style="flex:1;"><h3 style="color:#D4A84B;margin:0;">'+b.nome+'</h3><p style="color:#aaa;font-size:12px;margin:4px 0;">✂️ '+(b.especialidades||['Cortes']).join(', ')+'</p><p style="color:#6B7280;font-size:11px;">⭐ '+(b.avaliacao||0)+' • '+(b.totalCortes||0)+' cortes</p></div><span style="font-size:24px;">➡️</span></div>'+(b.descricao?'<p style="color:#B0B0B0;font-size:12px;margin-top:8px;">'+b.descricao+'</p>':'')+'</div>').join('');}catch(e){}}
+
+// ==========================================================
+// PERFIL DO BARBEIRO
+// ==========================================================
+async function verPerfilBarbeiro(bid){try{let doc=await db.collection('barbeiros').doc(bid).get();if(!doc.exists)return;let b=doc.data();document.getElementById('perfilBarbeiroVistoNome').textContent=b.nome;document.getElementById('perfilBarbeiroVistoAvatar').src=b.fotoPerfil||'logobarbearia-rm.png';document.getElementById('perfilBarbeiroVistoEspecialidade').textContent=(b.especialidades||['Cortes']).join(', ');document.getElementById('perfilBarbeiroVistoDescricao').textContent=b.descricao||'Profissional dedicado';document.getElementById('perfilBarbeiroVistoCortes').textContent=b.totalCortes||0;let estrelas=Math.floor(b.avaliacao||0);document.getElementById('perfilBarbeiroVistoAvaliacao').textContent=estrelas>0?'⭐'.repeat(estrelas):'Sem avaliação';let ps=await db.collection('posts').where('barbeiroId','==',bid).orderBy('dataCriacao','desc').limit(6).get();let posts=ps.docs.map(d=>d.data());let pc=document.getElementById('perfilBarbeiroVistoPosts');pc.innerHTML=posts.length===0?'<p style="color:#6B7280;">Nenhum corte</p>':posts.map(p=>'<div style="background:rgba(255,255,255,0.03);border-radius:8px;overflow:hidden;">'+(p.imagem?'<img src="'+p.imagem+'" style="width:100%;height:120px;object-fit:cover;">':'')+'<div style="padding:8px;"><div style="font-weight:600;color:white;font-size:12px;">'+p.titulo+'</div><div style="color:#D4A84B;font-weight:700;">R$ '+(p.preco||0).toFixed(2)+'</div></div></div>').join('');document.getElementById('btnAgendarComBarbeiro').onclick=function(){fecharPerfilBarbeiro();agendarComBarbeiro(bid,b.nome);};document.getElementById('modalPerfilBarbeiro').classList.add('active');}catch(e){}}
+function fecharPerfilBarbeiro(){document.getElementById('modalPerfilBarbeiro').classList.remove('active');}
+function agendarComBarbeiro(bid,bnome){if(!clienteLogado){mostrarToast('❌ Faça login!','error');return;}sessionStorage.setItem('agendamentoBarbeiroId',bid);sessionStorage.setItem('agendamentoBarbeiroNome',bnome);mostrarTela('agendamento');mostrarToast('📅 Agende com '+bnome,'info');}
+
+// ==========================================================
+// FEED / POSTS
 // ==========================================================
 function previewImagemPost(event){let f=event.target.files[0];if(!f)return;let r=new FileReader();r.onload=function(ev){imagemBase64=ev.target.result;document.getElementById('postImagem').value=imagemBase64;document.getElementById('imagemPreviewImg').src=imagemBase64;document.getElementById('imagemPreview').style.display='block';document.getElementById('imagemUploadArea').style.display='none';};r.readAsDataURL(f);}
 function removerImagemPost(){imagemBase64='';document.getElementById('postImagem').value='';document.getElementById('imagemPreview').style.display='none';document.getElementById('imagemUploadArea').style.display='block';document.getElementById('postImagemInput').value='';}
 function previewVideoPost(event){let f=event.target.files[0];if(!f)return;let r=new FileReader();r.onload=function(ev){videoBase64=ev.target.result;document.getElementById('postVideo').value=videoBase64;document.getElementById('videoPreviewVideo').src=videoBase64;document.getElementById('videoPreview').style.display='block';document.getElementById('videoUploadArea').style.display='none';};r.readAsDataURL(f);}
 function removerVideoPost(){videoBase64='';document.getElementById('postVideo').value='';document.getElementById('videoPreview').style.display='none';document.getElementById('videoUploadArea').style.display='block';document.getElementById('postVideoInput').value='';}
-
-// ==========================================================
-// FEED / POSTS / AGENDAMENTOS / PLANOS / EXTRATO / ANÚNCIOS / PERFIL / FATURAMENTO
-// ==========================================================
 async function criarPost(){if(!barbeiroLogado)return;let t=document.getElementById('postTitulo').value.trim(),p=parseFloat(document.getElementById('postPreco').value),d=document.getElementById('postDescricao').value.trim(),i=document.getElementById('postImagem').value||'',v=document.getElementById('postVideo').value||'';if(!t||!p||p<=0){mostrarToast('❌ Título e preço!','error');return;}try{let id=Date.now().toString();await db.collection('posts').doc(id).set({id,barbeiroId:barbeiroLogado.id,barbeiroNome:barbeiroLogado.nome,titulo:t,preco:p,descricao:d,imagem:i,video:v,likes:0,comentarios:[],dataCriacao:new Date().toISOString()});mostrarToast('✅ Publicado!','success');document.getElementById('postTitulo').value='';document.getElementById('postPreco').value='';document.getElementById('postDescricao').value='';removerImagemPost();removerVideoPost();mostrarTela('homeBarbeiro');}catch(e){mostrarToast('❌ Erro!','error');}}
-async function carregarFeedCliente(){let c=document.getElementById('feedClienteContainer');if(!c)return;try{let sn=await db.collection('posts').orderBy('dataCriacao','desc').get();let posts=sn.docs.map(d=>({id:d.id,...d.data()}));if(posts.length===0){c.innerHTML='<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post</h3></div>';return;}c.innerHTML=posts.map(p=>'<div class="feed-post"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+(p.barbeiroNome||'Barbearia RM')+'</div><div class="feed-post-user-time">'+new Date(p.dataCriacao).toLocaleDateString('pt-BR')+'</div></div></div>'+(p.video?'<video class="feed-post-video" controls><source src="'+p.video+'" type="video/mp4"></video>':'')+(p.imagem&&!p.video?'<img src="'+p.imagem+'" class="feed-post-image">':'')+'<div class="feed-post-body"><div class="feed-post-title">'+p.titulo+'</div><div class="feed-post-price">R$ '+(p.preco||0).toFixed(2)+'</div></div><div class="feed-post-actions"><button>❤️ '+(p.likes||0)+'</button><button class="btn-comentar" data-id="'+p.id+'">💬 '+(p.comentarios||[]).length+'</button></div></div>').join('');document.querySelectorAll('.btn-comentar').forEach(b=>b.addEventListener('click',function(){abrirComentarios(this.dataset.id);}));}catch(e){}}
+async function carregarFeedCliente(){let c=document.getElementById('feedClienteContainer');if(!c)return;try{let sn=await db.collection('posts').orderBy('dataCriacao','desc').get();let posts=sn.docs.map(d=>({id:d.id,...d.data()}));if(posts.length===0){c.innerHTML='<div class="card" style="text-align:center;padding:40px;"><h3 style="color:#D4A84B;">📸 Nenhum post</h3></div>';return;}c.innerHTML=posts.map(p=>'<div class="feed-post"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+p.barbeiroNome+'</div><div class="feed-post-user-time">'+new Date(p.dataCriacao).toLocaleDateString('pt-BR')+'</div></div></div>'+(p.video?'<video class="feed-post-video" controls><source src="'+p.video+'" type="video/mp4"></video>':'')+(p.imagem&&!p.video?'<img src="'+p.imagem+'" class="feed-post-image">':'')+'<div class="feed-post-body"><div class="feed-post-title">'+p.titulo+'</div><div class="feed-post-price">R$ '+(p.preco||0).toFixed(2)+'</div></div><div class="feed-post-actions"><button>❤️ '+(p.likes||0)+'</button><button class="btn-comentar" data-id="'+p.id+'">💬 '+(p.comentarios||[]).length+'</button></div></div>').join('');document.querySelectorAll('.btn-comentar').forEach(b=>b.addEventListener('click',function(){abrirComentarios(this.dataset.id);}));}catch(e){}}
 async function carregarMeusPosts(){let c=document.getElementById('meusPostsContainer');if(!c||!barbeiroLogado)return;try{let sn=await db.collection('posts').where('barbeiroId','==',barbeiroLogado.id).get();let posts=[];sn.forEach(d=>posts.push({id:d.id,...d.data()}));posts.sort((a,b)=>new Date(b.dataCriacao)-new Date(a.dataCriacao));if(posts.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum post</p>';return;}c.innerHTML=posts.map(p=>'<div class="feed-post" style="margin-bottom:12px;"><div class="feed-post-header"><div class="feed-post-avatar">✂️</div><div class="feed-post-user"><div class="feed-post-user-name">'+p.titulo+'</div><div class="feed-post-user-time">R$ '+(p.preco||0).toFixed(2)+'</div></div></div>'+(p.imagem?'<img src="'+p.imagem+'" class="feed-post-image">':'')+'<button class="btn btn-small btn-danger btn-excluir" data-id="'+p.id+'">🗑</button></div>').join('');document.querySelectorAll('.btn-excluir').forEach(b=>b.addEventListener('click',function(){excluirMeuPost(this.dataset.id);}));}catch(e){}}
 async function excluirMeuPost(id){if(!confirm('Excluir?'))return;await db.collection('posts').doc(id).delete();mostrarToast('🗑 Excluído!','success');carregarMeusPosts();carregarFeedCliente();}
 function abrirComentarios(id){postSelecionadoId=id;carregarComentarios(id);document.getElementById('modalComentario').classList.add('active');}
 async function carregarComentarios(id){let c=document.getElementById('comentariosContainer');if(!c)return;let doc=await db.collection('posts').doc(id).get();if(!doc.exists)return;let com=doc.data().comentarios||[];c.innerHTML=com.length===0?'<p style="color:#6B7280;">Nenhum</p>':com.map(x=>'<div style="padding:8px;margin:4px 0;background:rgba(255,255,255,.03);border-radius:8px;"><strong style="color:#D4A84B;">'+x.autor+'</strong><p style="color:#B0B0B0;">'+x.texto+'</p></div>').join('');}
 async function adicionarComentario(){let t=document.getElementById('novoComentario').value.trim();if(!t)return;let a=clienteLogado?clienteLogado.nome:(barbeiroLogado?barbeiroLogado.nome:'Anônimo');let doc=await db.collection('posts').doc(postSelecionadoId).get();let com=doc.data().comentarios||[];com.push({autor:a,texto:t,data:new Date().toISOString()});await db.collection('posts').doc(postSelecionadoId).update({comentarios:com});document.getElementById('novoComentario').value='';carregarComentarios(postSelecionadoId);}
 function fecharModalComentario(){document.getElementById('modalComentario').classList.remove('active');}
+
+// ==========================================================
+// AGENDAMENTOS
+// ==========================================================
 function carregarOpcoesAgendamento(){let sh=document.getElementById('agendamentoHorario'),st=document.getElementById('agendamentoTipo');if(sh){let h=[];for(let i=9;i<=18;i++)for(let j=0;j<60;j+=30){if(i===18&&j>0)break;h.push(String(i).padStart(2,'0')+':'+String(j).padStart(2,'0'));}sh.innerHTML=h.map(x=>'<option value="'+x+'">'+x+'</option>').join('');}if(st){let t=['Corte Social','Corte Degradê','Corte Navalhado','Corte Máquina','Barba','Barba + Corte'];st.innerHTML=t.map(x=>'<option value="'+x+'">'+x+'</option>').join('');}let d=document.getElementById('agendamentoData');if(d)d.min=new Date().toISOString().split('T')[0];}
-async function agendarCorte(){if(!clienteLogado){mostrarToast('❌ Faça login!','error');return;}let d=document.getElementById('agendamentoData').value,h=document.getElementById('agendamentoHorario').value,t=document.getElementById('agendamentoTipo').value;if(!d){mostrarToast('❌ Selecione data!','error');return;}try{let id=Date.now().toString();await db.collection('agendamentos').doc(id).set({id,clienteId:clienteLogado.id,clienteNome:clienteLogado.nome,data:d,horario:h,tipo:t,status:'pendente',dataCriacao:new Date().toISOString()});mostrarToast('✅ Agendado!','success');document.getElementById('agendamentoData').value='';carregarAgendaCliente();mostrarTela('homeCliente');}catch(e){}}
-async function carregarAgendaCliente(){if(!clienteLogado)return;let c=document.getElementById('agendaClienteContainer');if(!c)return;try{let sn=await db.collection('agendamentos').where('clienteId','==',clienteLogado.id).get();let ag=sn.docs.map(d=>({id:d.id,...d.data()}));ag.sort((a,b)=>new Date(b.data)-new Date(a.data));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=ag.map(a=>'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">'+a.tipo+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+a.status+'">'+(a.status==='confirmado'?'✅':a.status==='cancelado'?'❌':a.status==='concluido'?'✔️':'⏳')+' '+a.status+'</span></div>').join('');}catch(e){}}
-async function carregarAgendamentosBarbeiro(){let c=document.getElementById('agendamentosBarbeiroContainer');if(!c)return;try{let sn=await db.collection('agendamentos').orderBy('data','desc').get();let ag=sn.docs.map(d=>({id:d.id,...d.data()}));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=ag.map(a=>'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">👤 '+(a.clienteNome||'Cliente')+' - '+a.tipo+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+a.status+'">'+a.status+'</span>'+ (a.status==='pendente'?'<button class="btn btn-small btn-success" onclick="confirmarAgendamento(\''+a.id+'\')">✅</button><button class="btn btn-small btn-danger" onclick="cancelarAgendamento(\''+a.id+'\')">❌</button>':'')+ (a.status==='confirmado'?'<button class="btn btn-small btn-outline" onclick="concluirAgendamento(\''+a.id+'\')">✔️</button>':'')+'</div>').join('');}catch(e){}}
+async function agendarCorte(){if(!clienteLogado){mostrarToast('❌ Faça login!','error');return;}let d=document.getElementById('agendamentoData').value,h=document.getElementById('agendamentoHorario').value,t=document.getElementById('agendamentoTipo').value;let bid=sessionStorage.getItem('agendamentoBarbeiroId');let bnome=sessionStorage.getItem('agendamentoBarbeiroNome');if(!bid){let sn=await db.collection('barbeiros').limit(1).get();if(sn.empty){mostrarToast('❌ Nenhum barbeiro!','error');return;}let b=sn.docs[0].data();bid=b.id;bnome=b.nome;}if(!d){mostrarToast('❌ Selecione data!','error');return;}try{let id=Date.now().toString();await db.collection('agendamentos').doc(id).set({id,barbeiroId:bid,barbeiroNome:bnome,clienteId:clienteLogado.id,clienteNome:clienteLogado.nome,data:d,horario:h,tipo:t,status:'pendente',dataCriacao:new Date().toISOString()});await db.collection('barbeiros').doc(bid).update({totalCortes:firebase.firestore.FieldValue.increment(1)});mostrarToast('✅ Agendado com '+bnome+'!','success');document.getElementById('agendamentoData').value='';carregarAgendaCliente();mostrarTela('homeCliente');}catch(e){}}
+async function carregarAgendaCliente(){if(!clienteLogado)return;let c=document.getElementById('agendaClienteContainer');if(!c)return;try{let sn=await db.collection('agendamentos').where('clienteId','==',clienteLogado.id).get();let ag=sn.docs.map(d=>({id:d.id,...d.data()}));ag.sort((a,b)=>new Date(b.data)-new Date(a.data));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=ag.map(a=>'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">✂️ '+a.tipo+' com '+a.barbeiroNome+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+a.status+'">'+(a.status==='confirmado'?'✅':a.status==='cancelado'?'❌':a.status==='concluido'?'✔️':'⏳')+' '+a.status+'</span></div>').join('');}catch(e){}}
+async function carregarAgendamentosBarbeiro(){if(!barbeiroLogado)return;let c=document.getElementById('agendamentosBarbeiroContainer');if(!c)return;try{let sn=await db.collection('agendamentos').where('barbeiroId','==',barbeiroLogado.id).orderBy('data','desc').get();let ag=sn.docs.map(d=>({id:d.id,...d.data()}));if(ag.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML=ag.map(a=>'<div class="agenda-item"><div class="agenda-info"><div class="agenda-cliente">👤 '+a.clienteNome+' • ✂️ '+a.tipo+'</div><div class="agenda-data">📅 '+a.data+' • ⏰ '+a.horario+'</div></div><span class="agenda-status '+a.status+'">'+a.status+'</span>'+ (a.status==='pendente'?'<button class="btn btn-small btn-success" onclick="confirmarAgendamento(\''+a.id+'\')">✅</button><button class="btn btn-small btn-danger" onclick="cancelarAgendamento(\''+a.id+'\')">❌</button>':'')+ (a.status==='confirmado'?'<button class="btn btn-small btn-outline" onclick="concluirAgendamento(\''+a.id+'\')">✔️</button>':'')+'</div>').join('');}catch(e){}}
 async function confirmarAgendamento(id){await db.collection('agendamentos').doc(id).update({status:'confirmado'});carregarAgendamentosBarbeiro();if(clienteLogado)carregarAgendaCliente();mostrarToast('✅ Confirmado!','success');}
 async function cancelarAgendamento(id){if(!confirm('Cancelar?'))return;await db.collection('agendamentos').doc(id).update({status:'cancelado'});carregarAgendamentosBarbeiro();if(clienteLogado)carregarAgendaCliente();mostrarToast('❌ Cancelado!','info');}
 async function concluirAgendamento(id){await db.collection('agendamentos').doc(id).update({status:'concluido'});carregarAgendamentosBarbeiro();if(clienteLogado)carregarAgendaCliente();mostrarToast('✔️ Concluído!','success');}
-async function carregarPlanos(){let c=document.getElementById('planosContainer');if(!c)return;try{let sn=await db.collection('planos').orderBy('dataCriacao','desc').get();let p=sn.docs.map(d=>({id:d.id,...d.data()}));if(p.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum plano</p>';return;}c.innerHTML=p.map(x=>'<div class="plano-card"><div class="plano-info"><div class="plano-nome">'+x.nome+'</div><div class="plano-periodo">📅 '+x.periodo+'</div></div><div class="plano-preco">R$ '+(x.preco||0).toFixed(2)+'</div><div style="display:flex;gap:4px;"><button class="btn btn-small btn-primary" onclick="editarPlano(\''+x.id+'\')">✏️</button><button class="btn btn-small btn-danger" onclick="excluirPlano(\''+x.id+'\')">🗑</button></div></div>').join('');}catch(e){}}
+
+// ==========================================================
+// PLANOS
+// ==========================================================
+async function carregarPlanos(){let c=document.getElementById('planosContainer');if(!c||!barbeiroLogado)return;try{let sn=await db.collection('planos').where('barbeiroId','==',barbeiroLogado.id).orderBy('dataCriacao','desc').get();let p=sn.docs.map(d=>({id:d.id,...d.data()}));if(p.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum plano</p>';return;}c.innerHTML=p.map(x=>'<div class="plano-card"><div class="plano-info"><div class="plano-nome">'+x.nome+'</div><div class="plano-periodo">📅 '+x.periodo+'</div></div><div class="plano-preco">R$ '+(x.preco||0).toFixed(2)+'</div><div style="display:flex;gap:4px;"><button class="btn btn-small btn-primary" onclick="editarPlano(\''+x.id+'\')">✏️</button><button class="btn btn-small btn-danger" onclick="excluirPlano(\''+x.id+'\')">🗑</button></div></div>').join('');}catch(e){}}
 async function criarPlano(){if(!barbeiroLogado)return;let n=document.getElementById('planoNome').value.trim(),p=document.getElementById('planoPeriodo').value,pr=parseFloat(document.getElementById('planoPreco').value);if(!n||!pr){mostrarToast('❌ Preencha!','error');return;}try{let id=Date.now().toString();await db.collection('planos').doc(id).set({id,barbeiroId:barbeiroLogado.id,nome:n,periodo:p,preco:pr,dataCriacao:new Date().toISOString()});mostrarToast('✅ Plano criado!','success');document.getElementById('planoNome').value='';document.getElementById('planoPreco').value='';mostrarTela('homeBarbeiro');}catch(e){}}
 async function editarPlano(id){let nn=prompt('Novo nome:');if(!nn)return;let np=parseFloat(prompt('Novo preço:'));if(!np)return;await db.collection('planos').doc(id).update({nome:nn,preco:np});carregarPlanos();mostrarToast('✅ Atualizado!','success');}
 async function excluirPlano(id){if(!confirm('Excluir plano?'))return;await db.collection('planos').doc(id).delete();carregarPlanos();mostrarToast('🗑 Excluído!','success');}
+
+// ==========================================================
+// EXTRATO
+// ==========================================================
 async function filtrarExtrato(periodo){calcularExtrato(periodo);}
-async function calcularExtrato(periodo){let c=document.getElementById('extratoContainer');if(!c)return;try{let sn=await db.collection('agendamentos').where('status','in',['confirmado','concluido']).get();let ag=sn.docs.map(d=>d.data());let hoje=new Date();let total=0;let itens=[];ag.forEach(a=>{let da=new Date(a.data);let v=35;let inc=!1;if(periodo==='hoje'){inc=a.data===hoje.toISOString().split('T')[0];}else if(periodo==='semana'){let ini=new Date(hoje);ini.setDate(hoje.getDate()-hoje.getDay());inc=da>=ini;}else if(periodo==='mes'){inc=da.getMonth()===hoje.getMonth()&&da.getFullYear()===hoje.getFullYear();}else if(periodo==='ano'){inc=da.getFullYear()===hoje.getFullYear();}else{inc=!0;}if(inc){total+=v;itens.push(a);}});document.getElementById('extratoHoje').textContent='R$ '+total.toFixed(2);document.getElementById('extratoSemana').textContent='R$ '+(total*0.3).toFixed(2);document.getElementById('extratoMes').textContent='R$ '+(total*0.7).toFixed(2);document.getElementById('extratoAno').textContent='R$ '+total.toFixed(2);if(itens.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML='<p style="color:#D4A84B;">Total: <strong>R$ '+total.toFixed(2)+'</strong> ('+itens.length+' cortes)</p>'+itens.map(a=>'<div style="padding:8px;margin:2px 0;background:rgba(255,255,255,.03);border-radius:6px;font-size:12px;">👤 '+a.clienteNome+' • ✂️ '+a.tipo+' • 📅 '+a.data+' • R$ 35,00</div>').join('');}catch(e){}}
+async function calcularExtrato(periodo){let c=document.getElementById('extratoContainer');if(!c||!barbeiroLogado)return;try{let sn=await db.collection('agendamentos').where('barbeiroId','==',barbeiroLogado.id).where('status','in',['confirmado','concluido']).get();let ag=sn.docs.map(d=>d.data());let hoje=new Date();let total=0;let itens=[];ag.forEach(a=>{let da=new Date(a.data);let v=35;let inc=!1;if(periodo==='hoje'){inc=a.data===hoje.toISOString().split('T')[0];}else if(periodo==='semana'){let ini=new Date(hoje);ini.setDate(hoje.getDate()-hoje.getDay());inc=da>=ini;}else if(periodo==='mes'){inc=da.getMonth()===hoje.getMonth()&&da.getFullYear()===hoje.getFullYear();}else if(periodo==='ano'){inc=da.getFullYear()===hoje.getFullYear();}else{inc=!0;}if(inc){total+=v;itens.push(a);}});document.getElementById('extratoHoje').textContent='R$ '+total.toFixed(2);document.getElementById('extratoSemana').textContent='R$ '+(total*0.3).toFixed(2);document.getElementById('extratoMes').textContent='R$ '+(total*0.7).toFixed(2);document.getElementById('extratoAno').textContent='R$ '+total.toFixed(2);if(itens.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum</p>';return;}c.innerHTML='<p style="color:#D4A84B;">Total: <strong>R$ '+total.toFixed(2)+'</strong> ('+itens.length+' cortes)</p>'+itens.map(a=>'<div style="padding:8px;margin:2px 0;background:rgba(255,255,255,.03);border-radius:6px;font-size:12px;">👤 '+a.clienteNome+' • ✂️ '+a.tipo+' • 📅 '+a.data+' • R$ 35,00</div>').join('');}catch(e){}}
+
+// ==========================================================
+// ANÚNCIOS / PERFIL / FATURAMENTO
+// ==========================================================
 async function carregarAnuncios(){let c=document.getElementById('anunciosContainer');if(!c)return;try{let hoje=new Date().toISOString();let sn=await db.collection('anuncios').where('dataExpiracao','>',hoje).get();let a=sn.docs.map(d=>({id:d.id,...d.data()}));if(a.length===0){c.innerHTML='<p style="color:#6B7280;">📢 Nenhum</p>';return;}c.innerHTML=a.map(x=>'<div class="card" style="border:2px solid #FF6B6B;"><span style="background:#FF4757;color:white;padding:4px 10px;border-radius:20px;font-size:11px;">📢</span>'+(x.imagem?'<img src="'+x.imagem+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin:8px 0;">':'')+'<h3 style="color:#FF6B6B;">'+x.titulo+'</h3><p>'+x.descricao+'</p></div>').join('');}catch(e){}}
 function carregarPerfilCliente(){if(!clienteLogado)return;document.getElementById('perfilClienteNome').textContent=clienteLogado.nome;document.getElementById('perfilClienteEmail').textContent=clienteLogado.email;document.getElementById('editClienteNome').value=clienteLogado.nome||'';document.getElementById('editClienteCelular').value=clienteLogado.celular||'';}
 async function salvarPerfilCliente(){if(!clienteLogado)return;let n=document.getElementById('editClienteNome').value.trim(),c=document.getElementById('editClienteCelular').value.trim();await db.collection('clientes').doc(clienteLogado.id).update({nome:n,celular:c});clienteLogado.nome=n;clienteLogado.celular=c;salvarSessao('cliente',clienteLogado);mostrarToast('✅ Salvo!','success');}
 function carregarPerfilBarbeiro(){if(!barbeiroLogado)return;document.getElementById('perfilBarbeiroNome').textContent=barbeiroLogado.nome;document.getElementById('perfilBarbeiroEmail').textContent=barbeiroLogado.email;document.getElementById('editBarbeiroNome').value=barbeiroLogado.nome||'';document.getElementById('editBarbeiroCelular').value=barbeiroLogado.celular||'';document.getElementById('editBarbeiroEmail').value=barbeiroLogado.email||'';}
 async function salvarPerfilBarbeiro(){if(!barbeiroLogado)return;let n=document.getElementById('editBarbeiroNome').value.trim(),c=document.getElementById('editBarbeiroCelular').value.trim(),e=document.getElementById('editBarbeiroEmail').value.trim();await db.collection('barbeiros').doc(barbeiroLogado.id).update({nome:n,celular:c,email:e});barbeiroLogado.nome=n;barbeiroLogado.celular=c;barbeiroLogado.email=e;salvarSessao('barbeiro',barbeiroLogado);mostrarToast('✅ Salvo!','success');}
-async function calcularFaturamento(){try{let sn=await db.collection('agendamentos').where('status','in',['confirmado','concluido']).get();let ag=sn.docs.map(d=>d.data()),hoje=new Date().toISOString().split('T')[0],th=0,tg=0;ag.forEach(a=>{let v=35;if(a.data===hoje)th+=v;tg+=v;});document.getElementById('faturamentoHoje').textContent='R$ '+th.toFixed(2);document.getElementById('faturamentoSemana').textContent='R$ '+(tg*0.3).toFixed(2);document.getElementById('faturamentoMes').textContent='R$ '+(tg*0.7).toFixed(2);document.getElementById('faturamentoAno').textContent='R$ '+tg.toFixed(2);}catch(e){}}
+async function calcularFaturamento(){if(!barbeiroLogado)return;try{let sn=await db.collection('agendamentos').where('barbeiroId','==',barbeiroLogado.id).where('status','in',['confirmado','concluido']).get();let ag=sn.docs.map(d=>d.data()),hoje=new Date().toISOString().split('T')[0],th=0,tg=0;ag.forEach(a=>{let v=35;if(a.data===hoje)th+=v;tg+=v;});document.getElementById('faturamentoHoje').textContent='R$ '+th.toFixed(2);document.getElementById('faturamentoSemana').textContent='R$ '+(tg*0.3).toFixed(2);document.getElementById('faturamentoMes').textContent='R$ '+(tg*0.7).toFixed(2);document.getElementById('faturamentoAno').textContent='R$ '+tg.toFixed(2);}catch(e){}}
 async function verificarLiveBadge(){try{let doc=await db.collection('lives').doc('live_atual').get();liveAtivaGeral=doc.exists&&doc.data().ativa;let bc=document.getElementById('liveBadgeCliente'),bb=document.getElementById('liveBadgeBarbeiro');if(bc)bc.style.display=liveAtivaGeral?'inline-block':'none';if(bb)bb.style.display=liveAtivaGeral?'inline-block':'none';}catch(e){}}
 
 // ==========================================================
 // SOCIAL / CHAT PRIVADO
 // ==========================================================
 async function carregarSocialCliente(){let c=document.getElementById('socialClientesOnline');if(!c)return;let online=await carregarClientesOnline();online=online.filter(x=>x.id!==(clienteLogado?clienteLogado.id:''));if(online.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhum online</p>';return;}c.innerHTML=online.map(x=>'<div class="cliente-online-card" onclick="abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:#0c6;font-size:10px;">● Online</span></div></div>').join('');}
-async function carregarSocialBarbeiro(){
-    let co=document.getElementById('socialBarbeiroOnline'),ct=document.getElementById('socialBarbeiroTodos');
-    if(!co)return;
-    let online=await carregarClientesOnline();
-    document.getElementById('onlineAgora').textContent=online.length;
-    co.innerHTML=online.length===0?'<p style="color:#6B7280;text-align:center;padding:20px;">Nenhum cliente online</p>':online.map(x=>'<div class="cliente-online-card" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:#0c6;font-size:10px;">● Online agora</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');
-    if(ct){let todos=await carregarTodosClientes();document.getElementById('totalClientesSocial').textContent=todos.length;ct.innerHTML=todos.map(x=>'<div class="cliente-online-card" style="border-color:rgba(255,255,255,0.1);" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'" style="border-color:'+(x.online?'#0c6':'#666')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:'+(x.online?'#0c6':'#aaa')+';font-size:10px;">'+(x.online?'● Online agora':'○ Offline')+'</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');}
-}
+async function carregarSocialBarbeiro(){let co=document.getElementById('socialBarbeiroOnline'),ct=document.getElementById('socialBarbeiroTodos');if(!co)return;let online=await carregarClientesOnline();document.getElementById('onlineAgora').textContent=online.length;co.innerHTML=online.length===0?'<p style="color:#6B7280;">Nenhum online</p>':online.map(x=>'<div class="cliente-online-card" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:#0c6;">● Online</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');if(ct){let todos=await carregarTodosClientes();document.getElementById('totalClientesSocial').textContent=todos.length;ct.innerHTML=todos.map(x=>'<div class="cliente-online-card" style="border-color:rgba(255,255,255,0.1);" onclick="verPerfilCliente(\''+x.id+'\')"><img src="'+(x.fotoPerfil||'logobarbearia-rm.png')+'" style="border-color:'+(x.online?'#0c6':'#666')+'"><div style="flex:1;"><strong>'+x.nome+'</strong><br><span style="color:'+(x.online?'#0c6':'#aaa')+'">'+(x.online?'● Online':'○ Offline')+'</span></div><button class="btn btn-small btn-outline" onclick="event.stopPropagation();abrirChatCliente(\''+x.id+'\',\''+x.nome+'\')">💬</button></div>').join('');}}
 async function carregarConversasSocial(){let c=document.getElementById('socialConversas');if(!c||!clienteLogado)return;try{let sn=await db.collection('chats').get();let conv=[];sn.forEach(d=>{let data=d.data();if(d.id.includes(clienteLogado.id)&&data.mensagens&&data.mensagens.length>0){conv.push({id:d.id,ultima:data.mensagens[data.mensagens.length-1],total:data.mensagens.length});}});if(conv.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhuma conversa</p>';return;}c.innerHTML=conv.map(x=>'<div style="padding:12px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;cursor:pointer;" onclick="abrirChatPorId(\''+x.id+'\')"><div style="display:flex;align-items:center;gap:10px;"><div style="width:45px;height:45px;border-radius:50%;background:linear-gradient(135deg,#D4A84B,#B8923A);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a1a1a;">👤</div><div style="flex:1;"><strong style="color:#D4A84B;">'+x.ultima.autor+'</strong><p style="color:#aaa;font-size:12px;">'+(x.ultima.texto||'')+(x.ultima.imagem?' 🖼️':'')+(x.ultima.audio?' 🎤':'')+'</p></div><span style="font-size:10px;color:#666;">'+x.total+'</span></div></div>').join('');}catch(e){}}
 async function carregarConversasSocialBarbeiro(){let c=document.getElementById('socialConversasBarbeiro');if(!c||!barbeiroLogado)return;try{let sn=await db.collection('chats').get();let conv=[];sn.forEach(d=>{let data=d.data();if(data.mensagens&&data.mensagens.length>0){conv.push({id:d.id,ultima:data.mensagens[data.mensagens.length-1],total:data.mensagens.length});}});if(conv.length===0){c.innerHTML='<p style="color:#6B7280;">Nenhuma conversa</p>';return;}c.innerHTML=conv.map(x=>'<div style="padding:12px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:6px;cursor:pointer;" onclick="abrirChatPorId(\''+x.id+'\')"><div style="display:flex;align-items:center;gap:10px;"><div style="width:45px;height:45px;border-radius:50%;background:linear-gradient(135deg,#D4A84B,#B8923A);display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a1a1a;">👤</div><div style="flex:1;"><strong style="color:#D4A84B;">'+x.ultima.autor+'</strong><p style="color:#aaa;font-size:12px;">'+(x.ultima.texto||'')+(x.ultima.imagem?' 🖼️':'')+(x.ultima.audio?' 🎤':'')+'</p></div></div></div>').join('');}catch(e){}}
 function abrirChatPorId(chatId){let partes=chatId.split('_');let meuId=clienteLogado?clienteLogado.id:(barbeiroLogado?barbeiroLogado.id:'');let outroId=partes.find(p=>p!==meuId);if(outroId){db.collection('clientes').doc(outroId).get().then(doc=>{if(doc.exists){let c=doc.data();abrirChatCliente(c.id,c.nome);}});}}
@@ -263,38 +171,7 @@ async function verPerfilCliente(id){try{let doc=await db.collection('clientes').
 function fecharPerfilCliente(){document.getElementById('modalPerfilCliente').classList.remove('active');}
 function abrirChatCliente(id,nome){document.getElementById('chatClienteNome').textContent=nome;document.getElementById('chatClienteId').value=id;document.getElementById('modalChatCliente').classList.add('active');carregarMensagensChat(id);}
 function fecharChatCliente(){document.getElementById('modalChatCliente').classList.remove('active');}
-async function carregarMensagensChat(cid){
-    let c=document.getElementById('chatMensagens');if(!c)return;
-    let meuId=clienteLogado?clienteLogado.id:(barbeiroLogado?barbeiroLogado.id:'');
-    let chatId=[meuId,cid].sort().join('_');
-    try{
-        let doc=await db.collection('chats').doc(chatId).get();
-        let msgs=doc.exists?(doc.data().mensagens||[]):[];
-        if(msgs.length===0){c.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">💬 Nenhuma mensagem</div>';return;}
-        let html='',lastDate='';
-        msgs.forEach(m=>{
-            let msgDate=new Date(m.data).toLocaleDateString('pt-BR');
-            if(msgDate!==lastDate){html+='<div style="text-align:center;margin:10px 0;"><span style="background:#1a1a1a;color:#aaa;padding:4px 12px;border-radius:10px;font-size:11px;">'+msgDate+'</span></div>';lastDate=msgDate;}
-            let isSent=m.autorId===meuId;
-            let time=new Date(m.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-            if(isSent){
-                html+='<div style="display:flex;justify-content:flex-end;margin:3px 0;"><div style="max-width:75%;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;padding:8px 12px;border-radius:12px 12px 0 12px;font-size:13px;">';
-                if(m.imagem)html+='<img src="'+m.imagem+'" style="max-width:200px;border-radius:8px;margin-bottom:4px;" onclick="window.open(this.src)">';
-                if(m.audio)html+='<audio controls src="'+m.audio+'" style="height:30px;width:180px;"></audio>';
-                if(m.texto)html+=m.texto;
-                html+='<div style="text-align:right;font-size:9px;opacity:0.7;margin-top:2px;">'+time+'</div></div></div>';
-            }else{
-                html+='<div style="display:flex;justify-content:flex-start;margin:3px 0;"><div style="max-width:75%;background:#2a2a2a;color:#fff;padding:8px 12px;border-radius:12px 12px 12px 0;font-size:13px;">';
-                html+='<div style="font-size:10px;color:#D4A84B;font-weight:600;margin-bottom:2px;">'+m.autor+'</div>';
-                if(m.imagem)html+='<img src="'+m.imagem+'" style="max-width:200px;border-radius:8px;margin-bottom:4px;" onclick="window.open(this.src)">';
-                if(m.audio)html+='<audio controls src="'+m.audio+'" style="height:30px;width:180px;"></audio>';
-                if(m.texto)html+=m.texto;
-                html+='<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px;">'+time+'</div></div></div>';
-            }
-        });
-        c.innerHTML=html;c.scrollTop=c.scrollHeight;
-    }catch(e){}
-}
+async function carregarMensagensChat(cid){let c=document.getElementById('chatMensagens');if(!c)return;let meuId=clienteLogado?clienteLogado.id:(barbeiroLogado?barbeiroLogado.id:'');let chatId=[meuId,cid].sort().join('_');try{let doc=await db.collection('chats').doc(chatId).get();let msgs=doc.exists?(doc.data().mensagens||[]):[];if(msgs.length===0){c.innerHTML='<div style="text-align:center;color:#aaa;padding:20px;">💬 Nenhuma mensagem</div>';return;}let html='',lastDate='';msgs.forEach(m=>{let msgDate=new Date(m.data).toLocaleDateString('pt-BR');if(msgDate!==lastDate){html+='<div style="text-align:center;margin:10px 0;"><span style="background:#1a1a1a;color:#aaa;padding:4px 12px;border-radius:10px;font-size:11px;">'+msgDate+'</span></div>';lastDate=msgDate;}let isSent=m.autorId===meuId;let time=new Date(m.data).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});if(isSent){html+='<div style="display:flex;justify-content:flex-end;margin:3px 0;"><div style="max-width:75%;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;padding:8px 12px;border-radius:12px 12px 0 12px;font-size:13px;">';if(m.imagem)html+='<img src="'+m.imagem+'" style="max-width:200px;border-radius:8px;margin-bottom:4px;" onclick="window.open(this.src)">';if(m.audio)html+='<audio controls src="'+m.audio+'" style="height:30px;width:180px;"></audio>';if(m.texto)html+=m.texto;html+='<div style="text-align:right;font-size:9px;opacity:0.7;margin-top:2px;">'+time+'</div></div></div>';}else{html+='<div style="display:flex;justify-content:flex-start;margin:3px 0;"><div style="max-width:75%;background:#2a2a2a;color:#fff;padding:8px 12px;border-radius:12px 12px 12px 0;font-size:13px;">';html+='<div style="font-size:10px;color:#D4A84B;font-weight:600;margin-bottom:2px;">'+m.autor+'</div>';if(m.imagem)html+='<img src="'+m.imagem+'" style="max-width:200px;border-radius:8px;margin-bottom:4px;" onclick="window.open(this.src)">';if(m.audio)html+='<audio controls src="'+m.audio+'" style="height:30px;width:180px;"></audio>';if(m.texto)html+=m.texto;html+='<div style="text-align:right;font-size:9px;opacity:0.5;margin-top:2px;">'+time+'</div></div></div>';}});c.innerHTML=html;c.scrollTop=c.scrollHeight;}catch(e){}}
 async function enviarMensagemChat(){let i=document.getElementById('chatMensagemInput');if(!i)return;let t=i.value.trim();if(!t)return;let cid=document.getElementById('chatClienteId').value;let meuId=clienteLogado?clienteLogado.id:(barbeiroLogado?barbeiroLogado.id:'');let meuNome=clienteLogado?clienteLogado.nome:(barbeiroLogado?barbeiroLogado.nome:'Anônimo');let chatId=[meuId,cid].sort().join('_');let doc=await db.collection('chats').doc(chatId).get();let msgs=doc.exists?(doc.data().mensagens||[]):[];msgs.push({autor:meuNome,autorId:meuId,texto:t,data:new Date().toISOString()});await db.collection('chats').doc(chatId).set({mensagens:msgs});i.value='';carregarMensagensChat(cid);}
 async function enviarImagemChatPrivado(event){let f=event.target.files[0];if(!f)return;let r=new FileReader();r.onload=async function(ev){let cid=document.getElementById('chatClienteId').value;let meuId=clienteLogado?clienteLogado.id:(barbeiroLogado?barbeiroLogado.id:'');let meuNome=clienteLogado?clienteLogado.nome:(barbeiroLogado?barbeiroLogado.nome:'Anônimo');let chatId=[meuId,cid].sort().join('_');let doc=await db.collection('chats').doc(chatId).get();let msgs=doc.exists?(doc.data().mensagens||[]):[];msgs.push({autor:meuNome,autorId:meuId,imagem:ev.target.result,data:new Date().toISOString()});await db.collection('chats').doc(chatId).set({mensagens:msgs});carregarMensagensChat(cid);mostrarToast('🖼️ Imagem enviada!','success');};r.readAsDataURL(f);}
 
@@ -357,6 +234,7 @@ function setupEventListeners(){
     document.getElementById('btnVoltarCadastroCliente')?.addEventListener('click',()=>mostrarTela('login'));
     document.getElementById('btnVoltarCadastroBarbeiro')?.addEventListener('click',()=>mostrarTela('login'));
     document.getElementById('btnAgendarCorte')?.addEventListener('click',()=>mostrarTela('agendamento'));
+    document.getElementById('btnVerBarbeiros')?.addEventListener('click',()=>mostrarTela('barbeiros'));
     document.getElementById('btnGaleriaCliente')?.addEventListener('click',()=>mostrarTela('galeriaCortes'));
     document.getElementById('btnReelsCliente')?.addEventListener('click',()=>mostrarTela('reels'));
     document.getElementById('btnAnunciosCliente')?.addEventListener('click',()=>mostrarTela('anuncios'));
@@ -369,6 +247,8 @@ function setupEventListeners(){
     document.getElementById('btnLiveBarbeiro')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('btnConfirmarAgendamento')?.addEventListener('click',agendarCorte);
     document.getElementById('btnVoltarAgendamento')?.addEventListener('click',()=>mostrarTela('homeCliente'));
+    document.getElementById('btnVoltarBarbeiros')?.addEventListener('click',()=>mostrarTela('homeCliente'));
+    document.getElementById('btnFecharPerfilBarbeiro')?.addEventListener('click',fecharPerfilBarbeiro);
     document.getElementById('btnSalvarPerfilCliente')?.addEventListener('click',salvarPerfilCliente);
     document.getElementById('btnSairCliente')?.addEventListener('click',sairCliente);
     document.getElementById('btnSalvarPerfilBarbeiro')?.addEventListener('click',salvarPerfilBarbeiro);
@@ -388,8 +268,8 @@ function setupEventListeners(){
     document.getElementById('btnSalvarPlano')?.addEventListener('click',criarPlano);
     document.getElementById('btnVoltarCriarPlano')?.addEventListener('click',()=>mostrarTela('homeBarbeiro'));
     document.getElementById('navHomeCliente')?.addEventListener('click',()=>mostrarTela('homeCliente'));
+    document.getElementById('navVerBarbeiros')?.addEventListener('click',()=>mostrarTela('barbeiros'));
     document.getElementById('navAgendarCliente')?.addEventListener('click',()=>mostrarTela('agendamento'));
-    document.getElementById('navSocialCliente')?.addEventListener('click',()=>mostrarTela('socialCliente'));
     document.getElementById('navLiveCliente')?.addEventListener('click',()=>mostrarTela('live'));
     document.getElementById('navPerfilCliente')?.addEventListener('click',()=>mostrarTela('perfilCliente'));
     document.getElementById('navHomeBarbeiro')?.addEventListener('click',()=>mostrarTela('homeBarbeiro'));
@@ -432,10 +312,8 @@ document.addEventListener('DOMContentLoaded',async function(){
     document.getElementById('bottomNavBarbeiro').style.display='none';
     fecharFormulariosLogin();
     let restaurado=await restaurarSessao();
-    if(restaurado){
-        if(clienteLogado){document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;mostrarTela('homeCliente');}
-        else if(barbeiroLogado){document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;mostrarTela('homeBarbeiro');}
-    }else{document.getElementById('loginScreen').classList.add('active');}
+    if(restaurado){if(clienteLogado){document.getElementById('welcomeClienteNome').textContent=clienteLogado.nome;mostrarTela('homeCliente');}else if(barbeiroLogado){document.getElementById('welcomeBarbeiroNome').textContent=barbeiroLogado.nome;mostrarTela('homeBarbeiro');}}
+    else{document.getElementById('loginScreen').classList.add('active');}
     verificarLiveBadge();
     if(window.location.search.includes('live=1')&&clienteLogado){setTimeout(()=>{mostrarTela('live');},1000);}
     console.log('✅ Pronto!');
