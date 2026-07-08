@@ -58,10 +58,13 @@
     <!-- TELA INICIAL -->
     <section class="screen active" id="inicioScreen">
         <div style="text-align:center;padding:30px 16px;">
-            <div style="width:100px;height:100px;margin:0 auto 12px;position:relative;">
-                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:40px;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);">CB</div>
-            </div>
+            <svg width="100" height="100" viewBox="0 0 100 100" style="border-radius:50%;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);margin-bottom:12px;">
+                <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1a1a1a"/><stop offset="100%" style="stop-color:#0a0a0a"/></linearGradient></defs>
+                <circle cx="50" cy="50" r="50" fill="url(#logoGrad)"/>
+                <text x="50" y="42" text-anchor="middle" fill="#D4A84B" font-size="18" font-weight="900" font-family="Inter,sans-serif">CB</text>
+                <text x="50" y="65" text-anchor="middle" fill="#B8923A" font-size="16">✂️</text>
+                <text x="50" y="82" text-anchor="middle" fill="#D4A84B" font-size="8" font-weight="600" font-family="Inter,sans-serif">BARBEIRO</text>
+            </svg>
             <h2 style="color:#D4A84B;font-size:24px;">Clube do Barbeiro</h2>
             <p style="color:#aaa;font-size:12px;letter-spacing:3px;">ATITUDE, ESTILO E CONFIANÇA</p>
             <p style="color:#B0B0B0;font-size:13px;margin-top:8px;">Escolha um barbeiro para começar</p>
@@ -76,10 +79,11 @@
     <!-- LOGIN/REGISTRO CLIENTE -->
     <section class="screen" id="loginRegisterScreen">
         <div style="text-align:center;padding:20px;">
-            <div style="width:80px;height:80px;margin:0 auto 10px;position:relative;">
-                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:32px;border:3px solid #D4A84B;">CB</div>
-            </div>
+            <svg width="80" height="80" viewBox="0 0 100 100" style="border-radius:50%;border:3px solid #D4A84B;margin-bottom:10px;">
+                <circle cx="50" cy="50" r="50" fill="#1a1a1a"/>
+                <text x="50" y="45" text-anchor="middle" fill="#D4A84B" font-size="20" font-weight="900" font-family="Inter">CB</text>
+                <text x="50" y="70" text-anchor="middle" fill="#B8923A" font-size="22">✂️</text>
+            </svg>
             <h3 style="color:#D4A84B;">Clube do Barbeiro</h3>
             <p id="loginBarbeiroNome" style="color:#aaa;font-size:12px;"></p>
         </div>
@@ -94,10 +98,11 @@
     <!-- LOGIN/REGISTRO BARBEIRO -->
     <section class="screen" id="loginBarbeiroScreen">
         <div style="text-align:center;padding:20px;">
-            <div style="width:80px;height:80px;margin:0 auto 10px;position:relative;">
-                <img src="clube-do-barbeiro.png" alt="Clube do Barbeiro" style="width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid #D4A84B;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                <div class="avatar-placeholder" style="display:none;position:absolute;top:0;left:0;font-size:32px;border:3px solid #D4A84B;">CB</div>
-            </div>
+            <svg width="80" height="80" viewBox="0 0 100 100" style="border-radius:50%;border:3px solid #D4A84B;">
+                <circle cx="50" cy="50" r="50" fill="#1a1a1a"/>
+                <text x="50" y="45" text-anchor="middle" fill="#D4A84B" font-size="20" font-weight="900" font-family="Inter">CB</text>
+                <text x="50" y="70" text-anchor="middle" fill="#B8923A" font-size="22">✂️</text>
+            </svg>
             <h3 style="color:#D4A84B;">✂️ Área do Barbeiro</h3>
         </div>
         <div class="card">
@@ -129,7 +134,12 @@
     <!-- PERFIL BARBEIRO -->
     <section class="screen" id="perfilBarbeiroScreen">
         <div style="background:linear-gradient(135deg,#1a1a1a,#0a0a0a);border-radius:16px;overflow:hidden;margin-bottom:16px;border:1px solid rgba(212,168,75,0.2);">
-            <div style="height:100px;background:linear-gradient(135deg,#D4A84B,#B8923A);position:relative;"></div>
+            <div style="height:120px;background:linear-gradient(135deg,#D4A84B,#B8923A);position:relative;overflow:hidden;cursor:pointer;" id="capaBarbeiroContainer" onclick="document.getElementById('capaBarbeiroInput').click()">
+                <img id="capaBarbeiroImg" src="#" style="width:100%;height:100%;object-fit:cover;display:none;">
+                <div id="capaBarbeiroPlaceholder" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:40px;">📷 CAPA</div>
+                <button class="btn btn-small btn-outline" style="position:absolute;bottom:8px;right:8px;font-size:9px;padding:4px 8px;background:rgba(0,0,0,0.5);z-index:2;">📷 Alterar Capa</button>
+                <input type="file" id="capaBarbeiroInput" accept="image/*" style="display:none;">
+            </div>
             <div style="text-align:center;margin-top:-40px;position:relative;">
                 <div class="profile-avatar" id="perfilBarbeiroAvatar" onclick="document.getElementById('fotoBarbeiroInput').click()" style="margin:0 auto;width:90px;height:90px;"><div class="avatar-placeholder" style="font-size:35px;">✂️</div></div>
                 <input type="file" id="fotoBarbeiroInput" accept="image/*" style="display:none">
@@ -146,10 +156,8 @@
         <button class="btn btn-danger" id="btnSairBarbeiroPerfil">🚪 SAIR</button>
     </section>
 
-    <!-- AGENDAMENTO -->
+    <!-- AGENDAMENTO / PLANOS / LIVE / HOME BARBEIRO / CRIAR POST / EXTRATO / CRIAR PLANO -->
     <section class="screen" id="agendamentoScreen"><h2 class="screen-title">📅 AGENDAR CORTE</h2><div class="card"><div class="input-group"><label>📅 Data</label><input type="date" id="agendamentoData"></div><div class="input-group"><label>⏰ Horário</label><select id="agendamentoHorario"></select></div><div class="input-group"><label>✂️ Tipo</label><select id="agendamentoTipo"></select></div><button class="btn btn-primary" id="btnConfirmarAgendamento">✅ AGENDAR</button><button class="btn btn-outline" id="btnVoltarAgendamento">← Voltar</button></div></section>
-
-    <!-- PLANOS / LIVE / HOME BARBEIRO / CRIAR POST / EXTRATO / CRIAR PLANO -->
     <section class="screen" id="planosClienteScreen"><h2 class="screen-title">📋 PLANOS</h2><div id="planosClienteContainer"></div><button class="btn btn-outline" id="btnVoltarPlanos">← Voltar</button></section>
     
     <section class="screen" id="liveScreen">
