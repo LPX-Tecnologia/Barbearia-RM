@@ -51,6 +51,8 @@
         .btn-send{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,#D4A84B,#B8923A);color:#1a1a1a;font-size:16px;cursor:pointer;transition:0.3s;display:flex;align-items:center;justify-content:center}.btn-send:hover{transform:scale(1.1)}
         .btn-mic{width:36px;height:36px;border-radius:50%;border:none;background:#333;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}.btn-mic:hover{background:#D4A84B;color:#1a1a1a}.btn-mic.recording{background:#F00;animation:pulse 1s infinite}
         .avatar-placeholder{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#D4A84B,#B8923A);display:flex;align-items:center;justify-content:center;font-size:30px;color:#1a1a1a;font-weight:700}
+        .logo-fallback{display:none;width:100px;height:100px;border-radius:50%;border:4px solid #D4A84B;background:linear-gradient(135deg,#1a1a1a,#0a0a0a);margin:0 auto 12px;align-items:center;justify-content:center;font-size:24px;color:#D4A84B;font-weight:900;}
+        .logo-fallback-small{display:none;width:80px;height:80px;border-radius:50%;border:3px solid #D4A84B;background:#1a1a1a;margin:0 auto 10px;align-items:center;justify-content:center;font-size:20px;color:#D4A84B;font-weight:900;}
     </style>
 </head>
 <body>
@@ -58,13 +60,10 @@
     <!-- TELA INICIAL -->
     <section class="screen active" id="inicioScreen">
         <div style="text-align:center;padding:30px 16px;">
-            <svg width="100" height="100" viewBox="0 0 100 100" style="border-radius:50%;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);margin-bottom:12px;">
-                <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1a1a1a"/><stop offset="100%" style="stop-color:#0a0a0a"/></linearGradient></defs>
-                <circle cx="50" cy="50" r="50" fill="url(#logoGrad)"/>
-                <text x="50" y="42" text-anchor="middle" fill="#D4A84B" font-size="18" font-weight="900" font-family="Inter,sans-serif">CB</text>
-                <text x="50" y="65" text-anchor="middle" fill="#B8923A" font-size="16">✂️</text>
-                <text x="50" y="82" text-anchor="middle" fill="#D4A84B" font-size="8" font-weight="600" font-family="Inter,sans-serif">BARBEIRO</text>
-            </svg>
+            <!-- LOGO DO SISTEMA -->
+            <img src="https://drive.google.com/uc?export=view&id=1AjJV5o4GhE4qqoPnN0CL--Zd7FCTAkwG" style="width:100px;height:100px;border-radius:50%;border:4px solid #D4A84B;box-shadow:0 0 30px rgba(212,168,75,0.4);object-fit:cover;margin-bottom:12px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback" style="display:none;">CB</div>
+            
             <h2 style="color:#D4A84B;font-size:24px;">Clube do Barbeiro</h2>
             <p style="color:#aaa;font-size:12px;letter-spacing:3px;">ATITUDE, ESTILO E CONFIANÇA</p>
             <p style="color:#B0B0B0;font-size:13px;margin-top:8px;">Escolha um barbeiro para começar</p>
@@ -79,11 +78,8 @@
     <!-- LOGIN/REGISTRO CLIENTE -->
     <section class="screen" id="loginRegisterScreen">
         <div style="text-align:center;padding:20px;">
-            <svg width="80" height="80" viewBox="0 0 100 100" style="border-radius:50%;border:3px solid #D4A84B;margin-bottom:10px;">
-                <circle cx="50" cy="50" r="50" fill="#1a1a1a"/>
-                <text x="50" y="45" text-anchor="middle" fill="#D4A84B" font-size="20" font-weight="900" font-family="Inter">CB</text>
-                <text x="50" y="70" text-anchor="middle" fill="#B8923A" font-size="22">✂️</text>
-            </svg>
+            <img src="https://drive.google.com/uc?export=view&id=1AjJV5o4GhE4qqoPnN0CL--Zd7FCTAkwG" style="width:80px;height:80px;border-radius:50%;border:3px solid #D4A84B;object-fit:cover;margin-bottom:10px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback-small" style="display:none;">CB</div>
             <h3 style="color:#D4A84B;">Clube do Barbeiro</h3>
             <p id="loginBarbeiroNome" style="color:#aaa;font-size:12px;"></p>
         </div>
@@ -98,11 +94,8 @@
     <!-- LOGIN/REGISTRO BARBEIRO -->
     <section class="screen" id="loginBarbeiroScreen">
         <div style="text-align:center;padding:20px;">
-            <svg width="80" height="80" viewBox="0 0 100 100" style="border-radius:50%;border:3px solid #D4A84B;">
-                <circle cx="50" cy="50" r="50" fill="#1a1a1a"/>
-                <text x="50" y="45" text-anchor="middle" fill="#D4A84B" font-size="20" font-weight="900" font-family="Inter">CB</text>
-                <text x="50" y="70" text-anchor="middle" fill="#B8923A" font-size="22">✂️</text>
-            </svg>
+            <img src="https://drive.google.com/uc?export=view&id=1AjJV5o4GhE4qqoPnN0CL--Zd7FCTAkwG" style="width:80px;height:80px;border-radius:50%;border:3px solid #D4A84B;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+            <div class="logo-fallback-small" style="display:none;">CB</div>
             <h3 style="color:#D4A84B;">✂️ Área do Barbeiro</h3>
         </div>
         <div class="card">
